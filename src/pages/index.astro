@@ -5,17 +5,23 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="Home">
 	<section class="relative bg-brand-dark text-brand-light overflow-hidden">
 		<div class="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-28 lg:py-36 flex flex-col items-center text-center">
+			
+
 			<h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-8 max-w-4xl leading-tight">
 				IMT: Where <span class="text-brand-gold">Theory</span> and <span class="text-brand-gold">Application</span> Converge
 			</h1>
 			<p class="text-xl md:text-2xl text-gray-300 max-w-3xl mb-12 leading-relaxed font-light">
 				Welcome to the <span class="text-brand-gold">Integrated Mathematics Tournament</span>, an annual online mathematics competition aimed for middle and high schoolers introducing people to a wider range of mathematical topics.
 			</p>
-			<div class="flex flex-col sm:flex-row gap-6">
-				<a href={`${import.meta.env.BASE_URL}/about`} class="bg-brand-gold text-brand-dark font-bold py-4 px-10 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition transform duration-200 text-lg">
+            
+            <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 w-full max-w-4xl">
+				<a href={`${import.meta.env.BASE_URL}/about`} class="bg-transparent border-2 border-brand-gold text-brand-gold font-bold py-4 px-8 rounded-full hover:bg-brand-gold hover:text-brand-dark transition duration-200 text-lg text-center">
 					Learn More
 				</a>
-				<a href={`${import.meta.env.BASE_URL}/team`} class="bg-transparent border-2 border-brand-gold text-brand-gold font-bold py-4 px-10 rounded-full hover:bg-brand-gold hover:text-brand-dark transition duration-200 text-lg">
+                <a class="bg-brand-gold text-brand-dark font-bold py-4 px-8 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition transform duration-200 text-lg text-center">
+					Register Soon!
+				</a>
+				<a href={`${import.meta.env.BASE_URL}/team`} class="bg-transparent border-2 border-brand-gold text-brand-gold font-bold py-4 px-8 rounded-full hover:bg-brand-gold hover:text-brand-dark transition duration-200 text-lg text-center">
 					Meet the Team
 				</a>
 			</div>
@@ -43,7 +49,7 @@ import Layout from '../layouts/Layout.astro';
 				<div class="p-8 bg-white rounded-3xl shadow-card group hover:shadow-card-hover hover:border-brand-gold hover:scale-[1.02] transition duration-300 border border-gray-100">
 					<div class="w-20 h-20 bg-brand-green text-brand-light rounded-full flex items-center justify-center mx-auto mb-8 text-3xl font-extrabold group-hover:scale-110 transition transform duration-300">3</div>
 					<h3 class="text-2xl font-semibold mb-5 text-brand-dark group-hover:text-brand-green_dark transition">Encourage Deep Thinking</h3>
-					<p class="text-gray-700 leading-relaxed text-lg font-light">MT introduces students to solve open-ended problems that demand analytical depth and critical reasoning, not just speed and calculations.</p>
+					<p class="text-gray-700 leading-relaxed text-lg font-light">IMT introduces students to solve open-ended problems that demand analytical depth and critical reasoning, not just speed and calculations.</p>
 				</div>
 			</div>
 		</div>
