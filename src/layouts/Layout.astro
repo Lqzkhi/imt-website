@@ -1,0 +1,98 @@
+---
+export interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{title} | Integrated Mathematics Tournament</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+		<script is:inline src="https://cdn.tailwindcss.com"></script>
+		<script is:inline>
+			tailwind.config = {
+				theme: {
+					extend: {
+						colors: {
+							brand: {
+								dark: '#2B2D42',    /* Charcoal/Navy - Primary Dark */
+								gold: '#fcd34d',    /* Clean Amber - Revised Brighter Yellow */
+								light: '#F6F0ED',   /* Cream/Off-white - Primary Light */
+								green: '#4A7C59',   /* Academic Green - 4th Color */
+                                // Optional secondary tones derived internally for richer UI
+                                gold_dark: '#f59e0b',
+                                green_dark: '#3d6c4d',
+							}
+						},
+						fontFamily: {
+							inter: ['Inter', 'sans-serif'],
+						},
+                        boxShadow: {
+                            'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                            'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        }
+					}
+				}
+			}
+		</script>
+		<style is:global>
+			html { font-family: 'Inter', sans-serif; }
+			body {
+				@apply flex flex-col min-h-screen bg-brand-light text-brand-dark;
+			}
+			main { @apply flex-grow; }
+            /* Global visual enhancements */
+            h1, h2, h3 { @apply tracking-tight; }
+            section { @apply py-24; }
+		</style>
+	</head>
+	<body>
+		<header class="bg-brand-light shadow-sm border-b border-gray-100 sticky top-0 z-50">
+			<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+				<div class="flex justify-between items-center h-20">
+					<div class="flex-shrink-0 flex items-center">
+						<a href="/" class="text-3xl font-extrabold text-brand-dark tracking-tighter">IMT</a>
+					</div>
+					<nav class="hidden md:flex space-x-10">
+						<a href="/" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Home</a>
+						<a href="/about" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">The Challenge</a>
+						<a href="/examples" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Practice</a>
+						<a href="/team" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Team & Contact</a>
+					</nav>
+					<div class="md:hidden flex items-center">
+						<button class="text-brand-dark hover:text-brand-gold focus:outline-none transition duration-150">
+							<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+							</svg>
+						</button>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<main>
+			<slot />
+		</main>
+
+		<footer class="bg-brand-dark text-brand-light mt-16 border-t-4 border-brand-gold">
+			<div class="max-w-7xl mx-auto py-16 px-6 sm:px-8 lg:px-10">
+				<div class="md:flex md:items-center md:justify-between text-center md:text-left">
+					<div class="mb-10 md:mb-0">
+						<span class="text-3xl font-extrabold tracking-tighter text-brand-gold">Integrated Mathematics Tournament</span>
+						<p class="mt-4 text-gray-300 text-lg leading-relaxed max-w-xl mx-auto md:mx-0 font-light">Empowering future STEM leaders through analytical depth, community, and real-world connection.</p>
+					</div>
+					<div class="text-gray-400 text-base font-light">
+						&copy; 2026 Integrated Mathematics Tournament. All rights reserved.
+					</div>
+				</div>
+			</div>
+		</footer>
+	</body>
+</html>

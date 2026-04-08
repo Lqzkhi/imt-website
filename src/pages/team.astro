@@ -1,0 +1,75 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Team & Contact">
+	<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-20">
+		
+		<div class="mb-24 border-b-2 border-slate-200 pb-16">
+			<div class="text-center mb-16 max-w-2xl mx-auto">
+				<h1 class="text-5xl font-extrabold text-slate-950 mb-6 tracking-tight">Meet the Organizers</h1>
+				<p class="text-xl text-slate-600 leading-relaxed font-light">The Integrated Mathematics Tournament is entirely student-led. We are passionate about expanding mathematical literacy and creating dynamic analytical experiences for our peers.</p>
+			</div>
+
+			<div class="grid md:grid-cols-3 gap-10">
+				<div class="bg-white rounded-3xl shadow-card border border-gray-100 p-8 text-center hover:shadow-card-hover hover:border-slate-300 hover:scale-[1.02] transition duration-300 group">
+					<div class="w-28 h-28 bg-brand-light rounded-full mx-auto mb-6 border-4 border-slate-200 flex items-center justify-center text-slate-400 group-hover:scale-110 transition transform duration-300 group-hover:border-slate-300 shadow-inner">
+						<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+					</div>
+					<h3 class="text-2xl font-bold text-slate-950">[Team Member Name]</h3>
+					<p class="text-brand-green_dark font-semibold mb-4 group-hover:text-brand-dark transition">[Role / e.g., Tournament Director]</p>
+					<p class="text-slate-700 text-sm leading-relaxed font-light group-hover:text-brand-dark transition">[Short Bio: Briefly mention grade, school, and passion for organizing mathematical events.]</p>
+				</div>
+				<div class="bg-white rounded-3xl shadow-card border border-gray-100 p-8 text-center hover:shadow-card-hover hover:border-slate-300 hover:scale-[1.02] transition duration-300 group">
+					<div class="w-28 h-28 bg-brand-light rounded-full mx-auto mb-6 border-4 border-slate-200 flex items-center justify-center text-slate-400 group-hover:scale-110 transition transform duration-300 group-hover:border-slate-300 shadow-inner">
+						<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+					</div>
+					<h3 class="text-2xl font-bold text-slate-950">[Team Member Name]</h3>
+					<p class="text-brand-green_dark font-semibold mb-4 group-hover:text-brand-dark transition">[Role / e.g., Head Problem Writer]</p>
+					<p class="text-slate-700 text-sm leading-relaxed font-light group-hover:text-brand-dark transition">[Short Bio: Briefly mention grade, school, and passion for creating engaging data problems.]</p>
+				</div>
+				<div class="bg-white rounded-3xl shadow-card border border-gray-100 p-8 text-center hover:shadow-card-hover hover:border-slate-300 hover:scale-[1.02] transition duration-300 group">
+					<div class="w-28 h-28 bg-brand-light rounded-full mx-auto mb-6 border-4 border-slate-200 flex items-center justify-center text-slate-400 group-hover:scale-110 transition transform duration-300 group-hover:border-slate-300 shadow-inner">
+						<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+					</div>
+					<h3 class="text-2xl font-bold text-slate-950">[Team Member Name]</h3>
+					<p class="text-brand-green_dark font-semibold mb-4 group-hover:text-brand-dark transition">[Role / e.g., Logistics & Outreach]</p>
+					<p class="text-slate-700 text-sm leading-relaxed font-light group-hover:text-brand-dark transition">[Short Bio: Briefly mention grade, school, and dedication to ensuring a smooth event experience.]</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="bg-white rounded-3xl p-10 md:p-16 border-2 border-slate-100 flex flex-col md:flex-row gap-16 shadow-inner hover:border-slate-200 hover:shadow-lg transition duration-300">
+			<div class="md:w-1/2 flex flex-col justify-center">
+				<h2 class="text-4xl font-extrabold text-slate-950 mb-6 tracking-tight border-b-2 border-brand-green pb-4 inline-block">Partner With IMT</h2>
+				<p class="text-slate-700 text-xl leading-relaxed mb-6 font-light">
+					Are you a university department, corporate sponsor, or educational foundation passionate about investing in STEM leadership? We actively invite partnerships to cover venue costs, awards, and event materials for our Late May tournament. Reach out today to join us in defining mathematical excellence.
+				</p>
+				<p class="text-slate-700 text-xl leading-relaxed font-light">
+					Our outreach team will quickly send you our comprehensive sponsorship packet detailing partnership tiers and mutual benefits.
+				</p>
+			</div>
+			
+			<div class="md:w-1/2 bg-brand-light rounded-2xl shadow-xl p-10 border border-slate-100 hover:shadow-2xl hover:border-slate-300 transition duration-300">
+				<form action="#" method="POST" class="space-y-8">
+					<div>
+						<label for="name" class="block text-sm font-semibold text-brand-dark mb-1.5">Full Name / Organization</label>
+						<input type="text" name="name" id="name" class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-secondary-500 focus:ring-secondary-500 p-3.5 border-2 text-lg font-light placeholder:text-slate-400" placeholder="Jane Doe / Company XYZ">
+					</div>
+					<div>
+						<label for="email" class="block text-sm font-semibold text-brand-dark mb-1.5">Email Address</label>
+						<input type="email" name="email" id="email" class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-secondary-500 focus:ring-secondary-500 p-3.5 border-2 text-lg font-light placeholder:text-slate-400" placeholder="jane@example.com">
+					</div>
+					<div>
+						<label for="message" class="block text-sm font-semibold text-brand-dark mb-1.5">Inquiry / Message</label>
+						<textarea id="message" name="message" rows="5" class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-secondary-500 focus:ring-secondary-500 p-3.5 border-2 text-lg font-light placeholder:text-slate-400" placeholder="We are interested in exploring partnership opportunities..."></textarea>
+					</div>
+					<button type="submit" class="w-full flex justify-center py-4 px-10 border-2 border-transparent rounded-lg shadow-lg text-lg font-semibold text-white bg-brand-gold hover:opacity-90 transition transform duration-200 group-hover:scale-105 active:scale-95 text-brand-dark">
+						Send Message
+					</button>
+				</form>
+			</div>
+		</div>
+
+	</div>
+</Layout>

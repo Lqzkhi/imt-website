@@ -1,0 +1,68 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="The Competition">
+	<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-20">
+		
+		<div class="text-center max-w-3xl mx-auto mb-20 border-b-2 border-slate-200 pb-12">
+			<h1 class="text-5xl font-extrabold text-brand-dark mb-6 tracking-tight">Tournament Structure</h1>
+			<p class="text-xl text-gray-700 leading-relaxed font-light">Join us in <strong>Late May</strong> for an unprecedented analytical challenge. The Integrated Mathematics Tournament features three distinct phases, meticulously crafted to test diverse aspects of mathematical fluency, application, and collaborative power.</p>
+		</div>
+
+		<div class="space-y-16">
+			<div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 flex flex-col md:flex-row hover:border-brand-gold hover:shadow-card-hover transition duration-300">
+				<div class="bg-brand-dark md:w-2/5 p-12 text-brand-light flex flex-col justify-center border-r-8 border-brand-green">
+					<span class="uppercase tracking-widest text-xs font-bold text-gray-300 mb-3">The Signature Event</span>
+					<h2 class="text-4xl font-extrabold mb-6 tracking-tight text-white">Integrated Round</h2>
+					<ul class="space-y-4 font-semibold text-lg">
+						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> 90 Minutes</li>
+						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> 4 Thematic Sections</li>
+						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> Real-World Data Analysis</li>
+					</ul>
+				</div>
+				<div class="p-12 md:w-3/5 flex flex-col justify-center bg-white group-hover:bg-brand-light transition duration-300">
+					<p class="text-gray-700 text-xl leading-relaxed mb-6 font-light">
+						The cornerstone of our tournament, the Integrated Round is an applied mathematics power challenge that requires teams to analyze authentic, real-world data sets sourced from leading public health and academic research institutions (e.g., CDC, UNC, Duke).
+					</p>
+					<p class="text-gray-700 text-xl leading-relaxed font-light">
+						Instead of abstract problems, students develop mathematical models, statistical analysis, and logical reasoning to solve complex questions related to disease transmission, environmental sustainability, or economics. This round rewards meticulous critical thinking over computational speed.
+					</p>
+				</div>
+			</div>
+
+			<div class="grid md:grid-cols-2 gap-10">
+				<div class="bg-white rounded-3xl shadow-card border border-slate-100 p-10 hover:border-brand-green hover:shadow-card-hover transition duration-300 group hover:scale-[1.01]">
+					<h3 class="text-3xl font-extrabold text-brand-dark mb-6 tracking-tight border-b border-gray-200 pb-4 group-hover:text-brand-green transition">Team Round</h3>
+					<div class="flex items-center space-x-6 mb-8 text-brand-gold_dark font-semibold text-lg">
+						<span>40 Minutes</span>
+						<span>•</span>
+						<span>10 Questions</span>
+						<span>•</span>
+						<span>Full Team</span>
+					</div>
+					<p class="text-gray-700 leading-relaxed text-lg font-light">
+						A high-energy, collaborative test. The entire team works together to solve 10 rigorous competition problems. Success hinges on precise communication, effectively delegating tasks, and peer-reviewing answers under a strict time limit.
+					</p>
+				</div>
+
+				<div class="bg-white rounded-3xl shadow-card border border-slate-100 p-10 hover:border-brand-green hover:shadow-card-hover transition duration-300 group hover:scale-[1.01]">
+					<h3 class="text-3xl font-extrabold text-brand-dark mb-6 tracking-tight border-b border-gray-200 pb-4 group-hover:text-brand-green transition">Individual Round</h3>
+					<div class="flex items-center space-x-6 mb-8 text-brand-gold_dark font-semibold text-lg">
+						<span>90 Minutes Total</span>
+						<span>•</span>
+						<span>2 Topics per Student</span>
+						<span>•</span>
+						<span>Depth Focus</span>
+					</div>
+					<p class="text-gray-700 leading-relaxed text-lg font-light mb-6">
+						Each team member selects 2 out of 4 distinct subject areas: <strong class="text-brand-dark group-hover:text-brand-green transition">Algebra, Geometry, Number Theory, or Combinatorics</strong>.
+					</p>
+					<p class="text-gray-700 leading-relaxed text-lg font-light">
+						Competitors then take two 45-minute, 10-question subject tests, allowing specialists to shine while contributing vital points to their team's aggregate score.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>
