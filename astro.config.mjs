@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
+import vercel from '@astrojs/vercel';
 
 export default defineConfig({
-  site: 'https://Lqzkhi.github.io',
-  base: '/imt-website',
+  output: 'server',
+  adapter: vercel(),
 });
