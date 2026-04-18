@@ -1,0 +1,403 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Definitions for HTML generation
+const intSections = [
+    { id: 1, name: "Section I: Algebra & Number Theory" },
+    { id: 2, name: "Section II: Geometry" },
+    { id: 3, name: "Section III: Combinatorics & Probability" },
+    { id: 4, name: "Section IV: Integrated Applications" }
+];
+const intProblemsPerSection = 9;
+const teamProblems = 10;
+---
+
+<Layout title="Tournament Portal">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 hidden" id="auth-wrapper">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b-2 border-slate-200 pb-6 gap-4" id="portal-header">
+            <div>
+                <h1 class="text-3xl font-extrabold text-brand-dark" id="header-title">Tournament Portal</h1>
+                <p class="text-brand-green font-bold text-sm mt-1" id="team-name-display">Loading Team...</p>
+            </div>
+            
+            <div id="timer-display" class="hidden bg-brand-dark text-brand-gold font-mono font-bold text-2xl px-6 py-2 rounded-xl shadow-md border-2 border-brand-gold/30">
+                --:--
+            </div>
+        </div>
+
+        <div id="int-pre-start" class="hidden max-w-2xl mx-auto text-center py-16 bg-white border border-slate-200 rounded-3xl shadow-xl px-8">
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-6">Round 1: Integrated</h2>
+            <div class="text-left bg-red-50 p-6 rounded-xl border border-red-100 mb-8 space-y-3 text-slate-800 text-sm">
+                <h3 class="font-bold text-red-600 border-b border-red-200 pb-2 mb-3"> Security & Proctoring Rules</h3>
+                <p><strong> Time Limit:</strong> 90 Minutes. The timer cannot be paused.</p>
+                <p><strong> Focus Mode:</strong> Entering this test will lock your screen into fullscreen mode.</p>
+                <p><strong> Tab Switching:</strong> Detecting other tabs or minimizing will flag your team.</p>
+            </div>
+            <button id="start-int-btn" class="w-full sm:w-auto bg-brand-green text-white font-extrabold text-xl px-12 py-4 rounded-xl hover:bg-brand-green_dark transition shadow-lg hover:-translate-y-1">
+                Acknowledge & Begin Round 1
+            </button>
+        </div>
+
+        <div id="int-active" class="hidden grid lg:grid-cols-12 gap-8 h-[calc(100vh-150px)] min-h-[800px]">
+            <div class="lg:col-span-7 bg-slate-800 rounded-2xl p-4 shadow-lg flex flex-col h-full">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold">Integrated Packet</h3>
+                </div>
+                <iframe src="/pdfs/IMT_Geometry_Sample.pdf" class="w-full flex-grow rounded-xl bg-white"></iframe>
+            </div>
+
+            <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-lg flex flex-col h-full relative overflow-hidden">
+                <div class="p-6 border-b border-slate-100 bg-white z-10 shadow-sm">
+                    <h3 class="text-2xl font-extrabold text-brand-dark">Integrated Answer Sheet</h3>
+                </div>
+                
+                <div class="overflow-y-auto p-6 flex-grow pb-32">
+                    <form id="int-form" class="space-y-10">
+                        {intSections.map((section) => (
+                            <div class="space-y-4">
+                                <h4 class="text-lg font-extrabold text-brand-dark border-b-2 border-brand-gold/30 pb-2">{section.name}</h4>
+                                {Array.from({ length: intProblemsPerSection }).map((_, idx) => {
+                                    const probNum = idx + 1;
+                                    return (
+                                        <div class={`p-4 rounded-xl border ${probNum===9 ? 'bg-brand-gold/5 border-brand-gold/40' : 'bg-slate-50 border-slate-200'}`}>
+                                            <label class="font-bold text-brand-dark block mb-2">Problem {section.id}.{probNum} {probNum===9 && <span class="text-xs text-brand-gold_dark uppercase ml-2">Tie-Breaker</span>}</label>
+                                            <div class="space-y-3">
+                                                <input type="text" name={`int_s${section.id}_p${probNum}_text`} class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none text-sm" placeholder="Textual answer...">
+                                                <div class="flex items-center gap-3">
+                                                    <label class="cursor-pointer text-xs font-bold text-slate-600 bg-white border border-slate-300 px-3 py-2 rounded-lg hover:bg-slate-50 transition">
+                                                        Attach PDF
+                                                        <input type="file" name={`int_s${section.id}_p${probNum}_file`} accept=".pdf" class="hidden file-input" />
+                                                    </label>
+                                                    <span class="text-xs text-slate-400 file-name truncate max-w-[150px]">No file</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        ))}
+                    </form>
+                </div>
+                <div class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-slate-100 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+                    <button type="button" id="submit-int-btn" class="w-full bg-brand-dark text-brand-gold font-extrabold text-lg py-4 rounded-xl hover:bg-slate-800 transition shadow-lg">Submit Round 1</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="team-pre-start" class="hidden max-w-2xl mx-auto text-center py-16 bg-white border border-slate-200 rounded-3xl shadow-xl px-8">
+            <div class="w-20 h-20 bg-brand-green text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Round 1 Complete!</h2>
+            <p class="text-slate-600 mb-8 font-light text-lg">Your Integrated Round answers are secure. Do not begin the Team Round until you are told to do so.</p>
+            
+            <div class="text-left bg-brand-gold/10 p-6 rounded-xl border border-brand-gold/30 mb-8 space-y-3 text-slate-800 text-sm">
+                <p><strong> Time Limit:</strong> 60 Minutes.</p>
+                <p><strong> Format:</strong> 10 Questions. Collaboration is encouraged.</p>
+                <p><strong> Rule constraint:</strong> All final answers <strong>MUST</strong> be positive integers. Do not enter units, fractions, or text.</p>
+            </div>
+            
+            <button id="start-team-btn" class="w-full sm:w-auto bg-brand-dark text-brand-gold font-extrabold text-xl px-12 py-4 rounded-xl hover:bg-slate-800 transition shadow-lg hover:-translate-y-1">
+                Begin Team Round
+            </button>
+        </div>
+
+        <div id="team-active" class="hidden grid lg:grid-cols-12 gap-8 h-[calc(100vh-150px)] min-h-[800px]">
+            <div class="lg:col-span-7 bg-slate-800 rounded-2xl p-4 shadow-lg flex flex-col h-full">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold">Team Packet</h3>
+                </div>
+                <iframe src="/pdfs/IMT_Geometry_Sample.pdf" class="w-full flex-grow rounded-xl bg-white"></iframe>
+            </div>
+
+            <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-lg flex flex-col h-full relative overflow-hidden">
+                <div class="p-6 border-b border-slate-100 bg-brand-dark text-white z-10 shadow-sm">
+                    <h3 class="text-2xl font-extrabold text-brand-gold">Team Answer Sheet</h3>
+                    <p class="text-sm text-slate-300 mt-1 font-bold">POSITIVE INTEGERS ONLY.</p>
+                </div>
+                
+                <div class="overflow-y-auto p-6 flex-grow pb-32">
+                    <form id="team-form" class="space-y-4">
+                        {Array.from({ length: teamProblems }).map((_, idx) => (
+                            <div class="p-4 rounded-xl border bg-slate-50 border-slate-200 flex items-center justify-between gap-4">
+                                <label class="font-bold text-brand-dark whitespace-nowrap">Problem {idx + 1}</label>
+                                <input type="number" min="1" step="1" required name={`team_p${idx + 1}`} class="w-full max-w-[200px] px-4 py-2.5 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none text-lg font-mono text-center font-bold" placeholder="Integer">
+                            </div>
+                        ))}
+                    </form>
+                </div>
+                <div class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-slate-100 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+                    <button type="button" id="submit-team-btn" class="w-full bg-brand-green text-white font-extrabold text-lg py-4 rounded-xl hover:bg-brand-green_dark transition shadow-lg">Submit Final Team Answers</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tournament-complete" class="hidden max-w-2xl mx-auto text-center py-20 bg-white border border-slate-200 rounded-3xl shadow-xl px-8">
+            <h2 class="text-5xl font-extrabold text-brand-dark mb-4">Tournament Complete!</h2>
+            <p class="text-xl text-slate-600 mb-8">Congratulations. Your team has successfully submitted all materials. You may now log out and close your browser.</p>
+        </div>
+
+    </div>
+</Layout>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+
+    // UI Elements
+    const authWrapper = document.getElementById('auth-wrapper');
+    const headerTitle = document.getElementById('header-title');
+    const timerDisplay = document.getElementById('timer-display');
+    const portalHeader = document.getElementById('portal-header');
+    
+    // Screens
+    const screens = {
+        intPreStart: document.getElementById('int-pre-start'),
+        intActive: document.getElementById('int-active'),
+        teamPreStart: document.getElementById('team-pre-start'),
+        teamActive: document.getElementById('team-active'),
+        tournamentComplete: document.getElementById('tournament-complete')
+    };
+
+    // Buttons
+    const startIntBtn = document.getElementById('start-int-btn');
+    const submitIntBtn = document.getElementById('submit-int-btn');
+    const startTeamBtn = document.getElementById('start-team-btn');
+    const submitTeamBtn = document.getElementById('submit-team-btn');
+
+    // Time Constants
+    const INT_DURATION = 90 * 60 * 1000; // 90 min
+    const TEAM_DURATION = 60 * 60 * 1000; // 60 min
+    let timerInterval;
+
+    // --- SECURITY FUNCTIONS ---
+    function handleVisibilityChange() {
+        if (document.hidden) alert("⚠️ SECURITY WARNING: You have switched tabs. This has been flagged.");
+    }
+    function blockDefault(e) { e.preventDefault(); }
+    
+    function setSecurity(enabled) {
+        const header = document.querySelector('header');
+        const footer = document.querySelector('footer');
+        
+        if (enabled) {
+            if (header) header.style.display = 'none';
+            if (footer) footer.style.display = 'none';
+            try { document.documentElement.requestFullscreen(); } catch (e) {}
+            document.addEventListener('contextmenu', blockDefault);
+            document.addEventListener('copy', blockDefault);
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        } else {
+            if (header) header.style.display = '';
+            if (footer) footer.style.display = '';
+            try { document.exitFullscreen(); } catch (e) {}
+            document.removeEventListener('contextmenu', blockDefault);
+            document.removeEventListener('copy', blockDefault);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        }
+    }
+
+    // --- HELPER: SHOW SPECIFIC SCREEN ---
+    function showScreen(screenName) {
+        Object.values(screens).forEach(s => s.classList.add('hidden'));
+        screens[screenName].classList.remove('hidden');
+    }
+
+    // --- 1. INITIALIZATION LOGIC (THE STATE MACHINE) ---
+    async function initPortal() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { window.location.href = '/login'; return; }
+
+        authWrapper.classList.remove('hidden');
+        document.getElementById('team-name-display').textContent = `Team: ${user.user_metadata?.team_name || user.email}`;
+
+        const isIntDone = localStorage.getItem('imt_int_done') === 'true';
+        const isTeamDone = localStorage.getItem('imt_team_done') === 'true';
+        const activeRound = localStorage.getItem('imt_active_round');
+        const savedEndTime = localStorage.getItem('imt_endTime');
+
+        // Check the State Logic
+        if (isTeamDone) {
+            portalHeader.classList.add('hidden');
+            showScreen('tournamentComplete');
+        } else if (isIntDone) {
+            headerTitle.textContent = "Team Round";
+            if (activeRound === 'team' && savedEndTime) {
+                resumeTimer(parseInt(savedEndTime), 'team');
+            } else {
+                showScreen('teamPreStart');
+            }
+        } else {
+            headerTitle.textContent = "Integrated Round";
+            if (activeRound === 'int' && savedEndTime) {
+                resumeTimer(parseInt(savedEndTime), 'int');
+            } else {
+                showScreen('intPreStart');
+            }
+        }
+    }
+
+    // --- 2. TIMER LOGIC ---
+    function resumeTimer(endTime, round) {
+        const now = new Date().getTime();
+        if (endTime > now) {
+            beginRound(round, endTime, false);
+        } else {
+            alert(`Time expired for the ${round} round! Auto-submitting.`);
+            round === 'int' ? processIntSubmission() : processTeamSubmission();
+        }
+    }
+
+    function beginRound(round, endTime, isNew = true) {
+        if (isNew) {
+            localStorage.setItem('imt_active_round', round);
+            localStorage.setItem('imt_endTime', endTime.toString());
+        }
+        
+        showScreen(round === 'int' ? 'intActive' : 'teamActive');
+        timerDisplay.classList.remove('hidden');
+        setSecurity(true);
+
+        updateTimerUI(endTime, round);
+        timerInterval = setInterval(() => updateTimerUI(endTime, round), 1000);
+    }
+
+    function updateTimerUI(endTime, round) {
+        const distance = endTime - new Date().getTime();
+        if (distance <= 0) {
+            clearInterval(timerInterval);
+            alert("Time is up! Auto-submitting.");
+            round === 'int' ? processIntSubmission() : processTeamSubmission();
+            return;
+        }
+
+        const minutes = Math.floor(distance / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        if (minutes < 5) {
+            timerDisplay.classList.remove('bg-brand-dark', 'text-brand-gold');
+            timerDisplay.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+        }
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // --- 3. EVENT LISTENERS ---
+    startIntBtn.addEventListener('click', () => {
+        if(confirm("Ready? Timer cannot be paused.")) beginRound('int', new Date().getTime() + INT_DURATION);
+    });
+
+    startTeamBtn.addEventListener('click', () => {
+        if(confirm("Ready for the Team Round?")) beginRound('team', new Date().getTime() + TEAM_DURATION);
+    });
+
+    submitIntBtn.addEventListener('click', async () => {
+        if(confirm("Submit Round 1? You cannot undo this.")) await processIntSubmission();
+    });
+
+    submitTeamBtn.addEventListener('click', async () => {
+        // Enforce HTML validation before processing (makes sure they didn't bypass the positive integer rule)
+        const form = document.getElementById('team-form') as HTMLFormElement;
+        if (!form.reportValidity()) return; 
+        
+        if(confirm("Submit Final Team Round?")) await processTeamSubmission();
+    });
+
+    // --- 4. SUBMISSION HANDLERS ---
+    async function processIntSubmission() {
+        submitIntBtn.innerHTML = "Uploading...";
+        submitIntBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        clearInterval(timerInterval);
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const form = document.getElementById('int-form') as HTMLFormElement;
+            const formData = new FormData(form);
+            const textAnswers = {}; const pdfPaths = {};
+
+            for (let [key, value] of formData.entries()) {
+                if (key.includes('_file') && value instanceof File && value.size > 0) {
+                    const ext = value.name.split('.').pop();
+                    const { data, error } = await supabase.storage.from('pdf_uploads').upload(`${user.id}/${Date.now()}_${key}.${ext}`, value);
+                    if (error) throw error;
+                    pdfPaths[key] = data.path; 
+                } else if (key.includes('_text') && typeof value === 'string' && value.trim() !== '') {
+                    textAnswers[key] = value.trim();
+                }
+            }
+
+            const { error } = await supabase.from('submissions').insert({
+                user_id: user.id,
+                team_name: user.user_metadata?.team_name || user.email,
+                text_answers: { round: "Integrated", ...textAnswers },
+                pdf_paths: pdfPaths
+            });
+            if (error) throw error;
+
+            // Transition to Team Round Setup
+            localStorage.setItem('imt_int_done', 'true');
+            localStorage.removeItem('imt_active_round');
+            localStorage.removeItem('imt_endTime');
+            timerDisplay.classList.add('hidden');
+            setSecurity(false);
+            
+            headerTitle.textContent = "Team Round";
+            showScreen('teamPreStart');
+
+        } catch (err) {
+            alert("Error: " + err.message);
+            submitIntBtn.innerHTML = "Try Again";
+            submitIntBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    async function processTeamSubmission() {
+        submitTeamBtn.innerHTML = "Saving Final Scores...";
+        submitTeamBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        clearInterval(timerInterval);
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const form = document.getElementById('team-form') as HTMLFormElement;
+            const formData = new FormData(form);
+            const textAnswers = { round: "Team" };
+
+            // Grab all the numbers
+            for (let [key, value] of formData.entries()) {
+                if (value !== '') textAnswers[key] = value;
+            }
+
+            // Save to DB (re-using the same table, just no PDFs this time)
+            const { error } = await supabase.from('submissions').insert({
+                user_id: user.id,
+                team_name: user.user_metadata?.team_name || user.email,
+                text_answers: textAnswers,
+            });
+            if (error) throw error;
+
+            // Tournament Complete
+            localStorage.setItem('imt_team_done', 'true');
+            localStorage.removeItem('imt_active_round');
+            localStorage.removeItem('imt_endTime');
+            portalHeader.classList.add('hidden');
+            setSecurity(false);
+            
+            showScreen('tournamentComplete');
+
+        } catch (err) {
+            alert("Error: " + err.message);
+            submitTeamBtn.innerHTML = "Try Again";
+            submitTeamBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    // File input visual tweak
+    document.querySelectorAll('.file-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const span = (e.target as HTMLElement).parentElement.nextElementSibling;
+            const file = (e.target as HTMLInputElement).files[0];
+            if(file) { span.textContent = file.name; span.classList.add('text-brand-green'); }
+        });
+    });
+
+    initPortal();
+</script>

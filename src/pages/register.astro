@@ -1,0 +1,217 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Register for IMT">
+    <div class="min-h-screen bg-brand-light flex items-center justify-center py-20 px-6">
+        <div class="bg-white max-w-2xl w-full p-10 md:p-12 rounded-3xl shadow-xl border border-slate-100">
+            <div class="text-center mb-10 border-b border-slate-100 pb-8">
+                <h1 class="text-4xl font-extrabold text-brand-dark mb-3">Register Your Team</h1>
+                <p class="text-slate-600 font-light text-lg">Create a single account for your team to access the tournament portal.</p>
+            </div>
+
+            <form id="register-form" class="space-y-8">
+                
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4 border-b border-slate-200 pb-2">1. Account Login</h2>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="email" class="block text-sm font-bold text-brand-dark mb-2">Team Contact Email</label>
+                            <input type="email" id="email" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none transition" placeholder="student@school.edu">
+                        </div>
+                        <div class="relative">
+                            <label for="password" class="block text-sm font-bold text-brand-dark mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="password" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none transition" placeholder="••••••••">
+                                <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 hover:text-brand-dark">
+                                    SHOW
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4 border-b border-slate-200 pb-2">2. Team Roster</h2>
+                    
+                    <div class="mb-6">
+                        <label for="teamName" class="block text-sm font-bold text-brand-dark mb-2">Official Team Name</label>
+                        <input type="text" id="teamName" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none transition" placeholder="e.g. Euler's Minions">
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="block text-sm font-bold text-brand-dark">Team Members (1-6)</label>
+                            <span id="member-counter-text" class="text-xs font-bold text-slate-400">1 / 6 Members</span>
+                        </div>
+                        
+                        <div id="roster-container" class="space-y-3">
+                            <div class="flex gap-3 member-row items-center">
+                                <div class="bg-brand-dark text-white font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm">1</div>
+                                <input type="text" required class="member-name w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Captain's Name">
+                                <input type="number" required min="5" max="25" class="member-age w-24 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Age">
+                                <div class="w-8"></div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="add-member-btn" class="w-full mt-4 py-3 border-2 border-dashed border-brand-green/50 text-brand-green font-bold rounded-xl hover:bg-brand-green/5 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Add Teammate
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="error-message" class="text-red-500 text-sm hidden font-semibold text-center"></div>
+                <div id="success-message" class="text-brand-green text-lg hidden font-bold text-center">Team Registered Successfully! Redirecting to login...</div>
+
+                <button type="submit" class="w-full bg-brand-dark text-brand-gold font-extrabold text-lg py-4 rounded-xl hover:bg-slate-800 transition transform hover:-translate-y-0.5 shadow-lg">
+                    Complete Registration
+                </button>
+            </form>
+            
+            <p class="text-center mt-8 text-slate-600">
+                Already registered? <a href="/login" class="text-brand-green font-bold hover:underline">Log in to the portal</a>
+            </p>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+
+    // --- Dynamic Team Member Logic ---
+    const maxMembers = 6;
+    let currentMembers = 1;
+    
+    const rosterContainer = document.getElementById('roster-container');
+    const addMemberBtn = document.getElementById('add-member-btn');
+    const memberCounterText = document.getElementById('member-counter-text');
+
+    // Function to update the counter text
+    function updateCounter() {
+        memberCounterText.textContent = `${currentMembers} / ${maxMembers} Members`;
+        if (currentMembers >= maxMembers) {
+            addMemberBtn.classList.add('hidden');
+        } else {
+            addMemberBtn.classList.remove('hidden');
+        }
+    }
+
+    // Add a new member row
+    addMemberBtn.addEventListener('click', () => {
+        if (currentMembers < maxMembers) {
+            currentMembers++;
+            
+            const row = document.createElement('div');
+            row.className = 'flex gap-3 member-row items-center animate-fade-in-up';
+            
+            // Notice we add the 'required' attribute here so they can't submit an empty row!
+            row.innerHTML = `
+                <div class="bg-slate-200 text-slate-500 font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm">${currentMembers}</div>
+                <input type="text" required class="member-name w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Teammate Name">
+                <input type="number" required min="5" max="25" class="member-age w-24 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Age">
+                <button type="button" class="remove-member-btn text-slate-400 hover:text-red-500 transition w-8 flex justify-center" title="Remove Teammate">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </button>
+            `;
+            
+            rosterContainer.appendChild(row);
+            updateCounter();
+        }
+    });
+
+    // Remove a member row (Event Delegation)
+    rosterContainer.addEventListener('click', (e) => {
+        // Find the closest remove button if they clicked the SVG icon
+        const removeBtn = (e.target as HTMLElement).closest('.remove-member-btn');
+        
+        if (removeBtn) {
+            removeBtn.closest('.member-row').remove();
+            currentMembers--;
+            
+            // Re-number the circles visually so it always counts 1, 2, 3... perfectly
+            const rows = rosterContainer.querySelectorAll('.member-row');
+            rows.forEach((row, index) => {
+                const numberCircle = row.querySelector('div.rounded-full');
+                if(numberCircle) numberCircle.textContent = (index + 1).toString();
+            });
+
+            updateCounter();
+        }
+    });
+
+    // --- Password Toggle Logic ---
+    const toggleBtn = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+
+    toggleBtn.addEventListener('click', () => {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleBtn.textContent = 'HIDE';
+        } else {
+            passwordInput.type = 'password';
+            toggleBtn.textContent = 'SHOW';
+        }
+    });
+
+    // --- Form Submit Logic ---
+    const form = document.getElementById('register-form');
+    const errorMessage = document.getElementById('error-message');
+    const successMessage = document.getElementById('success-message');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+        errorMessage.classList.add('hidden');
+        successMessage.classList.add('hidden');
+
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+        const password = passwordInput.value;
+        const teamName = (document.getElementById('teamName') as HTMLInputElement).value;
+        
+        // Loop through all currently visible rows to build the roster array
+        const roster = [];
+        const rows = document.querySelectorAll('.member-row');
+        
+        rows.forEach((row) => {
+            const name = (row.querySelector('.member-name') as HTMLInputElement).value;
+            const age = (row.querySelector('.member-age') as HTMLInputElement).value;
+            // Since the fields are "required", we know they have data, but checking just in case
+            if(name && age) {
+                roster.push({ name: name, age: parseInt(age) });
+            }
+        });
+
+        // Send to Supabase
+        const { error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    team_name: teamName,
+                    roster: roster
+                }
+            }
+        });
+
+        if (error) {
+            errorMessage.textContent = error.message;
+            errorMessage.classList.remove('hidden');
+        } else {
+            successMessage.classList.remove('hidden');
+            form.reset();
+            // Automatically redirect them to login after 2 seconds
+            setTimeout(() => { window.location.href = '/login'; }, 2000);
+        }
+    });
+</script>
+
+<style>
+    /* Small animation to make adding rows feel smooth */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.3s ease-out forwards;
+    }
+</style>
