@@ -1,0 +1,62 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const sponsors = [
+    { 
+        name: "Art of Problem Solving", 
+        logo: "/aops-logo.svg", 
+        url: "https://artofproblemsolving.com",
+        desc: "The leader in math resources for high-performing students." 
+    },
+    { 
+        name: "Jane Street", 
+        logo: "/JANESTREET.png", 
+        url: "https://janestreet.com",
+        desc: "A quantitative trading firm with a focus on technology and collaborative problem solving." 
+    },
+    { 
+        name: "AwesomeMath", 
+        logo: "/AWESOMEMATH.png", 
+        url: "https://awesomemath.org",
+        desc: "Exposing students to the creative side of mathematics through summer programs and publications." 
+    }
+];
+---
+
+<Layout title="Our Sponsors">
+    <section class="max-w-7xl mx-auto px-6 py-20">
+        <div class="text-center mb-16">
+            <h1 class="text-5xl font-extrabold text-brand-dark mb-4">Our Partners</h1>
+            <p class="text-xl text-slate-600 max-w-2xl mx-auto">
+                We are proud to be supported by organizations that share our mission of empowering the next generation of STEM leaders.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            {sponsors.map(sponsor => (
+                <a href={sponsor.url} target="_blank" class="group bg-white border border-slate-100 p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center hover:-translate-y-2">
+                    <div class="h-32 flex items-center justify-center mb-6">
+                        <img 
+                            src={sponsor.logo} 
+                            alt={sponsor.name} 
+                            class="max-h-full max-w-[200px] object-contain filter grayscale group-hover:grayscale-0 transition duration-300"
+                        />
+                    </div>
+                    <h3 class="text-2xl font-bold text-brand-dark mb-2">{sponsor.name}</h3>
+                    <p class="text-slate-500 text-sm leading-relaxed">{sponsor.desc}</p>
+                    <span class="mt-4 text-brand-green font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                        Visit Website <span>→</span>
+                    </span>
+                </a>
+            ))}
+        </div>
+
+        <div class="mt-24 bg-brand-dark rounded-3xl p-12 text-center">
+            <h2 class="text-3xl font-bold text-brand-gold mb-4">Interested in Sponsoring?</h2>
+            <p class="text-slate-300 mb-8 max-w-lg mx-auto">Help us provide scholarships, prizes, and world-class mathematical resources to students globally.</p>
+            <a href="mailto:contact@imt-tournament.org" class="bg-brand-gold text-brand-dark px-8 py-3 rounded-full font-bold hover:bg-yellow-400 transition shadow-lg">
+                Get in Touch
+            </a>
+        </div>
+    </section>
+</Layout>
