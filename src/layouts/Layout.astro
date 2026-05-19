@@ -22,6 +22,12 @@ const {
         <meta name="description" content={description} />
         
         <meta name="google-site-verification" content="D9QIVtP_MgreLoXxoRklkcyIU3o-eUYsJkiqSdJh9A0" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={Astro.url} />
+        <meta property="og:title" content={`${title} | Integrated Mathematics Tournament`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content="https://www.integratedmathtournament.org/social-preview.png" />
 		
         <script is:inline>
             if (localStorage.getItem('imt_auth') === 'true') {
