@@ -7,26 +7,34 @@ import Layout from '../layouts/Layout.astro';
 		
 		<div class="text-center max-w-3xl mx-auto mb-20 border-b-2 border-slate-200 pb-12">
 			<h1 class="text-5xl font-extrabold text-brand-dark mb-6 tracking-tight">Tournament Structure</h1>
-			<p class="text-xl text-gray-700 leading-relaxed font-light">IMT will be hosted on <strong>May 30th</strong>. The Integrated Mathematics Tournament will consist of three rounds, consisting of high quality problems written by our team.</p>
+			<p class="text-xl text-gray-700 leading-relaxed font-light mb-4">
+                IMT 2026 is a free, virtual math contest for middle and high school students worldwide. Join us on <strong>Saturday, June 13th, 2026</strong> from 11:30 AM to 4:30 PM EDT fully online via Zoom.
+            </p>
+            <p class="text-lg text-gray-600 font-light mb-4">
+                Registration Deadline: <strong>June 12th, 11:59 PM EDT</strong>.
+            </p>
+            <p class="text-lg text-brand-dark font-semibold bg-brand-green/10 inline-block px-6 py-2 rounded-full border border-brand-green/20">
+                Proudly hosted on the <a href="https://www.solvefire.net" target="_blank" class="text-brand-green hover:underline">Solvefire Platform</a>
+            </p>
 		</div>
 
 		<div class="space-y-16">
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 flex flex-col md:flex-row hover:border-brand-gold hover:shadow-card-hover transition duration-300">
 				<div class="bg-brand-dark md:w-2/5 p-12 text-brand-light flex flex-col justify-center border-r-8 border-brand-green">
-					<span class="uppercase tracking-widest text-xs font-bold text-gray-300 mb-3">The First Round</span>
+					<span class="uppercase tracking-widest text-xs font-bold text-gray-300 mb-3">Pre-Tournament Event</span>
 					<h2 class="text-4xl font-extrabold mb-6 tracking-tight text-white">Integrated Round</h2>
 					<ul class="space-y-4 font-semibold text-lg">
-						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> 90 Minutes</li>
-						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> 4 Sections</li>
+						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> June 8th - June 12th</li>
 						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> Real-World Data Analysis</li>
+						<li class="flex items-center"><svg class="w-6 h-6 mr-3 text-brand-gold" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg> Optional (But Prized!)</li>
 					</ul>
 				</div>
 				<div class="p-12 md:w-3/5 flex flex-col justify-center bg-white group-hover:bg-brand-light transition duration-300">
 					<p class="text-gray-700 text-xl leading-relaxed mb-6 font-light">
-						The first round of IMT is the <strong>Integrated Round</strong>, a spinoff of a traditional power round. The integrated round is a team-based 90 minute long round which focuses on applied mathematics. Teams will be required to utilize prior competition math knowledge in various fields to analyze real-world data sets provided by institutions. 
+						The first round of IMT is the <strong>Integrated Round</strong>, a spinoff of a traditional power round focusing on applied mathematics and modeling. Teams of up to 5 will have up to 5 days to collaborate and submit their unique solutions.
 					</p>
 					<p class="text-gray-700 text-xl leading-relaxed font-light">
-						Problems will be computational or proof based in nature. Students will be required to analyze data and provide detailed reasoning on various topics related to applied mathematics.
+						Problems will require you to analyze real-world data sets provided by institutions and provide detailed, proof-based reasoning. While optional, special prizes are awarded to top participants of this round!
 					</p>
 				</div>
 			</div>
@@ -39,10 +47,10 @@ import Layout from '../layouts/Layout.astro';
 						<span>•</span>
 						<span>10 Questions</span>
 						<span>•</span>
-						<span>Full Team</span>
+						<span>Up to 5 Members</span>
 					</div>
 					<p class="text-gray-700 leading-relaxed text-lg font-light">
-						The second round of IMT is the Team Round. Teams of up to 4 individuals will have 40 minutes to work together, and collaborate to solve 10 competition math problems of increasing difficulty.
+						The second round of IMT is the Team Round. You can compete solo or in teams of up to 5 individuals. You will have 40 minutes to work together and collaborate to solve 10 competition math problems of increasing difficulty.
 					</p>
 				</div>
 
@@ -59,15 +67,29 @@ import Layout from '../layouts/Layout.astro';
 						Each team member selects 2 out of 4 distinct subject areas: <strong class="text-brand-dark group-hover:text-brand-green transition">Algebra, Geometry, Number Theory, or Combinatorics</strong>.
 					</p>
 					<p class="text-gray-700 leading-relaxed text-lg font-light">
-						Competitors then take two 45-minute, 10-question subject tests of increasing difficulty. 
+						Competitors then take two 45-minute, 10-question subject tests of increasing difficulty based on their chosen subjects.
                     </p>
 				</div>
 			</div>
 
+            <div class="bg-white rounded-3xl shadow-card border border-slate-100 p-10 hover:border-brand-gold hover:shadow-card-hover transition duration-300 group hover:scale-[1.01]">
+                <h3 class="text-3xl font-extrabold text-brand-dark mb-6 tracking-tight border-b border-gray-200 pb-4 group-hover:text-brand-gold transition">Live Events: Countdown & Integration Bee</h3>
+                <div class="flex items-center space-x-6 mb-8 text-brand-gold_dark font-semibold text-lg">
+                    <span>Fast-Paced</span>
+                    <span>•</span>
+                    <span>Live on Zoom</span>
+                    <span>•</span>
+                    <span>Open to All</span>
+                </div>
+                <p class="text-gray-700 leading-relaxed text-lg font-light">
+                    To cap off the tournament day, we host a thrilling, bracket-style <strong>Countdown Round</strong> for our top individual scorers, as well as an exciting <strong>Integration Bee</strong> that is open to all attendees to participate in and spectate!
+                </p>
+            </div>
+
             <div class="mt-24 pt-16 border-t-2 border-slate-100">
                 <div class="text-center max-w-3xl mx-auto mb-16">
                     <h2 class="text-4xl font-extrabold text-brand-dark mb-6 tracking-tight">Scoring Guidelines</h2>
-                    <p class="text-xl text-gray-700 leading-relaxed font-light">Below is a detailed breakdown of team scores are calculated.</p>
+                    <p class="text-xl text-gray-700 leading-relaxed font-light">Below is a detailed breakdown of how team scores are calculated.</p>
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-10 mb-10">
@@ -125,9 +147,12 @@ import Layout from '../layouts/Layout.astro';
                     <div class="w-16 h-16 bg-brand-green/10 text-brand-green rounded-full flex items-center justify-center mx-auto mb-6">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    <h3 class="text-3xl font-bold text-brand-dark mb-4">$400+ in Total Prizes</h3>
-                    <p class="text-xl text-gray-700 font-light max-w-2xl mx-auto">
-                        The tournament will be distributing over $400 worth of awards and prizes to our top-scoring individuals and overall highest-scoring teams.
+                    <h3 class="text-3xl font-bold text-brand-dark mb-4">Over $1,000+ in Total Prizes</h3>
+                    <p class="text-xl text-gray-700 font-light max-w-2xl mx-auto mb-4">
+                        We will be distributing over $1,000 worth of awards, certificates, and prizes to our top-scoring individuals, highest-scoring teams, and Integrated Round winners.
+                    </p>
+                    <p class="text-lg text-gray-500 font-medium">
+                        Sponsored by Jane Street, Art of Problem Solving, and AwesomeMath.
                     </p>
                 </div>
 
