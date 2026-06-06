@@ -1,0 +1,66 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Magic Link Test">
+    <div class="min-h-screen bg-brand-light flex items-center justify-center py-20 px-6">
+        <div class="bg-white max-w-lg w-full p-10 rounded-3xl shadow-xl border border-slate-100 text-center">
+            
+            <h1 class="text-3xl font-extrabold text-brand-dark mb-4">Test Magic Link</h1>
+            <p class="text-slate-600 mb-8">Enter your email below. Supabase will send you a secure, passwordless login link.</p>
+
+            <form id="magic-form" class="space-y-6">
+                <div>
+                    <input type="email" id="email" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none text-center" placeholder="your-email@example.com">
+                </div>
+                
+                <button type="submit" id="submit-btn" class="w-full bg-brand-dark text-brand-gold font-bold py-3 rounded-xl hover:bg-slate-800 transition">
+                    Send Magic Link
+                </button>
+            </form>
+
+            <div id="status-message" class="hidden mt-6 p-4 rounded-lg font-bold"></div>
+
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+
+    const form = document.getElementById('magic-form');
+    const emailInput = document.getElementById('email') as HTMLInputElement;
+    const submitBtn = document.getElementById('submit-btn');
+    const statusMsg = document.getElementById('status-message');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Visual feedback
+        submitBtn.textContent = "Sending...";
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        statusMsg.classList.add('hidden');
+
+        // The single line of code that powers Magic Links!
+        const { error } = await supabase.auth.signInWithOtp({
+            email: emailInput.value,
+            options: {
+                // This tells Supabase where to send them after clicking the link
+                emailRedirectTo: window.location.origin + '/portal' 
+            }
+        });
+
+        submitBtn.textContent = "Send Magic Link";
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-500', 'bg-green-50', 'text-brand-green');
+
+        if (error) {
+            statusMsg.textContent = "Error: " + error.message;
+            statusMsg.classList.add('bg-red-50', 'text-red-500');
+        } else {
+            statusMsg.textContent = "Success! Check your email inbox for the link.";
+            statusMsg.classList.add('bg-green-50', 'text-brand-green');
+            form.reset();
+        }
+    });
+</script>
