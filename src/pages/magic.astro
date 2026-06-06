@@ -55,8 +55,8 @@ import Layout from '../layouts/Layout.astro';
         statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-500', 'bg-green-50', 'text-brand-green');
 
         if (error) {
-            // Check if it's our custom whitelist error, or a generic error
-            if (error.message.includes("Email not authorized")) {
+            // Intercept Supabase's generic database error caused by our whitelist trigger
+            if (error.message.includes("Database error") || error.message.includes("Email not authorized")) {
                 statusMsg.textContent = "This email is not approved yet. Please wait for your application to be processed!";
             } else {
                 statusMsg.textContent = "Error: " + error.message;
