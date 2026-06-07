@@ -13,14 +13,17 @@ const sections = [
 ---
 
 <Layout title="Tournament Portal">
-    <!-- KaTeX CDN for LaTeX Rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
     <script is:inline src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script is:inline src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 
-    <div class="max-w-[1500px] mx-auto px-4 sm:px-6 py-8 hidden" id="auth-wrapper">
+    <div id="global-loader" class="flex flex-col items-center justify-center min-h-[60vh]">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-brand-green mb-4"></div>
+        <p class="text-slate-500 font-bold animate-pulse text-lg">Loading portal...</p>
+    </div>
+
+    <div class="max-w-[1500px] mx-auto px-4 sm:px-6 py-8 hidden animate-fade-in-up" id="auth-wrapper">
         
-        <!-- Global Portal Header -->
         <div id="portal-header" class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b-2 border-slate-200 pb-6 gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-brand-dark" id="header-title">Tournament Portal</h1>
@@ -28,9 +31,9 @@ const sections = [
             </div>
             
             <div id="nav-actions" class="hidden flex items-center gap-4">
-                <button id="open-pdf-btn" class="flex items-center gap-2 bg-brand-dark text-white font-bold px-5 py-2.5 rounded-lg shadow-md hover:bg-slate-800 transition">
+                <button id="open-pdf-btn" class="flex items-center gap-2 bg-brand-dark text-white font-bold px-5 py-2.5 rounded-lg shadow-md hover:bg-slate-800 transition disabled:opacity-50">
                     <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                    View Packet
+                    <span id="pdf-btn-text">Loading Packet...</span>
                 </button>
                 <button id="back-to-dash-btn" class="flex items-center gap-2 text-slate-500 font-bold hover:text-brand-dark transition bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg">
                     Exit Workspace
@@ -38,7 +41,6 @@ const sections = [
             </div>
         </div>
 
-        <!-- SCREEN 1: Home Dashboard -->
         <div id="portal-dashboard" class="hidden">
             <h2 class="text-2xl font-bold text-slate-800 mb-6">Your Events</h2>
             
@@ -60,7 +62,6 @@ const sections = [
                     <button id="open-workspace-btn" class="w-full bg-brand-dark text-brand-gold font-bold px-8 py-4 rounded-xl hover:bg-slate-800 transition shadow-lg whitespace-nowrap">
                         Enter Workspace
                     </button>
-                    <!-- This button shows up after submission -->
                     <button id="view-grading-btn" class="hidden w-full bg-slate-50 border border-slate-200 text-slate-400 font-bold px-8 py-4 rounded-xl cursor-not-allowed whitespace-nowrap" disabled>
                         <span class="flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -71,10 +72,8 @@ const sections = [
             </div>
         </div>
 
-        <!-- SCREEN 2: Integrated Workspace -->
         <div id="int-workspace" class="hidden flex flex-col min-h-[700px]">
             
-            <!-- Navigation & Submit Bar -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-2 w-full md:w-auto">
                     <button id="prev-prob-btn" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed">
@@ -102,7 +101,6 @@ const sections = [
                 </button>
             </div>
 
-            <!-- Workspace Area -->
             <form id="int-form" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 flex-grow flex flex-col">
                 <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
                     <div>
@@ -164,6 +162,11 @@ const sections = [
                                             </label>
                                             
                                             <div id={`file-display-${probNum}`} class="mt-8 w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-100 p-4 rounded-xl text-left hidden max-h-48 overflow-y-auto shadow-inner"></div>
+                                    
+                                            <!-- NEW WARNING MESSAGE -->
+                                            <p class="mt-6 text-xs text-red-500 font-bold bg-red-50 border border-red-100 p-3 rounded-lg text-center">
+                                                ⚠️ Notice: Browsers automatically clear attached files if you reload/refresh the page. Please attach files right before submittting.
+                                            </p>
                                         </div>
                                     </div>
 
@@ -175,14 +178,13 @@ const sections = [
             </form>
         </div>
 
-        <!-- PDF Modal -->
         <div id="pdf-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
             <div class="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-fade-in-up">
                 <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
                     <h3 class="font-extrabold text-brand-dark text-lg">Integrated Packet (Read-Only)</h3>
                     <button id="close-pdf-btn" class="text-slate-500 hover:text-red-500 bg-white border border-slate-200 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">Close Viewer</button>
                 </div>
-                <iframe src="/pdfs/IMT_Power.pdf" class="flex-grow w-full bg-slate-100"></iframe>
+                <iframe id="secure-pdf-frame" src="" class="flex-grow w-full bg-slate-100"></iframe>
             </div>
         </div>
 
@@ -190,9 +192,11 @@ const sections = [
 </Layout>
 
 <script>
+
     import { supabase } from '../lib/supabase.js';
 
     // UI Elements
+    const globalLoader = document.getElementById('global-loader');
     const authWrapper = document.getElementById('auth-wrapper');
     const headerTitle = document.getElementById('header-title');
     const navActions = document.getElementById('nav-actions');
@@ -211,6 +215,7 @@ const sections = [
     const backToDashBtn = document.getElementById('back-to-dash-btn');
     const submitIntBtn = document.getElementById('submit-int-btn');
     const openPdfBtn = document.getElementById('open-pdf-btn');
+    const pdfBtnText = document.getElementById('pdf-btn-text');
     const closePdfBtn = document.getElementById('close-pdf-btn');
     
     // Navigation Controls
@@ -219,6 +224,26 @@ const sections = [
     const nextProbBtn = document.getElementById('next-prob-btn') as HTMLButtonElement;
 
     const saveTimers = {};
+
+    // --- SECURE PDF LOADER ---
+    async function loadSecurePDF() {
+        openPdfBtn.disabled = true;
+        pdfBtnText.textContent = "Loading Packet...";
+
+        const { data, error } = await supabase
+            .storage
+            .from('secure_materials')
+            .createSignedUrl('IMT_Power.pdf', 7200);
+
+        if (error) {
+            console.error("Error loading PDF:", error.message);
+            pdfBtnText.textContent = "Error Loading Packet";
+        } else if (data) {
+            document.getElementById('secure-pdf-frame').src = data.signedUrl;
+            pdfBtnText.textContent = "View Packet";
+            openPdfBtn.disabled = false;
+        }
+    }
 
     // --- PDF MODAL LOGIC ---
     openPdfBtn.addEventListener('click', () => pdfModal.classList.remove('hidden'));
@@ -439,14 +464,14 @@ const sections = [
         headerTitle.textContent = "Integrated Workspace";
         updateProblemView();
         loadDraft();
+        loadSecurePDF(); // Only load the PDF URL if they actually enter the workspace
     }
 
     // --- INITIALIZATION (WITH DATABASE SECURITY CHECK) ---
     async function initPortal() {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { window.location.href = '/register'; return; }
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) { window.location.href = '/register'; return; }
 
-        authWrapper.classList.remove('hidden');
         teamNameDisplay.textContent = `Team: ${user.user_metadata?.team_name || user.email}`;
 
         const { data: dbSubmission } = await supabase
@@ -465,6 +490,10 @@ const sections = [
         const hasDraft = Object.keys(JSON.parse(localStorage.getItem('imt_int_draft') || '{}')).length > 0;
 
         showDashboard(isIntDone, hasDraft);
+
+        // Hide loading screen, show portal wrapper
+        if (globalLoader) globalLoader.classList.add('hidden');
+        if (authWrapper) authWrapper.classList.remove('hidden');
     }
 
     openWorkspaceBtn.addEventListener('click', showWorkspace);
@@ -492,7 +521,6 @@ const sections = [
             const formData = new FormData(form);
             const textAnswers = {}; const filePaths = {};
 
-            // NEW: Clean folder name based on the user's email
             const safeEmailFolder = (user.email || "Unknown_User").replace(/[^a-zA-Z0-9]/g, '_');
 
             for (let i = 1; i <= 12; i++) {
@@ -512,7 +540,6 @@ const sections = [
                             if (fileValue instanceof File && fileValue.size > 0) {
                                 const ext = fileValue.name.split('.').pop();
                                 
-                                // NEW: Upload directly to the email-named folder
                                 const filePath = `${safeEmailFolder}/Problem_${i}_File_${j + 1}_${Date.now()}.${ext}`;
                                 
                                 const { data, error } = await supabase.storage.from('pdf_uploads').upload(filePath, fileValue);

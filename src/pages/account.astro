@@ -3,7 +3,12 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="My Account">
-    <div class="max-w-3xl mx-auto px-6 py-12 hidden" id="account-wrapper">
+    <div id="global-loader" class="flex flex-col items-center justify-center min-h-[60vh]">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-brand-green mb-4"></div>
+        <p class="text-slate-500 font-bold animate-pulse text-lg">Loading team data...</p>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-6 py-12 hidden animate-fade-in-up" id="account-wrapper">
         
         <div class="mb-10 border-b-2 border-slate-200 pb-6 flex justify-between items-end">
             <div>
@@ -50,6 +55,7 @@ import Layout from '../layouts/Layout.astro';
 <script>
     import { supabase } from '../lib/supabase.js';
 
+    const globalLoader = document.getElementById('global-loader');
     const accountWrapper = document.getElementById('account-wrapper');
     const displayEmail = document.getElementById('display-email');
     const teamNameInput = document.getElementById('teamName') as HTMLInputElement;
@@ -66,11 +72,14 @@ import Layout from '../layouts/Layout.astro';
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-            window.location.href = '/login';
+            window.location.href = '/register';
             return;
         }
 
-        accountWrapper.classList.remove('hidden');
+        // Hide Loader, Show Content
+        if (globalLoader) globalLoader.classList.add('hidden');
+        if (accountWrapper) accountWrapper.classList.remove('hidden');
+
         displayEmail.textContent = user.email;
         
         // Populate existing metadata
@@ -167,6 +176,14 @@ import Layout from '../layouts/Layout.astro';
         }
         saveBtn.textContent = 'Save Changes';
     });
+
+    // Add animation styles for smooth loading
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    `;
+    document.head.appendChild(style);
 
     // Kick off
     loadData();
