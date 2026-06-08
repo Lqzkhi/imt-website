@@ -1,14 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// Definitions for HTML generation based on IMT_Power.pdf
+// Definitions for HTML generation based on new Quantum Computing IMT_Power.pdf
 const sections = [
-    { name: "Part I: A Tiny Brain With Four Neurons", problems: [1, 2, 3] },
-    { name: "Part II: Memories as Attractors", problems: [4, 5] },
-    { name: "Part III: Probability, Temperature, and Boltzmann Machines", problems: [6, 7] },
-    { name: "Part IV: Spiking Neurons and Thresholds", problems: [8, 9] },
-    { name: "Part V: Learning From Data", problems: [10, 11] },
-    { name: "Optional Challenge: Memory Capacity", problems: [12] }
+    { name: "Part I: Classical Computing", problems: [1, 2, 3, 4] },
+    { name: "Part II: Quantum Computing", problems: [5, 6, 7, 8, 9] },
+    { name: "Part III: Deutsch's Algorithm", problems: [10, 11, 12, 13, 14, 15, 16] },
+    { name: "Part IV: The Secret String", problems: [17, 18, 19, 20] }
 ];
 ---
 
@@ -30,10 +28,19 @@ const sections = [
                 <p class="text-brand-green font-bold text-sm mt-1" id="team-name-display">Loading Team...</p>
             </div>
             
-            <div id="nav-actions" class="hidden flex items-center gap-4">
-                <button id="open-pdf-btn" class="flex items-center gap-2 bg-brand-dark text-white font-bold px-5 py-2.5 rounded-lg shadow-md hover:bg-slate-800 transition disabled:opacity-50">
+            <div id="nav-actions" class="hidden flex flex-wrap items-center gap-3">
+                <div id="timer-display" class="hidden bg-red-50 text-red-600 font-mono font-bold px-4 py-2.5 rounded-lg border border-red-200 shadow-sm mr-2 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span id="countdown-text">--:--:--</span>
+                </div>
+
+                <button id="open-packet-btn" class="flex items-center gap-2 bg-brand-dark text-white font-bold px-4 py-2.5 rounded-lg shadow-md hover:bg-slate-800 transition disabled:opacity-50">
                     <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                    <span id="pdf-btn-text">Loading Packet...</span>
+                    <span>Loading Packet...</span>
+                </button>
+                <button id="open-glossary-btn" class="flex items-center gap-2 bg-brand-dark text-white font-bold px-4 py-2.5 rounded-lg shadow-md hover:bg-slate-800 transition disabled:opacity-50">
+                    <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Loading Glossary...</span>
                 </button>
                 <button id="back-to-dash-btn" class="flex items-center gap-2 text-slate-500 font-bold hover:text-brand-dark transition bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg">
                     Exit Workspace
@@ -54,7 +61,7 @@ const sections = [
                         An asynchronous applied modeling and proof-based round. You may open the workspace, research, and return as many times as you like.
                     </p>
                     <p class="text-brand-dark font-semibold text-sm bg-brand-gold/20 inline-block px-3 py-1 rounded-md">
-                        Window: June 8th — June 12th at 11:59 PM EDT
+                        Deadline: 10:00 PM EST
                     </p>
                 </div>
                 
@@ -105,7 +112,6 @@ const sections = [
                 <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
                     <div>
                         <h3 class="text-2xl font-extrabold text-brand-dark" id="current-problem-title">Problem 1</h3>
-                        <span class="text-xs font-bold text-slate-500 bg-brand-gold/20 px-3 py-1 rounded-full mt-2 inline-block">Due June 12</span>
                     </div>
                 </div>
 
@@ -163,9 +169,8 @@ const sections = [
                                             
                                             <div id={`file-display-${probNum}`} class="mt-8 w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-100 p-4 rounded-xl text-left hidden max-h-48 overflow-y-auto shadow-inner"></div>
                                     
-                                            <!-- NEW WARNING MESSAGE -->
                                             <p class="mt-6 text-xs text-red-500 font-bold bg-red-50 border border-red-100 p-3 rounded-lg text-center">
-                                                ⚠️ Notice: Browsers automatically clear attached files if you reload/refresh the page. Please attach files right before submittting.
+                                                ⚠️ Notice: Browsers automatically clear attached files if you reload/refresh the page. Please attach files right before submitting.
                                             </p>
                                         </div>
                                     </div>
@@ -178,13 +183,23 @@ const sections = [
             </form>
         </div>
 
-        <div id="pdf-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
+        <div id="packet-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
             <div class="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-fade-in-up">
                 <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
                     <h3 class="font-extrabold text-brand-dark text-lg">Integrated Packet (Read-Only)</h3>
-                    <button id="close-pdf-btn" class="text-slate-500 hover:text-red-500 bg-white border border-slate-200 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">Close Viewer</button>
+                    <button id="close-packet-btn" class="text-slate-500 hover:text-red-500 bg-white border border-slate-200 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">Close Viewer</button>
                 </div>
-                <iframe id="secure-pdf-frame" src="" class="flex-grow w-full bg-slate-100"></iframe>
+                <iframe id="packet-frame" src="" class="flex-grow w-full bg-slate-100"></iframe>
+            </div>
+        </div>
+
+        <div id="glossary-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
+            <div class="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-fade-in-up">
+                <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
+                    <h3 class="font-extrabold text-brand-dark text-lg">Glossary (Read-Only)</h3>
+                    <button id="close-glossary-btn" class="text-slate-500 hover:text-red-500 bg-white border border-slate-200 px-4 py-1.5 rounded-lg text-sm font-bold transition shadow-sm">Close Viewer</button>
+                </div>
+                <iframe id="glossary-frame" src="" class="flex-grow w-full bg-slate-100"></iframe>
             </div>
         </div>
 
@@ -192,8 +207,11 @@ const sections = [
 </Layout>
 
 <script>
-
     import { supabase } from '../lib/supabase.js';
+
+    // --- NEW: DEADLINE CONSTANT (Set to June 12, 2026, 10:00 PM EST) ---
+    // EST is UTC-5. Change this string to easily update the deadline.
+    const DEADLINE_DATE = new Date("2026-06-12T22:00:00-05:00").getTime(); 
 
     // UI Elements
     const globalLoader = document.getElementById('global-loader');
@@ -203,10 +221,16 @@ const sections = [
     const teamNameDisplay = document.getElementById('team-name-display');
     const currentProblemTitle = document.getElementById('current-problem-title');
     
+    // Timer UI
+    const timerDisplay = document.getElementById('timer-display');
+    const countdownText = document.getElementById('countdown-text');
+    let timerInterval;
+
     // Screens & Modals
     const dashboard = document.getElementById('portal-dashboard');
     const workspace = document.getElementById('int-workspace');
-    const pdfModal = document.getElementById('pdf-modal');
+    const packetModal = document.getElementById('packet-modal');
+    const glossaryModal = document.getElementById('glossary-modal');
     
     // Buttons & Inputs
     const statusBadge = document.getElementById('int-status-badge');
@@ -214,9 +238,11 @@ const sections = [
     const viewGradingBtn = document.getElementById('view-grading-btn');
     const backToDashBtn = document.getElementById('back-to-dash-btn');
     const submitIntBtn = document.getElementById('submit-int-btn');
-    const openPdfBtn = document.getElementById('open-pdf-btn');
-    const pdfBtnText = document.getElementById('pdf-btn-text');
-    const closePdfBtn = document.getElementById('close-pdf-btn');
+    
+    const openPacketBtn = document.getElementById('open-packet-btn');
+    const closePacketBtn = document.getElementById('close-packet-btn');
+    const openGlossaryBtn = document.getElementById('open-glossary-btn');
+    const closeGlossaryBtn = document.getElementById('close-glossary-btn');
     
     // Navigation Controls
     const problemSelector = document.getElementById('problem-selector') as HTMLSelectElement;
@@ -224,30 +250,88 @@ const sections = [
     const nextProbBtn = document.getElementById('next-prob-btn') as HTMLButtonElement;
 
     const saveTimers = {};
+    let isUploading = false;
 
     // --- SECURE PDF LOADER ---
-    async function loadSecurePDF() {
-        openPdfBtn.disabled = true;
-        pdfBtnText.textContent = "Loading Packet...";
+    async function loadSecurePDF(fileName, frameId, btnId, defaultText) {
+        const btn = document.getElementById(btnId);
+        const btnText = btn.querySelector('span');
+        
+        btn.disabled = true;
+        if(btnText) btnText.textContent = "Loading...";
 
         const { data, error } = await supabase
             .storage
             .from('secure_materials')
-            .createSignedUrl('IMT_Power.pdf', 7200);
+            .createSignedUrl(fileName, 7200);
 
         if (error) {
-            console.error("Error loading PDF:", error.message);
-            pdfBtnText.textContent = "Error Loading Packet";
+            console.error(`Error loading ${fileName}:`, error.message);
+            if(btnText) btnText.textContent = "Error";
         } else if (data) {
-            document.getElementById('secure-pdf-frame').src = data.signedUrl;
-            pdfBtnText.textContent = "View Packet";
-            openPdfBtn.disabled = false;
+            document.getElementById(frameId).src = data.signedUrl;
+            if(btnText) btnText.textContent = defaultText;
+            btn.disabled = false;
         }
     }
 
-    // --- PDF MODAL LOGIC ---
-    openPdfBtn.addEventListener('click', () => pdfModal.classList.remove('hidden'));
-    closePdfBtn.addEventListener('click', () => pdfModal.classList.add('hidden'));
+    // --- MODAL LOGIC ---
+    openPacketBtn.addEventListener('click', () => packetModal.classList.remove('hidden'));
+    closePacketBtn.addEventListener('click', () => packetModal.classList.add('hidden'));
+
+    openGlossaryBtn.addEventListener('click', () => glossaryModal.classList.remove('hidden'));
+    closeGlossaryBtn.addEventListener('click', () => glossaryModal.classList.add('hidden'));
+
+    // --- TIMER LOGIC ---
+    // --- TIMER LOGIC ---
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        
+        timerDisplay.classList.remove('hidden');
+
+        timerInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = DEADLINE_DATE - now;
+
+            if (distance <= 0) {
+                clearInterval(timerInterval);
+                countdownText.textContent = "00:00:00 - TIME UP";
+                timerDisplay.classList.replace('bg-red-50', 'bg-red-500');
+                timerDisplay.classList.replace('text-red-600', 'text-white');
+                timerDisplay.classList.add('animate-pulse');
+                
+                handleTimeUp();
+            } else {
+                // Calculate Days, Hours, Minutes, Seconds
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                // Display including Days
+                countdownText.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s remaining`;
+            }
+        }, 1000);
+    }
+
+    async function handleTimeUp() {
+        const hasDraft = Object.keys(JSON.parse(localStorage.getItem('imt_int_draft') || '{}')).length > 0;
+        const isIntDone = localStorage.getItem('imt_int_done') === 'true';
+
+        // Only force submit if they haven't submitted yet, AND they actually have progress saved.
+        if (!isIntDone && hasDraft) {
+            alert("The 10:00 PM EST deadline has passed! The portal is auto-submitting your saved progress to the server.");
+            await processIntSubmission(true); // Pass 'true' to skip confirmation dialog
+        } else if (!isIntDone && !hasDraft) {
+            // If they never typed anything, just lock them out without submitting blank data
+            showDashboard(false, false);
+            openWorkspaceBtn.textContent = "Deadline Passed";
+            openWorkspaceBtn.disabled = true;
+            openWorkspaceBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            alert("The 10:00 PM EST deadline has passed. The workspace is now locked.");
+        }
+    }
+
 
     // --- NAVIGATION LOGIC ---
     function updateProblemView() {
@@ -427,6 +511,14 @@ const sections = [
         }
     });
 
+    // --- BROWSER EXIT PROTECTION DURING UPLOADS ---
+    window.addEventListener('beforeunload', (e) => {
+        if (isUploading) {
+            e.preventDefault();
+            e.returnValue = 'Your files are currently uploading. Are you sure you want to leave?';
+        }
+    });
+
     // --- ROUTING LOGIC ---
     function showDashboard(isDone, hasDraft) {
         workspace.classList.add('hidden');
@@ -445,7 +537,15 @@ const sections = [
             openWorkspaceBtn.classList.remove('hidden');
             viewGradingBtn.classList.add('hidden');
 
-            if (hasDraft) {
+            const now = new Date().getTime();
+            if (now >= DEADLINE_DATE) {
+                statusBadge.textContent = "Closed";
+                statusBadge.classList.replace('bg-slate-100', 'bg-red-100');
+                statusBadge.classList.replace('text-slate-600', 'text-red-700');
+                openWorkspaceBtn.textContent = "Deadline Passed";
+                openWorkspaceBtn.disabled = true;
+                openWorkspaceBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (hasDraft) {
                 statusBadge.textContent = "In Progress";
                 statusBadge.classList.replace('bg-slate-100', 'bg-blue-100');
                 statusBadge.classList.replace('text-slate-600', 'text-blue-700');
@@ -464,7 +564,10 @@ const sections = [
         headerTitle.textContent = "Integrated Workspace";
         updateProblemView();
         loadDraft();
-        loadSecurePDF(); // Only load the PDF URL if they actually enter the workspace
+        startTimer();
+        
+        loadSecurePDF('IMT_Power.pdf', 'packet-frame', 'open-packet-btn', 'View Packet');
+        loadSecurePDF('IMT_Glossary.pdf', 'glossary-frame', 'open-glossary-btn', 'View Glossary');
     }
 
     // --- INITIALIZATION (WITH DATABASE SECURITY CHECK) ---
@@ -489,9 +592,14 @@ const sections = [
         const isIntDone = dbHasSubmitted || localStorage.getItem('imt_int_done') === 'true';
         const hasDraft = Object.keys(JSON.parse(localStorage.getItem('imt_int_draft') || '{}')).length > 0;
 
-        showDashboard(isIntDone, hasDraft);
+        // Check if deadline passed BEFORE they even enter the workspace
+        const now = new Date().getTime();
+        if (now >= DEADLINE_DATE && !isIntDone && hasDraft) {
+            await handleTimeUp(); // Instantly autosubmit their saved work!
+        } else {
+            showDashboard(isIntDone, hasDraft);
+        }
 
-        // Hide loading screen, show portal wrapper
         if (globalLoader) globalLoader.classList.add('hidden');
         if (authWrapper) authWrapper.classList.remove('hidden');
     }
@@ -499,21 +607,26 @@ const sections = [
     openWorkspaceBtn.addEventListener('click', showWorkspace);
 
     backToDashBtn.addEventListener('click', () => {
+        if(timerInterval) clearInterval(timerInterval); // Pause timer if they leave workspace
+        timerDisplay.classList.add('hidden');
+        
         const hasDraft = Object.keys(JSON.parse(localStorage.getItem('imt_int_draft') || '{}')).length > 0;
         showDashboard(false, hasDraft);
     });
 
+    // Modified to accept a boolean flag to skip the confirmation popup during auto-submit
     submitIntBtn.addEventListener('click', async () => {
         if(confirm("Submit Integrated Round? You cannot undo this. Ensure all solutions are attached before clicking OK.")) {
-            await processIntSubmission();
+            await processIntSubmission(false);
         }
     });
 
-    async function processIntSubmission() {
+    async function processIntSubmission(isAutoSubmit = false) {
         const originalText = submitIntBtn.innerHTML;
-        submitIntBtn.innerHTML = "Uploading... Please wait.";
+        submitIntBtn.innerHTML = isAutoSubmit ? "Auto-submitting..." : "Uploading... Please wait.";
         submitIntBtn.classList.add('opacity-50', 'cursor-not-allowed');
         submitIntBtn.disabled = true;
+        isUploading = true; 
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -523,7 +636,8 @@ const sections = [
 
             const safeEmailFolder = (user.email || "Unknown_User").replace(/[^a-zA-Z0-9]/g, '_');
 
-            for (let i = 1; i <= 12; i++) {
+            // Capturing all 20 parts
+            for (let i = 1; i <= 20; i++) {
                 const mode = formData.get(`mode_p${i}`);
                 
                 if (mode === 'latex') {
@@ -562,10 +676,17 @@ const sections = [
             localStorage.setItem('imt_int_done', 'true');
             localStorage.removeItem('imt_int_draft'); 
             
+            isUploading = false; 
+            if(timerInterval) clearInterval(timerInterval);
+            timerDisplay.classList.add('hidden');
+            
             showDashboard(true, false);
-            alert("Success! Your team's Integrated Round has been submitted. You can now safely close this window.");
+            if (!isAutoSubmit) {
+                alert("Success! Your team's Integrated Round has been submitted. You can now safely close this window.");
+            }
 
         } catch (err) {
+            isUploading = false; 
             alert("Error: " + err.message);
             submitIntBtn.innerHTML = originalText;
             submitIntBtn.classList.remove('opacity-50', 'cursor-not-allowed');
