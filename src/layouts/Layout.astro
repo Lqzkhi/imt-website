@@ -2,193 +2,258 @@
 import Analytics from '@vercel/analytics/astro';
 
 export interface Props {
-	title: string;
-	description?: string;
+  title: string;
+  description?: string;
 }
 
-const { 
-    title,
-    description = "The Integrated Mathematics Tournament (IMT) is an annual online math competition for middle and high school students focusing on applied mathematics and problem-solving."
+const {
+  title,
+  description = "Integrated Math is a student-led organization dedicated to introducing students to higher mathematics, bridging the gap between theory and application.",
 } = Astro.props;
 ---
 
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-    	<link rel="icon" type="image/png" href="/favicon.png" />
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>{title} | Integrated Mathematics Tournament</title>
-		
-        <meta name="description" content={description} />
-        
-        <meta name="google-site-verification" content="D9QIVtP_MgreLoXxoRklkcyIU3o-eUYsJkiqSdJh9A0" />
+  <head>
+    <link rel="icon" type="image/png" href="/bridge-icon-offwhite.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Integrated Math</title>
 
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={Astro.url} />
-        <meta property="og:title" content={`${title} | Integrated Mathematics Tournament`} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content="https://www.integratedmathtournament.org/social-preview.png" />
-		
-        <script is:inline>
-            if (localStorage.getItem('imt_auth') === 'true') {
-                document.documentElement.classList.add('is-authenticated');
-            }
-        </script>
+    <meta name="description"              content={description} />
+    <meta name="google-site-verification" content="D9QIVtP_MgreLoXxoRklkcyIU3o-eUYsJkiqSdJh9A0" />
+    <meta property="og:type"              content="website" />
+    <meta property="og:url"              content={Astro.url} />
+    <meta property="og:title"            content={`${title} | Integrated Math`} />
+    <meta property="og:description"      content={description} />
+    <meta property="og:image"            content="https://www.integratedmath.org/social-preview.png" />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-		<script is:inline src="https://cdn.tailwindcss.com"></script>
-		<script is:inline>
-			tailwind.config = {
-				theme: {
-					extend: {
-						colors: {
-							brand: {
-								dark: '#2B2D42',
-								gold: '#fcd34d',
-								light: '#F6F0ED',
-								green: '#4A7C59',
-							}
-						},
-						fontFamily: {
-							inter: ['Inter', 'sans-serif'],
-						}
-					}
-				}
-			}
-		</script>
-		<style is:global>
-			html { font-family: 'Inter', sans-serif; }
-			body { @apply flex flex-col min-h-screen bg-brand-light text-brand-dark; }
-			main { @apply flex-grow; }
-            
-            /* Instant CSS swapping based on the script above */
-            #nav-logged-out { display: flex; }
-            #nav-logged-in { display: none; }
-            #mobile-nav-logged-out { display: block; }
-            #mobile-nav-logged-in { display: none; }
-            
-            html.is-authenticated #nav-logged-out { display: none !important; }
-            html.is-authenticated #nav-logged-in { display: flex !important; }
-            html.is-authenticated #mobile-nav-logged-out { display: none !important; }
-            html.is-authenticated #mobile-nav-logged-in { display: block !important; }
-		</style>
-	</head>
-	<body>
-		<header class="bg-brand-light shadow-sm border-b border-gray-100 sticky top-0 z-50 relative">
-			<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-				<div class="flex justify-between items-center h-20">
-					<div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-3xl font-extrabold text-brand-dark tracking-tighter">IMT</a>
-					</div>
-					
-                    <nav class="hidden md:flex items-center space-x-8">
-                        <a href="/" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Home</a>
-    					<a href="/format" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Format</a>
-    					<a href="/sponsors" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Sponsors</a>
-						<a href="/practice" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Practice</a>
-                        <a href="/team" class="text-brand-dark hover:text-brand-gold font-semibold transition duration-200">Team & Contact</a>
-						
-						<div class="flex items-center border-l-2 border-slate-200 pl-6 ml-2 min-h-[40px]">
-                            <div id="nav-logged-out" class="items-center space-x-4">
-                                <a href="/register" class="bg-brand-dark text-brand-gold px-5 py-2 rounded-full hover:bg-slate-800 transition shadow-md text-sm font-bold">
-                                    Register
-                                </a>
-                            </div>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-                            <div id="nav-logged-in" class="items-center space-x-4">
-                                <a href="/portal" class="font-bold text-brand-green hover:text-brand-dark transition">Portal</a>
-                                <a href="/account" class="font-bold text-slate-600 hover:text-brand-dark transition">My Account</a>
-                                <button id="nav-logout-btn" class="font-bold text-red-500 hover:text-red-700 transition text-sm px-3 py-1 bg-red-50 rounded-full">
-                                    Sign Out
-                                </button>
-                            </div>
-                        </div>
-					</nav>
+    <script is:inline src="https://cdn.tailwindcss.com"></script>
+    <script is:inline>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                dark:  '#162236',
+                gold:  '#F5C518',
+                light: '#F4F1E8',
+                green: '#4A7C59',
+              },
+            },
+            fontFamily: {
+              sans:  ['Inter', 'sans-serif'],
+              serif: ['"EB Garamond"', 'Georgia', 'serif'],
+            },
+          },
+        },
+      };
+    </script>
 
-                    <div class="md:hidden flex items-center">
-                        <button id="mobile-menu-btn" class="text-brand-dark focus:outline-none p-2">
-                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
-                    </div>
-				</div>
-			</div>
+    <style is:global>
+      html {
+        font-family: 'Inter', sans-serif;
+        scroll-behavior: smooth;
+        scroll-padding-top: 5rem;
+      }
 
-            <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 w-full bg-brand-light border-b border-gray-200 shadow-xl px-6 py-6 space-y-4 z-40">
-                <a href="/" class="block text-brand-dark text-lg font-semibold">Home</a>
-                <a href="/format" class="block text-brand-dark text-lg font-semibold">Format</a>
-                <a href="/sponsors" class="block text-brand-dark text-lg font-semibold">Sponsors</a>
-                <a href="/practice" class="block text-brand-dark text-lg font-semibold">Practice</a>
-                <a href="/team" class="block text-brand-dark text-lg font-semibold">Team & Contact</a>
-                
-                <hr class="border-gray-200 my-4">
-                
-                <div id="mobile-nav-logged-out" class="space-y-4">
-                    <a href="/register" class="block text-center bg-brand-dark text-brand-gold px-5 py-3 rounded-xl font-bold">Register</a>
-                </div>
+      /* ── Scroll-reveal (shared across all pages) ── */
+      .animate-on-load {
+        animation: fadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .reveal-on-scroll.is-revealed {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .delay-100 { transition-delay: 100ms; }
+      .delay-200 { transition-delay: 200ms; }
+      .delay-300 { transition-delay: 300ms; }
+      .delay-400 { transition-delay: 400ms; }
 
-                <div id="mobile-nav-logged-in" class="space-y-4">
-                    <a href="/portal" class="block text-brand-green text-lg font-bold">Portal</a>
-                    <a href="/account" class="block text-slate-600 text-lg font-bold">My Account</a>
-                    <button id="mobile-logout-btn" class="block text-left text-red-500 text-lg font-bold">Sign Out</button>
-                </div>
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* ── Button lift ── */
+      .btn-lift {
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+      .btn-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.2);
+      }
+
+      p { text-wrap: pretty; }
+    </style>
+  </head>
+
+  <body class="flex flex-col min-h-screen bg-brand-light text-brand-dark antialiased">
+
+    <!-- ╔══════════════════════════════╗
+         ║  HEADER / NAV               ║
+         ╚══════════════════════════════╝ -->
+    <header id="site-header" class="bg-brand-light border-b border-gray-200 sticky top-0 z-50 transition-shadow duration-200">
+      <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+        <div class="flex items-center justify-between h-[4.5rem]">
+
+          <!-- Wordmark: bridge icon + weight-contrast type -->
+          <a href="/" class="flex items-center gap-3 shrink-0">
+            <!-- /public/bridge-icon.png: just the bridge tower graphic, dark navy, transparent bg -->
+            <img src="/bridge-icon.png" class="h-7 w-auto" aria-hidden="true" alt="" />
+            <span class="text-[1.1rem] leading-none tracking-tight">
+              <span class="font-black text-brand-dark">integrated</span><span class="font-light text-brand-dark">math</span>
+            </span>
+          </a>
+
+          <!-- Desktop nav -->
+          <nav class="hidden md:flex items-center gap-7">
+            <a href="/"             class="nav-link text-sm font-medium text-brand-dark hover:text-brand-green transition-colors duration-150">Home</a>
+            <a href="/competitions" class="nav-link text-sm font-medium text-brand-dark hover:text-brand-green transition-colors duration-150">Competitions</a>
+            <a href="/learn"        class="nav-link text-sm font-medium text-brand-dark hover:text-brand-green transition-colors duration-150">Learn</a>
+            <a href="/sponsors"     class="nav-link text-sm font-medium text-brand-dark hover:text-brand-green transition-colors duration-150">Sponsors</a>
+            <a href="/team"         class="nav-link text-sm font-medium text-brand-dark hover:text-brand-green transition-colors duration-150">Team &amp; Contact</a>
+            <div class="border-l border-gray-300 pl-5 ml-1">
+              <a href="/register" class="bg-brand-dark text-brand-gold text-sm font-bold px-5 py-2 rounded hover:bg-[#1e3152] transition-colors duration-150">
+                Register
+              </a>
             </div>
-		</header>
+          </nav>
 
-		<main>
-			<slot />
-		</main>
+          <!-- Hamburger -->
+          <button id="mobile-menu-btn" class="md:hidden p-2 -mr-1 text-brand-dark" aria-label="Toggle menu">
+            <svg id="icon-open"  class="w-6 h-6"        fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg id="icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
 
-		<footer class="bg-brand-dark text-brand-light mt-16 border-t-4 border-brand-green">
-			<div class="max-w-7xl mx-auto py-12 px-6 sm:px-8 lg:px-10">
-				<div class="flex flex-col md:flex-row justify-between items-center gap-6">
-					<span class="text-3xl font-extrabold tracking-tighter text-brand-gold">Integrated Mathematics Tournament</span>
-                    <p class="text-slate-400 text-sm font-medium text-center md:text-right">
-                        &copy; {new Date().getFullYear()} Integrated Mathematics Tournament. All rights reserved.
-                    </p>
-				</div>
-			</div>
-		</footer>
+      <!-- Mobile menu -->
+      <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-brand-light border-b border-gray-200 shadow-lg z-40">
+        <div class="px-6 py-4">
+          <a href="/"             class="mobile-link block py-3 text-brand-dark font-semibold border-b border-gray-100 text-base">Home</a>
+          <a href="/competitions" class="mobile-link block py-3 text-brand-dark font-semibold border-b border-gray-100 text-base">Competitions</a>
+          <a href="/learn"        class="mobile-link block py-3 text-brand-dark font-semibold border-b border-gray-100 text-base">Learn</a>
+          <a href="/sponsors"     class="mobile-link block py-3 text-brand-dark font-semibold border-b border-gray-100 text-base">Sponsors</a>
+          <a href="/team"         class="mobile-link block py-3 text-brand-dark font-semibold border-b border-gray-100 text-base">Team &amp; Contact</a>
+          <div class="pt-4 pb-2">
+            <a href="/register" class="mobile-link block text-center bg-brand-dark text-brand-gold font-bold py-3 rounded text-base">
+              Register
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
 
-        <Analytics />
-	</body>
+    <main class="flex-grow">
+      <slot />
+    </main>
+
+    <!-- ╔══════════════════════════════╗
+         ║  FOOTER                     ║
+         ╚══════════════════════════════╝ -->
+    <footer class="bg-brand-dark border-t border-slate-800">
+      <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 pt-10 pb-6">
+        <div class="flex flex-col md:flex-row justify-between items-start gap-10">
+
+          <!-- Brand -->
+          <div class="max-w-xs">
+            <a href="/" class="flex items-center gap-3 mb-4">
+              <img src="/bridge-icon.png"
+                   class="h-6 w-auto"
+                   style="filter: brightness(0) invert(1); opacity: 0.4;"
+                   aria-hidden="true" alt="" />
+              <span class="text-base leading-none tracking-tight">
+                <span class="font-black text-white">integrated</span><span class="font-light text-slate-400">math</span>
+              </span>
+            </a>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              Student-led. Globally-minded.<br />
+              Bridging the gap between theory and application.
+            </p>
+          </div>
+
+          <!-- Links -->
+          <div class="flex gap-16 sm:gap-24">
+            <div>
+              <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Platform</h4>
+              <ul class="space-y-2.5 text-sm text-slate-500">
+                <li><a href="/competitions" class="hover:text-brand-gold transition-colors duration-150">Competitions</a></li>
+                <li><a href="/learn"        class="hover:text-brand-gold transition-colors duration-150">Learn Hub</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">About</h4>
+              <ul class="space-y-2.5 text-sm text-slate-500">
+                <li><a href="/sponsors" class="hover:text-brand-gold transition-colors duration-150">Our Sponsors</a></li>
+                <li><a href="/team"     class="hover:text-brand-gold transition-colors duration-150">Team &amp; Contact</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 pt-5 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p class="text-slate-600 text-xs">
+            &copy; {new Date().getFullYear()} Integrated Mathematics.
+          </p>
+          <a href="/register" class="text-slate-600 text-xs font-medium hover:text-brand-gold transition-colors duration-150">
+            Register for updates &rarr;
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <Analytics />
+  </body>
 </html>
 
 <script>
-    import { supabase } from '../lib/supabase.js';
+  // ── Mobile menu ─────────────────────────────────────────
+  const menuBtn   = document.getElementById('mobile-menu-btn');
+  const mobileNav = document.getElementById('mobile-menu');
+  const iconOpen  = document.getElementById('icon-open');
+  const iconClose = document.getElementById('icon-close');
 
-    // Desktop auth state
-    supabase.auth.onAuthStateChange((event, session) => {
-        if (session) {
-            localStorage.setItem('imt_auth', 'true');
-            document.documentElement.classList.add('is-authenticated');
-        } else {
-            localStorage.removeItem('imt_auth');
-            document.documentElement.classList.remove('is-authenticated');
-        }
-    });
+  function openMenu()  {
+    mobileNav?.classList.remove('hidden');
+    iconOpen?.classList.add('hidden');
+    iconClose?.classList.remove('hidden');
+  }
+  function closeMenu() {
+    mobileNav?.classList.add('hidden');
+    iconOpen?.classList.remove('hidden');
+    iconClose?.classList.add('hidden');
+  }
 
-    // Logout handling for both desktop and mobile
-    const logoutBtn = document.getElementById('nav-logout-btn');
-    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
-    
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        window.location.href = '/'; 
-    };
+  menuBtn?.addEventListener('click', () =>
+    mobileNav?.classList.contains('hidden') ? openMenu() : closeMenu()
+  );
+  document.querySelectorAll('.mobile-link').forEach(l => l.addEventListener('click', closeMenu));
 
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-    if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
-
-    // Mobile menu toggle logic
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-
-    if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
+  // ── Active nav highlight ─────────────────────────────────
+  const path = window.location.pathname;
+  document.querySelectorAll('.nav-link').forEach(link => {
+    const href   = link.getAttribute('href') ?? '';
+    const active = href === '/' ? path === '/' : path.startsWith(href);
+    if (active) {
+      (link as HTMLElement).style.color      = '#4A7C59';
+      (link as HTMLElement).style.fontWeight = '600';
     }
+  });
+
+  // ── Scroll shadow ────────────────────────────────────────
+  const header = document.getElementById('site-header');
+  window.addEventListener('scroll', () => {
+    header?.classList.toggle('shadow-md', window.scrollY > 8);
+  }, { passive: true });
 </script>

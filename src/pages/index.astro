@@ -3,57 +3,220 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Home">
-	<section class="relative bg-brand-dark text-brand-light overflow-hidden">
-		<div class="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-28 lg:py-36 flex flex-col items-center text-center">
-			<h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-8 max-w-4xl leading-tight">
-				IMT:  <span class="text-brand-gold">Integrated Math Tournament</span>
-			</h1>
-			<p class="text-xl md:text-2xl text-gray-300 max-w-3xl mb-12 leading-relaxed font-light">
-				Welcome to the <span class="text-brand-gold">Integrated Mathematics Tournament</span>, an annual mathematics competition that aims to introduce students to higher and applied mathematics.
-			</p>
-            
-            <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 w-full max-w-4xl">
-				<a href="/format" class="bg-transparent border-2 border-brand-gold text-brand-gold font-bold py-4 px-8 rounded-full hover:bg-brand-gold hover:text-brand-dark transition duration-200 text-lg text-center">
-					Learn More
-				</a>
-                <a href="/register" class="bg-brand-gold text-brand-dark font-bold py-4 px-8 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition transform duration-200 text-lg text-center">
-					Register Now!
-				</a>
-				<a href="/team" class="bg-transparent border-2 border-brand-gold text-brand-gold font-bold py-4 px-8 rounded-full hover:bg-brand-gold hover:text-brand-dark transition duration-200 text-lg text-center">
-					Meet the Team
-				</a>
-			</div>
-		</div>
-	</section>
 
-	<section class="py-24 bg-white">
-		<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-			<div class="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
-				
-				<div class="lg:w-1/3 border-l-4 border-brand-green pl-8">
-					<h2 class="text-4xl md:text-5xl font-extrabold text-brand-dark leading-tight tracking-tight">
-						Mathematics <br/>
-						<span class="text-brand-green">Reimagined</span>
-					</h2>
-					<div class="mt-6 w-16 h-1.5 bg-brand-gold rounded-full"></div>
-				</div>
+  <!-- ══════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════ -->
+  <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green relative overflow-hidden">
 
-				<div class="lg:w-2/3">
-					<p class="text-2xl md:text-3xl text-gray-800 font-light leading-relaxed mb-8">
-						The Integrated Mathematics Tournament <span class="font-semibold text-brand-dark">bridges the gap</span> between rigorous competition math and real-world analytical application.
-					</p>
-					
-					<div class="grid md:grid-cols-2 gap-8 text-lg text-gray-600 font-light leading-relaxed">
-						<p>
-							We challenge students to move beyond computational mathematics, immersing them in <span class="text-brand-green font-medium">mathematical applications</span>. 
-						</p>
-						<p>
-							We integrate creative problem-solving with open-ended data analysis and applications.
-						</p>
-					</div>
-				</div>
+    <!-- Bridge watermark — bottom right, very faint -->
+    <img src="/bridge-icon.png"
+         class="absolute bottom-5 right-5 w-[45%] max-w-xl h-auto pointer-events-none select-none"
+         style="filter: brightness(0) invert(1); opacity: 0.065;"
+         aria-hidden="true" alt="" />
 
-			</div>
-		</div>
-	</section>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-24 md:py-36 flex flex-col items-start animate-on-load">
+      <span class="text-brand-green font-semibold tracking-widest uppercase text-xs mb-5 block">
+        Integrated Mathematics 
+      </span>
+      <h1 class="font-serif font-bold text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight mb-6 max-w-4xl">
+        Mathematics is more<br class="hidden md:block" />
+        than just <em class="text-brand-green not-italic">computation.</em>
+      </h1>
+      <p class="text-slate-300 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed font-light">
+        IntegratedMath provides rigorous competitions and resources, introducing students to proof-based mathematics, higher/applied mathematics, and ideas that are beyond standard curriculums.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="/competitions"
+           class="bg-brand-gold text-brand-dark font-bold py-3 px-8 rounded hover:bg-yellow-400 transition-colors duration-150 text-base text-center btn-lift shadow-md">
+          Explore Competitions
+        </a>
+        <a href="/learn"
+           class="border-2 border-white/25 text-brand-light font-semibold py-3 px-8 rounded hover:bg-white/10 transition-colors duration-150 text-base text-center">
+          Visit Learn Hub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       THE COMPUTATIONAL GAP
+  ══════════════════════════════════════════ -->
+  <section class="py-20 md:py-28 bg-white border-b border-gray-100 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="flex flex-col lg:flex-row gap-16 items-start">
+
+        <div class="lg:w-1/3 reveal-on-scroll">
+          <h2 class="font-serif font-bold text-3xl md:text-4xl text-brand-dark leading-tight tracking-tight">
+            The Computational<br />
+            <span class="text-brand-green">Gap</span>
+          </h2>
+          <div class="mt-5 w-12 h-[3px] bg-brand-gold rounded"></div>
+        </div>
+
+        <div class="lg:w-2/3 reveal-on-scroll delay-100">
+          <p class="text-xl md:text-2xl text-gray-800 font-light leading-relaxed mb-8">
+            Traditional mathematical education rewards
+            <span class="font-semibold text-brand-dark">speed and memorization.</span>
+            Modern STEM requires
+            <span class="font-medium text-brand-dark draw-underline">creativity and innovation.</span>
+          </p>
+          <div class="grid md:grid-cols-2 gap-8 text-base text-gray-500 font-light leading-relaxed">
+            <p>
+              Many students learn to compute without understanding why the mathematics works — or how it connects to the world outside the classroom.
+            </p>
+            <p>
+              Integrated Math exists to close that gap. We build competitions and resources that reward deep thinking, proof-based rigor, and genuine mathematical curiosity.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       STATS STRIP
+  ══════════════════════════════════════════ -->
+  <section class="bg-brand-dark py-14 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 reveal-on-scroll">
+      <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-700/60">
+        <div class="py-8 md:py-0 md:px-10 text-center">
+          <div class="font-serif font-bold text-5xl text-white mb-2 counter" data-target="200">0+</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-brand-green">Global Competitors</div>
+        </div>
+        <div class="py-8 md:py-0 md:px-10 text-center">
+          <div class="font-serif font-bold text-5xl text-white mb-2 counter" data-target="1000">$0+</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-brand-green">in Prizes Awarded</div>
+        </div>
+        <div class="py-8 md:py-0 md:px-10 text-center">
+          <div class="font-serif font-bold text-5xl text-white mb-2 counter" data-target="35">0+</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-brand-green">Countries Reached</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       THREE PILLARS
+  ══════════════════════════════════════════ -->
+  <section class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+
+      <div class="text-center max-w-2xl mx-auto mb-16 reveal-on-scroll">
+        <h2 class="font-serif font-bold text-3xl md:text-4xl text-brand-dark mb-3 leading-tight">How We Drive Change</h2>
+        <p class="text-slate-500 text-base leading-relaxed">
+          IMT impacts the mathematical community through three core pillars.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+
+        <div class="bg-brand-light border border-gray-200 p-8 rounded-lg flex flex-col hover:shadow-md transition-shadow duration-200 reveal-on-scroll delay-100">
+          <div class="w-10 h-10 rounded bg-white border border-gray-200 flex items-center justify-center mb-5 shadow-sm">
+            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-brand-dark mb-2">Handouts &amp; Resources</h3>
+          <p class="text-slate-500 text-sm leading-relaxed flex-grow">
+            Handouts, problems, and applied modules that cover mathematics outside standard curriculums.
+          </p>
+        </div>
+
+        <div class="bg-brand-light border border-gray-200 p-8 rounded-lg flex flex-col hover:shadow-md transition-shadow duration-200 reveal-on-scroll delay-200">
+          <div class="w-10 h-10 rounded bg-white border border-gray-200 flex items-center justify-center mb-5 shadow-sm">
+            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M10.5 2.25H13.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5H10.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5z"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-brand-dark mb-2">Competitions</h3>
+          <p class="text-slate-500 text-sm leading-relaxed flex-grow">
+            The annual IMT challenges students with a unique Integrated Round, introducing them to proof-based writing, applied mathematics, data analysis, and mathematical modeling. 
+          </p>
+        </div>
+
+        <div class="bg-brand-light border border-gray-200 p-8 rounded-lg flex flex-col hover:shadow-md transition-shadow duration-200 reveal-on-scroll delay-300">
+          <div class="w-10 h-10 rounded bg-white border border-gray-200 flex items-center justify-center mb-5 shadow-sm">
+            <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-brand-dark mb-2">Accessible to All</h3>
+          <p class="text-slate-500 text-sm leading-relaxed flex-grow">
+            Talent is universal; opportunity is not. All competitions and resources are free.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       BOTTOM CTA
+  ══════════════════════════════════════════ -->
+  <section class="bg-brand-dark py-16 border-t border-slate-800">
+    <div class="max-w-2xl mx-auto px-6 text-center reveal-on-scroll">
+      <h2 class="font-serif font-bold text-3xl md:text-4xl text-white mb-4 leading-tight">
+        Ready to compete?
+      </h2>
+      <p class="text-slate-400 text-base font-light mb-8 leading-relaxed">
+        The Fall 2026 IMT is coming. Register now and be the first to know when it opens.
+      </p>
+      <a href="/register"
+         class="inline-block bg-brand-gold text-brand-dark font-bold py-3 px-10 rounded hover:bg-yellow-400 transition-colors duration-150 btn-lift shadow-md">
+        Get Notified
+      </a>
+    </div>
+  </section>
+
+  <style>
+    /* Gold underline draws in after the paragraph fades up */
+    .draw-underline {
+      background-image: linear-gradient(to right, #F5C518 0%, #F5C518 100%);
+      background-position: 0 100%;
+      background-size: 0% 3px;
+      background-repeat: no-repeat;
+      transition: background-size 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.45s;
+      display: inline;
+    }
+    .is-revealed .draw-underline {
+      background-size: 100% 3px;
+    }
+  </style>
 </Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // ── Scroll reveal + counter trigger ─────────────────
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-revealed');
+        if ((entry.target as HTMLElement).classList.contains('counter')) {
+          animateCounter(entry.target as HTMLElement);
+        }
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.reveal-on-scroll, .counter').forEach(el => observer.observe(el));
+
+    // ── Stat counters ────────────────────────────────────
+    function animateCounter(el: HTMLElement) {
+      const target   = +(el.dataset.target ?? 0);
+      const hasDollar = el.innerText.includes('$');
+      const duration  = 1200;
+      const start     = performance.now();
+
+      const tick = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased    = 1 - Math.pow(1 - progress, 3);
+        el.innerText   = `${hasDollar ? '$' : ''}${Math.floor(eased * target).toLocaleString()}+`;
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  });
+</script>

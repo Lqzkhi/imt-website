@@ -6,5 +6,9 @@ export default defineConfig({
   output: 'server',
   adapter: vercel(),
   site: 'https://integratedmathtournament.org',
-  integrations: [sitemap()]
+  integrations: [sitemap()],
+  // Add this block below:
+  server: {
+    allowedHosts: true, 
+  }
 });

@@ -1,0 +1,155 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Competitions">
+
+  <!-- ══════════════════════════════════════════
+       HERO — centered, formal, distinct from home
+  ══════════════════════════════════════════ -->
+  <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green relative overflow-hidden">
+
+    <!-- Bridge watermark — bottom right -->
+    <img src="/bridge-icon.png"
+     class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[45%] max-w-xl h-auto pointer-events-none select-none"
+     style="filter: brightness(0) invert(1); opacity: 0.025;"
+     aria-hidden="true" alt="" />
+
+    <div class="relative z-10 max-w-4xl mx-auto px-6 sm:px-8 lg:px-10 py-24 md:py-32 text-center animate-on-load">
+      <span class="inline-block text-brand-green font-semibold tracking-widest uppercase text-xs mb-6">
+        Annual Tournament
+      </span>
+
+      <h1 class="font-serif font-bold text-5xl md:text-6xl lg:text-[4.5rem] leading-[1.1] tracking-tight mb-5">
+        The Integrated<br />
+        <span class="font-normal italic text-white/75">Mathematics Tournament.</span>
+      </h1>
+
+      <div class="w-14 h-px bg-brand-green mx-auto my-6 opacity-60"></div>
+
+      <p class="text-slate-300 text-lg max-w-xl mx-auto font-light leading-relaxed mb-10">
+        Proof-based writing. Original and high quality problems. A unique Integrated Round covering real-world applications. Completely free.
+      </p>
+
+      <a href="#directory"
+         class="inline-block bg-brand-gold text-brand-dark font-bold py-3 px-8 rounded hover:bg-yellow-400 transition-colors duration-150 btn-lift shadow-md">
+        View Tournament Directory
+      </a>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       WHAT MAKES IMT DIFFERENT
+  ══════════════════════════════════════════ -->
+  <section class="py-20 md:py-24 bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="flex flex-col md:flex-row gap-16 items-start">
+
+        <div class="md:w-1/3 reveal-on-scroll">
+          <h2 class="font-serif font-bold text-3xl md:text-4xl text-brand-dark leading-tight tracking-tight mb-4">
+            A higher standard of<br />
+            <span class="text-brand-green">problem solving.</span>
+          </h2>
+          <div class="w-12 h-[3px] bg-brand-gold rounded"></div>
+        </div>
+
+        <div class="md:w-2/3 space-y-8 reveal-on-scroll delay-100">
+          <p class="text-xl text-slate-600 font-light leading-relaxed">
+            IMT is designed to challenge students and broaden their understanding of mathematics. 
+          </p>
+          <div class="grid sm:grid-cols-2 gap-8">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-1 h-5 bg-brand-gold rounded-full"></span>
+                <h3 class="font-bold text-brand-dark text-sm uppercase tracking-wider">Proof-Based Rigor</h3>
+              </div>
+              <p class="text-sm text-slate-500 leading-relaxed pl-3">
+                Our proof section demands that students justify their reasoning, deepening their understanding of mathematical principles.
+              </p>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-1 h-5 bg-brand-green rounded-full"></span>
+                <h3 class="font-bold text-brand-dark text-sm uppercase tracking-wider">The Integrated Round</h3>
+              </div>
+              <p class="text-sm text-slate-500 leading-relaxed pl-3">
+                Our signature round that introduces teams to advanced mathematical topics that have real world implications, requiring them to apply mathematics in entirely new contexts.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       TOURNAMENT DIRECTORY
+  ══════════════════════════════════════════ -->
+  <section id="directory" class="py-24 bg-brand-light">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+
+      <div class="mb-12 reveal-on-scroll">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">All Seasons</p>
+        <h2 class="font-serif font-bold text-3xl text-brand-dark">Tournament Directory</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        <!-- Upcoming: Fall 2026 -->
+        <div class="bg-white border-2 border-brand-green p-8 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden reveal-on-scroll delay-100">
+          <div class="absolute top-0 right-0 bg-brand-green text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-xl uppercase tracking-widest">
+            Upcoming
+          </div>
+          <div>
+            <div class="font-serif font-bold text-4xl text-brand-green mb-1 tracking-tight">Fall 2026</div>
+            <h3 class="text-lg font-bold text-brand-dark mb-3">IMT Fall Series</h3>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+              Registration and format details coming soon. Register below to be notified the moment they're announced.
+            </p>
+          </div>
+          <a href="/register"
+             class="block text-center bg-brand-dark text-white font-bold py-3 rounded hover:bg-[#1e3152] transition-colors duration-150 btn-lift text-sm">
+            Get Notified
+          </a>
+        </div>
+
+        <!-- Past: Spring 2026 -->
+        <div class="bg-white border border-gray-200 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between reveal-on-scroll delay-200">
+          <div>
+            <div class="flex items-start gap-3 mb-1">
+              <div class="font-serif font-bold text-4xl text-brand-dark tracking-tight">Spring '26</div>
+              <span class="mt-2 text-[10px] font-bold text-slate-400 border border-slate-200 rounded px-2 py-0.5 uppercase tracking-widest whitespace-nowrap">
+                Concluded
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-brand-dark mb-3">Inaugural Tournament</h3>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+              Our debut global event: 200+ registered competitors from over 35 countries across 6 events. Full results, standings, and open-source problem archive available.
+            </p>
+          </div>
+          <a href="/competitions/spring-2026"
+             class="block text-center bg-brand-light border border-gray-300 text-brand-dark font-bold py-3 rounded hover:bg-gray-100 transition-colors duration-150 btn-lift text-sm">
+            View Results &amp; Archive
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+  });
+</script>

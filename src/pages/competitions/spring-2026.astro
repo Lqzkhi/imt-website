@@ -1,0 +1,388 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Spring 2026 — Inaugural Tournament">
+
+  <!-- ══════════════════════════════════════════
+       ARCHIVE HEADER — document / report feel
+  ══════════════════════════════════════════ -->
+  <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 pt-10 pb-16 animate-on-load">
+
+      <!-- Back link -->
+      <a href="/competitions"
+         class="inline-flex items-center text-slate-400 hover:text-brand-gold transition-colors duration-150 text-sm font-medium mb-10 group">
+        <svg class="w-4 h-4 mr-1.5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Tournament Directory
+      </a>
+
+      <!-- Status badge + season label -->
+      <div class="flex flex-wrap items-center gap-3 mb-5">
+        <span class="inline-flex items-center gap-1.5 bg-brand-green/20 text-brand-green text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-green inline-block"></span>
+          Concluded
+        </span>
+        <span class="text-slate-500 text-sm font-medium">Spring 2026</span>
+      </div>
+
+      <!-- Title -->
+      <h1 class="font-serif font-bold text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight mb-4 max-w-3xl">
+        Inaugural Integrated<br />
+        <span class="font-normal italic text-white/65">Mathematics Tournament</span>
+      </h1>
+      <p class="text-slate-400 max-w-xl text-base font-light leading-relaxed">
+        This page contains all placements, statistics, problems, and solutions for the Inaugural IMT.
+      </p>
+
+      <!-- Metadata row -->
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-slate-500 font-medium mt-6 pt-5 border-t border-slate-700/40">
+        <span>June 2026</span>
+        <span class="text-slate-700">·</span>
+        <span>200+ Registered Competitors</span>
+        <span class="text-slate-700">·</span>
+        <span>35+ Countries</span>
+        <span class="text-slate-700">·</span>
+        <span>6 Events</span>
+        <span class="text-slate-700">·</span>
+        <span>Online</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       WORLD MAP
+  ══════════════════════════════════════════ -->
+  <section class="py-20 bg-white border-b border-gray-200 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 reveal-on-scroll">
+
+      <div class="text-center mb-10">
+        <h2 class="font-serif font-bold text-3xl text-brand-dark mb-2">Global Reach</h2>
+        <p class="text-slate-500 text-base max-w-lg mx-auto">
+          Competitors joined from over 35 countries.
+        </p>
+      </div>
+
+      <div class="w-full max-w-5xl mx-auto bg-slate-50 rounded-xl border border-gray-200 shadow-inner relative overflow-hidden">
+        <div class="absolute inset-0 pointer-events-none opacity-[0.03]"
+             style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+        <div id="d3-world-map" class="w-full aspect-[1.8/1] relative"></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-10 mt-10 pt-8 border-t border-gray-100">
+        <div class="text-center">
+          <div class="font-serif font-bold text-4xl text-brand-dark mb-1">200+</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Competitors</div>
+        </div>
+        <div class="flex items-center gap-2 bg-brand-light border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-brand-dark shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span>
+          Hover to explore regions
+        </div>
+        <div class="text-center">
+          <div class="font-serif font-bold text-4xl text-brand-dark mb-1">35+</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Countries</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       HALL OF FAME
+  ══════════════════════════════════════════ -->
+  <section class="py-20 bg-brand-light border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+
+      <div class="mb-12 reveal-on-scroll border-l-4 border-brand-gold pl-5">
+        <h2 class="font-serif font-bold text-3xl text-brand-dark mb-1">Top Scorers</h2>
+        <p class="text-slate-500 text-sm">Recognizing top performers in each category.</p>
+      </div>
+
+      <!-- Overall Champions + Integrated Round -->
+      <div class="grid md:grid-cols-2 gap-8 mb-12">
+
+        <div class="bg-white border border-gray-200 p-8 rounded-xl shadow-sm reveal-on-scroll delay-100">
+          <h3 class="flex items-center gap-2 text-sm font-bold text-brand-dark uppercase tracking-wider mb-5 pb-3 border-b border-gray-100">
+            <svg class="w-4 h-4 text-brand-gold flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+            Overall Team Champions
+          </h3>
+          <ul class="space-y-4">
+  <li class="flex items-center justify-between pb-3 border-b border-gray-50">
+    <span class="flex items-center gap-3">
+      <span class="font-black text-sm w-4 text-right text-brand-gold">1.</span>
+      <span class="font-semibold text-brand-dark">FrostMath</span>
+    </span>
+    <span class="text-xs text-slate-400">Yonis Gulleth, Brandon Ni, Shreyan Dutt</span>
+  </li>
+
+  <li class="flex items-center justify-between pb-3 border-b border-gray-50">
+    <span class="flex items-center gap-3">
+      <span class="font-black text-sm w-4 text-right text-slate-300">2.</span>
+      <span class="font-semibold text-brand-dark">SET</span>
+    </span>
+    <span class="text-xs text-slate-400">Seojin Lee, Ella Feng, Thomas Ni, Satvik Sharma, Allison Zhang</span>
+  </li>
+
+  <li class="flex items-center justify-between pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+    <span class="flex items-center gap-3">
+      <span class="font-black text-sm w-4 text-right text-slate-300">3.</span>
+      <span class="font-semibold text-brand-dark">Team 38</span>
+    </span>
+    <span class="text-xs text-slate-400">Nana Akowuah Frimpong, Paul Segun, Mankirrat Kaur, Pedro</span>
+  </li>
+</ul>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-8 rounded-xl shadow-sm reveal-on-scroll delay-200">
+          <h3 class="flex items-center gap-2 text-sm font-bold text-brand-dark uppercase tracking-wider mb-5 pb-3 border-b border-gray-100">
+            <svg class="w-4 h-4 text-brand-green flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+            </svg>
+            Integrated Round
+          </h3>
+          <ul class="space-y-4">
+            <!-- 1st Place -->
+            <li class="flex items-center justify-between pb-3 border-b border-gray-50">
+              <span class="flex items-center gap-3">
+                <span class="font-black text-sm w-4 text-right text-brand-gold">1.</span>
+                <span class="font-semibold text-brand-dark">Mahabu Subhani Mohammed</span>
+              </span>
+            </li>
+
+            <!-- 2nd Place -->
+            <li class="flex items-center justify-between pb-3 border-b border-gray-50">
+              <span class="flex items-center gap-3">
+                <span class="font-black text-sm w-4 text-right text-slate-300">2.</span>
+                <span class="font-semibold text-brand-dark">Edmund Eric Gah</span>
+              </span>
+            </li>
+
+            <!-- 3rd Place -->
+            <li class="flex items-center justify-between pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+              <span class="flex items-center gap-3">
+                <span class="font-black text-sm w-4 text-right text-slate-300">3.</span>
+                <span class="font-semibold text-brand-dark">Team Rigor Mortis</span>
+              </span>
+              <span class="text-xs text-slate-400">Mahdis, Mona</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Subject Test Champions -->
+      <div class="reveal-on-scroll delay-100">
+        <h3 class="font-serif font-bold text-xl text-brand-dark mb-6 pb-3 border-b border-gray-200">
+          Subject Test Champions
+        </h3>
+        <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
+  
+          <div class="bg-white border border-gray-200 border-t-2 border-t-brand-green p-6 rounded-lg shadow-sm">
+            <h4 class="text-[11px] font-bold text-brand-dark uppercase tracking-widest mb-3 pb-2 border-b border-gray-100">Algebra</h4>
+            <ul class="space-y-2 text-sm font-medium text-brand-dark">
+              <li class="flex gap-2"><span class="text-brand-gold font-bold">1.</span>Siddarth Thota</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">2.</span>Vidika Mirpuri</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">3.</span>Zarif Ula</li>
+            </ul>
+          </div>
+
+          <div class="bg-white border border-gray-200 border-t-2 border-t-brand-green p-6 rounded-lg shadow-sm">
+            <h4 class="text-[11px] font-bold text-brand-dark uppercase tracking-widest mb-3 pb-2 border-b border-gray-100">Geometry</h4>
+            <ul class="space-y-2 text-sm font-medium text-brand-dark">
+              <li class="flex gap-2"><span class="text-brand-gold font-bold">1.</span>Yonis Gullath</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">2.</span>Satvik Sharma</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">3.</span>Allison Zhang</li>
+            </ul>
+          </div>
+
+          <div class="bg-white border border-gray-200 border-t-2 border-t-brand-green p-6 rounded-lg shadow-sm">
+            <h4 class="text-[11px] font-bold text-brand-dark uppercase tracking-widest mb-3 pb-2 border-b border-gray-100">Number Theory</h4>
+            <ul class="space-y-2 text-sm font-medium text-brand-dark">
+              <li class="flex gap-2"><span class="text-brand-gold font-bold">1.</span>Brandon Ni</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">2.</span>Thomas Ni</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">3.</span>Qiaofan Li</li>
+            </ul>
+          </div>
+
+          <div class="bg-white border border-gray-200 border-t-2 border-t-brand-green p-6 rounded-lg shadow-sm">
+            <h4 class="text-[11px] font-bold text-brand-dark uppercase tracking-widest mb-3 pb-2 border-b border-gray-100">Combinatorics</h4>
+            <ul class="space-y-2 text-sm font-medium text-brand-dark">
+              <li class="flex gap-2"><span class="text-brand-gold font-bold">1.</span>Utkarsh Soni</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">2.</span>Brandon Ni</li>
+              <li class="flex gap-2"><span class="text-slate-300 font-bold">3.</span>Pham Hien Minh</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       RESOURCE ARCHIVE
+  ══════════════════════════════════════════ -->
+  <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+
+      <div class="flex flex-col md:flex-row justify-between items-end mb-12 pb-5 border-b border-gray-200 reveal-on-scroll">
+        <div>
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Open Source</p>
+          <h2 class="font-serif font-bold text-3xl text-brand-dark">Resource Archive</h2>
+          <p class="text-slate-500 text-sm mt-1">Click the buttons to download the problems/solutions.</p>
+        </div>
+        <a href="/pdfs/IMTspring2026_statistics.pdf" target="_blank"
+           class="mt-6 md:mt-0 flex items-center gap-2 bg-brand-dark text-brand-gold font-bold py-2.5 px-6 rounded hover:bg-[#1e3152] transition-colors duration-150 btn-lift text-sm shadow">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          Statistics Report
+        </a>
+      </div>
+
+      <!-- Core Events -->
+      <div class="mb-12 reveal-on-scroll delay-100">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-3">
+          <span class="w-6 h-px bg-brand-dark inline-block"></span>
+          Core Events
+        </p>
+        <div class="grid md:grid-cols-2 gap-6">
+          {[
+            { title: 'Team Round', desc: 'Team worked together to solve 10 problems in 30 minutes.', p: '/pdfs/IMTspring2026_team_problems.pdf', s: '/pdfs/IMTspring2026_team_solutions.pdf' },
+            { title: 'Integrated Round', desc: 'Quantum mechanics integrated with data analysis.', p: '/pdfs/IMTspring2026_integrated_problems.pdf', s: '/pdfs/IMTspring2026_integrated_solutions.pdf' },
+          ].map(test => (
+            <div class="bg-brand-light border-l-4 border-brand-dark border border-gray-200 p-7 rounded-r-xl flex flex-col justify-between group relative overflow-hidden">
+              <div class="absolute top-0 right-0 p-4 opacity-[0.04] pointer-events-none">
+                <svg class="w-24 h-24 text-brand-dark" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+              </div>
+              <div class="mb-5 relative z-10">
+                <h4 class="font-serif font-bold text-xl text-brand-dark mb-1">{test.title}</h4>
+                <p class="text-sm text-slate-500 leading-relaxed">{test.desc}</p>
+              </div>
+              <div class="flex flex-col sm:flex-row gap-3 relative z-10">
+                <a href={test.p} target="_blank"
+                   class="flex-1 bg-white border border-gray-300 text-brand-dark text-center py-2.5 text-xs font-bold rounded hover:bg-gray-50 transition-colors btn-lift">
+                  Download Problems
+                </a>
+                <a href={test.s} target="_blank"
+                   class="flex-1 bg-brand-green text-white text-center py-2.5 text-xs font-bold rounded hover:bg-green-700 transition-colors btn-lift">
+                  View Solutions
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Subject Tests -->
+      <div class="reveal-on-scroll delay-200">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-3">
+          <span class="w-6 h-px bg-brand-gold inline-block"></span>
+          Subject Tests
+        </p>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[
+            { title: 'Algebra',       p: '/pdfs/IMTspring2026_algebra_problems.pdf',  s: '/pdfs/IMTspring2026_algebra_solutions.pdf'  },
+            { title: 'Geometry',      p: '/pdfs/IMTspring2026_geometry_problems.pdf', s: '/pdfs/IMTspring2026_geometry_solutions.pdf' },
+            { title: 'Number Theory', p: '/pdfs/IMTspring2026_number_theory_problems.pdf',       s: '/pdfs/IMTspring2026_number_theory_solutions.pdf'       },
+            { title: 'Combinatorics', p: '/pdfs/IMTspring2026_combinatorics_problems.pdf',    s: '/pdfs/IMTspring2026_combinatorics_solutions.pdf'    },
+          ].map(test => (
+            <div class="bg-white border-t-4 border-brand-dark border border-gray-200 p-5 rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col justify-between">
+              <h4 class="font-bold text-brand-dark text-base mb-5">{test.title}</h4>
+              <div class="flex flex-col gap-2">
+                <a href={test.p} target="_blank"
+                   class="w-full bg-brand-light border border-gray-200 text-slate-600 text-center py-2 text-xs font-bold rounded hover:bg-gray-100 transition-colors">
+                  Problems PDF
+                </a>
+                <a href={test.s} target="_blank"
+                   class="w-full border border-brand-green text-brand-green text-center py-2 text-xs font-bold rounded hover:bg-brand-green/5 transition-colors">
+                  Solutions PDF
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+  });
+</script>
+
+<script type="module">
+  import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+  import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3/+esm";
+
+  const container = document.getElementById('d3-world-map');
+  if (!container) throw new Error('Map container missing');
+
+  const width  = container.clientWidth  || 900;
+  const height = container.clientHeight || 500;
+
+  const svg = d3.select('#d3-world-map')
+    .append('svg')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMidYMid meet')
+    .attr('class', 'w-full h-full');
+
+  const projection = d3.geoNaturalEarth1()
+    .scale(width / 5.2)
+    .translate([width / 2.05, height / 1.65]);
+  const path = d3.geoPath().projection(projection);
+
+  const activeCountries = [
+    'United States of America','United Kingdom','Italy','France','Russia',
+    'Algeria','Burkina Faso','Egypt','Ethiopia','Ghana','Kenya',
+    'Malawi','Morocco','Nigeria','Rwanda','Bangladesh','India',
+    'Iran','Kyrgyzstan','Malaysia','Pakistan','Philippines',
+    'United Arab Emirates','Vietnam','Brazil','Peru','New Zealand','Timor-Leste',
+  ];
+
+  const tooltip = d3.select('#d3-world-map')
+    .append('div')
+    .attr('class', 'absolute hidden bg-brand-dark text-white text-xs font-bold px-3 py-1.5 rounded shadow-lg pointer-events-none z-50')
+    .style('opacity', 0);
+
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+    const countries = topojson.feature(world, world.objects.countries).features;
+    svg.append('g')
+      .selectAll('path')
+      .data(countries.filter(d => d.properties.name !== 'Antarctica'))
+      .join('path')
+      .attr('d', path)
+      .attr('fill',         d => activeCountries.includes(d.properties.name) ? '#4A7C59' : '#1e293b')
+      .attr('stroke',       '#334155')
+      .attr('stroke-width', 0.5)
+      .on('mouseover', function(event, d) {
+        if (!activeCountries.includes(d.properties.name)) return;
+        d3.select(this).attr('fill','#386044').attr('stroke','#F5C518').attr('stroke-width', 1.5).raise();
+        tooltip.classed('hidden', false).style('opacity', 1).text(d.properties.name);
+      })
+      .on('mousemove', function(event) {
+        const [x, y] = d3.pointer(event, container);
+        tooltip.style('left', (x + 14) + 'px').style('top', (y - 14) + 'px');
+      })
+      .on('mouseout', function(event, d) {
+        if (!activeCountries.includes(d.properties.name)) return;
+        d3.select(this).attr('fill','#4A7C59').attr('stroke','#334155').attr('stroke-width', 0.5);
+        tooltip.style('opacity', 0).classed('hidden', true);
+      });
+  });
+</script>

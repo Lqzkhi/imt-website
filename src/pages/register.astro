@@ -2,87 +2,128 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Portal Access">
-    <div class="min-h-screen bg-brand-light flex items-center justify-center py-20 px-6">
-        <div class="bg-white max-w-2xl w-full p-10 md:p-12 rounded-3xl shadow-xl border border-slate-100">
-            
-            <div class="text-center mb-8 border-b border-slate-100 pb-8">
-                <h1 class="text-4xl font-extrabold text-brand-dark mb-3">Tournament Portal</h1>
-                <p class="text-slate-600 font-light text-lg">Apply for IMT 2026 or log in to your approved team account.</p>
-            </div>
+<Layout title="Register for Updates">
 
-            <div class="bg-brand-gold/10 border-l-4 border-brand-gold p-8 rounded-r-2xl mb-10">
-                <h2 class="text-2xl font-bold text-brand-dark mb-4">Step 1: Apply to Compete</h2>
-                <p class="text-slate-700 mb-6 leading-relaxed">New teams must fill out the official application. Once approved, your team's email will be whitelisted for portal access.</p>
-                
-                <a href="https://docs.google.com/forms/d/1dDcLWp5SkQWtZL3bHUetz5Mtp0Iwtgb0rdrgZrFUHHA/edit?ts=6a0bdf19" target="_blank" class="w-full bg-white border-2 border-brand-gold text-brand-dark font-extrabold text-lg py-3 px-8 rounded-xl hover:bg-brand-gold transition shadow-sm flex items-center justify-center gap-2">
-                    Open Application Form
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                </a>
-            </div>
+  <div class="min-h-[calc(100vh-4.5rem)] bg-brand-light flex items-center justify-center py-16 px-6 relative overflow-hidden">
 
-            <div class="bg-slate-50 border border-slate-100 p-8 rounded-2xl">
-                <h2 class="text-2xl font-bold text-brand-dark mb-4">Step 2: Access Portal</h2>
-                <p class="text-slate-600 mb-6">Already approved? Enter your team's registered email to receive a secure login link. No password required.</p>
+    <!-- Subtle dot grid -->
+    <div class="absolute inset-0 opacity-[0.025]"
+         style="background-image: radial-gradient(#162236 1px, transparent 1px); background-size: 26px 26px;"
+         aria-hidden="true"></div>
 
-                <form id="magic-form" class="space-y-4">
-                    <div>
-                        <input type="email" id="email" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="team-contact@example.com">
-                    </div>
-                    
-                    <button type="submit" id="submit-btn" class="w-full bg-brand-dark text-brand-gold font-bold py-3 rounded-xl hover:bg-slate-800 transition shadow-md">
-                        Send Login Link
-                    </button>
-                </form>
+    <!-- Card -->
+    <div class="bg-white max-w-lg w-full rounded-2xl shadow-xl border border-gray-200 relative z-10 animate-on-load overflow-hidden">
 
-                <div id="status-message" class="hidden mt-4 p-4 rounded-lg font-bold text-sm text-center"></div>
-            </div>
+      <!-- Top accent bar -->
+      <div class="h-1 bg-brand-green w-full"></div>
 
+      <div class="p-10 md:p-12">
+
+        <!-- Icon + heading -->
+        <div class="text-center mb-8">
+          <div class="w-14 h-14 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg class="w-7 h-7 text-brand-green" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </div>
+          <h1 class="font-serif font-bold text-3xl text-brand-dark mb-2 tracking-tight">Stay in the loop.</h1>
+          <p class="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto">
+            Register your email and we'll reach out when any of the following go live:
+          </p>
         </div>
+
+        <!-- What you'll receive -->
+        <ul class="space-y-2.5 mb-8 bg-brand-light rounded-lg p-5 text-sm text-slate-600">
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-brand-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>Registration opening for the <strong class="text-brand-dark font-semibold">Fall 2026 IMT</strong></span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-brand-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>New <strong class="text-brand-dark font-semibold">handouts and learning modules</strong>.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-brand-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>Competition <strong class="text-brand-dark font-semibold">results, archives, and announcements</strong></span>
+          </li>
+        </ul>
+
+        <!-- Form -->
+        <form id="waitlist-form" action="https://formspree.io/f/xojzalge" method="POST" class="space-y-4">
+          <input type="hidden" name="subject" value="New Waitlist Registration" />
+
+          <div>
+            <label for="email" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">
+              Email Address
+            </label>
+            <input type="email" id="email" name="email" required
+                   class="w-full rounded-lg border border-gray-200 focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 px-4 py-3.5 text-sm outline-none transition bg-brand-light"
+                   placeholder="student@example.com" />
+          </div>
+
+          <div id="status-message" class="hidden text-sm font-semibold text-center p-3 rounded-lg"></div>
+
+          <button type="submit" id="submit-btn"
+                  class="w-full bg-brand-dark text-brand-gold font-bold py-4 rounded-lg hover:bg-[#1e3152] transition-colors duration-150 btn-lift flex justify-center items-center gap-2 text-sm">
+            Get Notified
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Trust line -->
+        <p class="text-center text-slate-400 text-xs mt-6">
+          Unsubscribe any time by contacting us.
+        </p>
+
+      </div>
     </div>
+  </div>
+
 </Layout>
 
 <script>
-    import { supabase } from '../lib/supabase.js';
+  document.addEventListener('DOMContentLoaded', () => {
+    const form    = document.getElementById('waitlist-form') as HTMLFormElement;
+    const btn     = document.getElementById('submit-btn')    as HTMLButtonElement;
+    const status  = document.getElementById('status-message') as HTMLElement;
 
-    const form = document.getElementById('magic-form');
-    const emailInput = document.getElementById('email') as HTMLInputElement;
-    const submitBtn = document.getElementById('submit-btn');
-    const statusMsg = document.getElementById('status-message');
+    form?.addEventListener('submit', async e => {
+      e.preventDefault();
 
-    if(form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            submitBtn.textContent = "Sending...";
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            statusMsg.classList.add('hidden');
-            statusMsg.classList.remove('bg-red-50', 'text-red-500', 'bg-green-50', 'text-brand-green');
+      const original   = btn.innerHTML;
+      btn.textContent  = 'Submitting…';
+      btn.disabled     = true;
+      status.className = 'hidden';
 
-            const { error } = await supabase.auth.signInWithOtp({
-                email: emailInput.value,
-                options: {
-                    emailRedirectTo: window.location.origin + '/portal' 
-                }
-            });
-
-            submitBtn.textContent = "Send Login Link";
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            statusMsg.classList.remove('hidden');
-
-            if (error) {
-                // Intercept Supabase's generic database error caused by our whitelist trigger
-                if (error.message.includes("Database error") || error.message.includes("Email not authorized")) {
-                    statusMsg.textContent = "This email is not approved yet. Please wait for your application to be processed!";
-                } else {
-                    statusMsg.textContent = "Error: " + error.message;
-                }
-                statusMsg.classList.add('bg-red-50', 'text-red-500');
-            } else {
-                statusMsg.textContent = "Success! Check your email inbox for the secure link.";
-                statusMsg.classList.add('bg-green-50', 'text-brand-green');
-                form.reset();
-            }
+      try {
+        const res = await fetch(form.action, {
+          method:  'POST',
+          body:    new FormData(form),
+          headers: { Accept: 'application/json' },
         });
-    }
+
+        if (res.ok) {
+          form.reset();
+          status.textContent = "✓ You're on the list! Keep an eye on your inbox.";
+          status.className   = 'text-sm font-semibold text-center p-3 rounded-lg bg-green-50 text-brand-green';
+        } else {
+          throw new Error();
+        }
+      } catch {
+        status.textContent = 'Something went wrong. Please try again.';
+        status.className   = 'text-sm font-semibold text-center p-3 rounded-lg bg-red-50 text-red-600';
+      }
+
+      btn.innerHTML = original;
+      btn.disabled  = false;
+    });
+  });
 </script>

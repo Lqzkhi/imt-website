@@ -1,0 +1,314 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const TIERS = [
+  { n: 'I',    label: 'Foundation' },
+  { n: 'II',   label: 'AMC 8 Proficient' },
+  { n: 'III',  label: 'AMC 10/12 Developing' },
+  { n: 'IV',   label: 'AMC 10/12 Competitive' },
+  { n: 'V',    label: 'AIME Qualifier' },
+  { n: 'VI',   label: 'AIME Advanced' },
+  { n: 'VII',  label: 'Olympiad' },
+  { n: 'VIII', label: 'Elite Olympiad' },
+];
+
+const FAQ = [
+  {
+    q: 'Do I need an account?',
+    a: 'No. The diagnostic is free and anonymous. Your progress and result are stored in your browser, so you can return to an in-progress session on the same device.',
+  },
+  {
+    q: 'How long does it take?',
+    a: 'Usually about 30-60 minutes. The diagnostic asks between 15 and 25 questions and stops early once it has a confident estimate of your level.',
+  },
+  {
+    q: 'What if I have never done a competition before?',
+    a: 'That is fine — choose "I haven\'t taken one / not sure" at the start. The test simply begins at an easier point and adapts upward as you answer.',
+  },
+  {
+    q: 'Can I retake it?',
+    a: 'Yes. You can take the diagnostic as many times as you like. Each run starts a fresh session and produces a new, updated report.',
+  },
+  {
+    q: 'Is my tier a permanent judgement of my ability?',
+    a: 'No. This is a beta snapshot of your current competition-math level based on one session. Treat domain estimates with few questions as directional, not final.',
+  },
+];
+---
+
+<Layout
+  title="How the Diagnostic Works"
+  description="A plain-English guide to Integrated Math's adaptive competition-math diagnostic — what it measures, how it adapts, and what your report tells you."
+>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HERO
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10 py-16 md:py-20 animate-on-load">
+      <a href="/learn/diagnostic" class="inline-flex items-center gap-2 text-slate-400 hover:text-brand-green text-sm font-medium transition-colors mb-6">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Back to the diagnostic
+      </a>
+      <span class="inline-block text-brand-green font-semibold tracking-widest uppercase text-xs mb-5">
+        Learning Diagnostic
+      </span>
+      <h1 class="font-serif font-bold text-4xl md:text-5xl leading-tight mb-5 max-w-3xl">
+        How the diagnostic works
+      </h1>
+      <p class="text-slate-300 text-base md:text-lg font-light leading-relaxed max-w-2xl">
+        It is an <strong class="text-white font-semibold">adaptive</strong> competition-math test: every question
+        is chosen based on how you answered the last one, so it pinpoints your level fast &mdash; without wasting
+        your time on problems that are far too easy or far too hard.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       THE THREE STEPS
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="py-14 md:py-16 bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-8 reveal-on-scroll">
+        The short version
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="border border-gray-200 rounded-lg p-7 reveal-on-scroll delay-100">
+          <span class="flex w-9 h-9 rounded-full bg-brand-dark text-brand-gold font-bold text-sm items-center justify-center mb-5">1</span>
+          <h3 class="font-bold text-brand-dark text-lg mb-2">Tell us your background</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            Pick your highest contest experience &mdash; from "never taken one" up to USAMO/Olympiad. This sets a smart
+            starting difficulty so you are not stuck answering questions far from your level.
+          </p>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-7 reveal-on-scroll delay-200">
+          <span class="flex w-9 h-9 rounded-full bg-brand-dark text-brand-gold font-bold text-sm items-center justify-center mb-5">2</span>
+          <h3 class="font-bold text-brand-dark text-lg mb-2">Answer adaptive questions</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            After each answer, the test re-estimates your level and serves the most informative next problem &mdash;
+            harder when you are right, easier when you are wrong, while balancing all four subjects.
+          </p>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-7 reveal-on-scroll delay-300">
+          <span class="flex w-9 h-9 rounded-full bg-brand-dark text-brand-gold font-bold text-sm items-center justify-center mb-5">3</span>
+          <h3 class="font-bold text-brand-dark text-lg mb-2">Get your skill-tree report</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            When the estimate is confident enough, it stops and builds your report: an overall tier, a per-subject
+            breakdown, a skill map, and a recommended next focus.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       WHAT IT MEASURES
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="py-14 md:py-16 bg-brand-light border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="grid lg:grid-cols-[0.9fr_1.1fr] gap-10 items-start">
+
+        <div class="reveal-on-scroll">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">What it measures</p>
+          <h2 class="font-serif font-bold text-3xl text-brand-dark mb-4">Four domains, one tier</h2>
+          <p class="text-slate-500 text-sm leading-relaxed mb-6">
+            Questions are drawn from the four pillars of competition math. Your performance is summarized as a
+            single overall <strong class="text-brand-dark">tier</strong>, plus a separate read on each subject.
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            {['Algebra','Geometry','Number Theory','Combinatorics'].map((d) => (
+              <div class="bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm font-semibold text-brand-dark">
+                {d}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Tier ladder -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 md:p-7 reveal-on-scroll delay-100">
+          <h3 class="font-bold text-brand-dark mb-4">The tier ladder</h3>
+          <ol class="space-y-1.5">
+            {TIERS.map((t, i) => (
+              <li class="flex items-center gap-3 rounded px-3 py-2"
+                  style={`background: rgba(74,124,89,${0.04 + i * 0.025});`}>
+                <span class="flex-shrink-0 w-12 text-xs font-bold uppercase tracking-widest text-brand-green">Tier {t.n}</span>
+                <span class="text-sm text-brand-dark">{t.label}</span>
+              </li>
+            ))}
+          </ol>
+          <p class="text-xs text-slate-400 mt-4 leading-relaxed">
+            Tiers run from foundational skills up to elite Olympiad. Most students land somewhere in the middle &mdash;
+            the point is to find your edge, not to rank you.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       WHAT YOUR REPORT INCLUDES
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="py-14 md:py-16 bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-8 reveal-on-scroll">
+        Your report
+      </p>
+
+      <div class="grid sm:grid-cols-2 gap-5">
+        <div class="border border-gray-200 rounded-lg p-6 reveal-on-scroll delay-100">
+          <h3 class="font-bold text-brand-dark mb-2">Overall tier &amp; confidence range</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            Your estimated level, plus a 95% range so you can see how precise that estimate is.
+          </p>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-6 reveal-on-scroll delay-200">
+          <h3 class="font-bold text-brand-dark mb-2">Subject breakdown</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            How you did in each of the four domains, with accuracy and a note when a subject had only a few questions.
+          </p>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-6 reveal-on-scroll delay-100">
+          <h3 class="font-bold text-brand-dark mb-2">Skill map</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            A tree of specific skills the diagnostic touched, color-coded by the evidence it gathered for each.
+          </p>
+        </div>
+        <div class="border border-gray-200 rounded-lg p-6 reveal-on-scroll delay-200">
+          <h3 class="font-bold text-brand-dark mb-2">Recommended next focus</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            One concrete skill to work on next, chosen from where your results suggest the most upside.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       UNDER THE HOOD (optional / technical)
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="py-14 md:py-16 bg-brand-light border-b border-gray-200">
+    <div class="max-w-3xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="reveal-on-scroll">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">For the curious</p>
+        <h2 class="font-serif font-bold text-3xl text-brand-dark mb-3">Under the hood</h2>
+        <p class="text-slate-500 text-sm leading-relaxed mb-6">
+          You do not need any of this to take the diagnostic &mdash; but if you like knowing how the machinery works,
+          here it is.
+        </p>
+      </div>
+
+      <details class="group bg-white border border-gray-200 rounded-lg p-6 mb-3 reveal-on-scroll delay-100">
+        <summary class="cursor-pointer font-bold text-brand-dark flex items-center justify-between">
+          Item Response Theory (IRT)
+          <span class="text-brand-green group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+        </summary>
+        <div class="text-sm text-slate-500 leading-relaxed mt-4 space-y-3">
+          <p>
+            Every question is calibrated with parameters describing its <strong>difficulty</strong>, how sharply it
+            separates strong from weak solvers (<strong>discrimination</strong>), and the chances of guessing or
+            slipping. From these, the test models the probability that a student at a given ability level answers
+            correctly.
+          </p>
+          <p>
+            Your ability is represented by a single number, <em>theta</em> (&theta;). Higher theta means a higher
+            estimated competition-math level, and theta is what maps onto your tier.
+          </p>
+        </div>
+      </details>
+
+      <details class="group bg-white border border-gray-200 rounded-lg p-6 mb-3 reveal-on-scroll delay-100">
+        <summary class="cursor-pointer font-bold text-brand-dark flex items-center justify-between">
+          How the next question is chosen
+          <span class="text-brand-green group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+        </summary>
+        <div class="text-sm text-slate-500 leading-relaxed mt-4 space-y-3">
+          <p>
+            After each answer, we update a probability distribution over your ability (a Bayesian posterior, computed
+            on a grid). The next item picked is the one expected to be <strong>most informative</strong> about your
+            true level &mdash; for the first few "cold-start" questions this uses expected information across the whole
+            distribution, then switches to maximizing information right at your current estimate.
+          </p>
+          <p>
+            A content-balancing layer keeps the four subjects represented and avoids serving the same domain too many
+            times in a row, so your report is not lopsided toward whatever you happened to see first.
+          </p>
+        </div>
+      </details>
+
+      <details class="group bg-white border border-gray-200 rounded-lg p-6 reveal-on-scroll delay-100">
+        <summary class="cursor-pointer font-bold text-brand-dark flex items-center justify-between">
+          When &mdash; and why &mdash; it stops
+          <span class="text-brand-green group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+        </summary>
+        <div class="text-sm text-slate-500 leading-relaxed mt-4 space-y-3">
+          <p>
+            The diagnostic asks at least <strong>15</strong> questions and at most <strong>25</strong>. It stops early
+            once two things are true: the estimate is precise enough (the standard error of your ability has dropped
+            below a set threshold) <em>and</em> every subject has met a minimum number of questions.
+          </p>
+          <p>
+            That is why two people can finish after a different number of questions &mdash; the test stops as soon as
+            it is confident, rather than making everyone answer a fixed list.
+          </p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FAQ
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="py-14 md:py-16 bg-white border-b border-gray-200">
+    <div class="max-w-3xl mx-auto px-6 sm:px-8 lg:px-10">
+      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-8 reveal-on-scroll">
+        Questions
+      </p>
+      <div class="space-y-4">
+        {FAQ.map((item) => (
+          <div class="border border-gray-200 rounded-lg p-6 reveal-on-scroll delay-100">
+            <h3 class="font-bold text-brand-dark mb-2">{item.q}</h3>
+            <p class="text-slate-500 text-sm leading-relaxed">{item.a}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CTA
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="py-16 md:py-20 bg-brand-dark text-brand-light text-center">
+    <div class="max-w-xl mx-auto px-6 reveal-on-scroll">
+      <h2 class="font-serif font-bold text-3xl text-white mb-3">Ready to find your tier?</h2>
+      <p class="text-slate-300 mb-8 text-base leading-relaxed font-light">
+        It is free, anonymous, and takes about 45 minutes.
+      </p>
+      <a href="/learn/diagnostic"
+         class="inline-flex items-center justify-center gap-2 bg-brand-gold text-brand-dark font-bold py-3.5 px-8 rounded hover:bg-yellow-400 transition-colors duration-150 btn-lift text-sm">
+        Start the Diagnostic
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+  });
+</script>

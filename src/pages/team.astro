@@ -1,116 +1,184 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const teamMembers = [
+  {
+    name: 'Brandon Jia',
+    role: 'Founder & Director',
+    initials: 'BJ',
+    desc: 'Brandon leads the development of competitions and resources, oversees problem creation, and handles logistics/web design. He is a high school sophomore.',
+  },
+  {
+    name: 'Christopher Liang',
+    role: 'Founder & Director',
+    initials: 'CL',
+    desc: 'Christopher leads problem creation and the development of competitions and resources. He is an incoming college freshman.',
+  },
+  {
+    name: 'Jiwan Kim',
+    role: 'Director & Logistics Lead',
+    initials: 'JK',
+    desc: 'Jiwan leads logistics and the day-to-day management of competitions and resources. He is a high school sophomore.',
+  },
+  {
+    name: 'Yiran Yang',
+    role: 'Outreach Lead',
+    initials: 'YY',
+    desc: 'Yiran leads outreach and communications. They are an incoming college freshman.',
+  },
+];
 ---
 
 <Layout title="Team & Contact">
-	<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-20">
-		
-		<div class="mb-24 border-b-2 border-slate-200 pb-20">
-			<div class="text-center mb-12 max-w-3xl mx-auto">
-				<h1 class="text-5xl font-extrabold text-slate-950 mb-6 tracking-tight">Meet the Organizers</h1>
-				<p class="text-xl text-slate-600 leading-relaxed font-light">The Integrated Mathematics Tournament is student-led. We are passionate about expanding mathematical literacy and introducing like-minded peers to wider forms of mathematics.</p>
-			</div>
 
-			<div class="bg-white rounded-3xl shadow-card border border-gray-100 p-10 md:p-16 hover:shadow-card-hover hover:border-slate-300 transition duration-300 relative overflow-hidden">
-                <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-gold opacity-10 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-brand-green opacity-10 rounded-full blur-3xl pointer-events-none"></div>
+  <!-- ══════════════════════════════════════════
+       HERO — shorter, direct, credentials up front
+  ══════════════════════════════════════════ -->
+  <section class="bg-brand-dark text-brand-light pt-14 pb-16 border-b-4 border-brand-green">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 animate-on-load">
+      <p class="text-brand-green font-semibold text-xs tracking-widest uppercase mb-4">Student-Led</p>
+      <h1 class="font-serif font-bold text-4xl md:text-5xl leading-tight tracking-tight mb-4 max-w-2xl">
+        The people who built this.
+      </h1>
+      <p class="text-slate-300 max-w-2xl text-base font-light leading-relaxed">
+        IMT is organized entirely by high school and college students. Our committee includes USAMO/USAJMO qualifiers, AMC 12 perfect scorers, and multiple AIME qualifiers — we've competed at the highest levels, and we built the competition we wished had existed.
+      </p>
+    </div>
+  </section>
 
-                <div class="relative z-10 max-w-4xl mx-auto text-center">
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6">The Team</h2>
-                    <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light mb-12">
-                        IMT is organized fully by a committee of student mathematicians. 
-                    </p>
+  <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-20">
 
-                    <div class="grid sm:grid-cols-3 gap-6 text-left">
-                        <div class="p-8 bg-slate-50 rounded-2xl border border-slate-100 hover:border-brand-green hover:shadow-md transition group">
-                            <div class="text-brand-green font-extrabold text-xl mb-3 group-hover:scale-105 transform origin-left transition">USAMO & AIME</div>
-                            <p class="text-slate-600 text-sm font-light leading-relaxed">Our committee is composed of Olympiad-level qualifiers (USAMO/USAJMO) and multi-time AIME qualifiers.</p>
-                        </div>
-                        
-                        <div class="p-8 bg-slate-50 rounded-2xl border border-slate-100 hover:border-brand-gold hover:shadow-md transition group">
-                            <div class="text-brand-gold font-extrabold text-xl mb-3 group-hover:scale-105 transform origin-left transition text-shadow-sm">AMC 10/12</div>
-                            <p class="text-slate-600 text-sm font-light leading-relaxed">Including AMC 12 perfect scorers, and multiple DHR awardees.</p>
-                        </div>
-                        
-                        <div class="p-8 bg-slate-50 rounded-2xl border border-slate-100 hover:border-brand-dark hover:shadow-md transition group">
-                            <div class="text-brand-dark font-extrabold text-xl mb-3 group-hover:scale-105 transform origin-left transition">NC ARML Team</div>
-                            <p class="text-slate-600 text-sm font-light leading-relaxed">Featuring active, high-performing members of the North Carolina state American Regions Mathematics League (ARML) team.</p>
-                        </div>
-                    </div>
-                </div>
-			</div>
-		</div>
+    <!-- ══════════════════════════════════════════
+         TEAM GRID
+    ══════════════════════════════════════════ -->
+    <section class="mb-20 pb-20 border-b border-gray-100">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 reveal-on-scroll">
+        {teamMembers.map(member => (
+          <div class="bg-white border border-gray-200 rounded-xl p-7 flex flex-col items-center text-center hover:border-brand-green hover:shadow-lg transition-all duration-300 group">
+            <div class="w-14 h-14 rounded-full bg-slate-50 border border-gray-200 flex items-center justify-center font-bold text-lg text-brand-green mb-5 shadow-sm group-hover:bg-brand-green group-hover:text-white group-hover:scale-105 transition-all duration-300">
+              {member.initials}
+            </div>
+            <h3 class="font-bold text-brand-dark text-base mb-0.5">{member.name}</h3>
+            <p class="text-[10px] font-bold text-brand-green uppercase tracking-widest mb-4">{member.role}</p>
+            <p class="text-slate-500 text-sm leading-relaxed">{member.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
 
-		<div class="bg-white rounded-3xl p-10 md:p-16 border-2 border-slate-100 flex flex-col md:flex-row gap-16 shadow-inner hover:border-slate-200 hover:shadow-lg transition duration-300">
-			<div class="md:w-1/2 flex flex-col justify-center">
-				<h2 class="text-4xl font-extrabold text-slate-950 mb-6 tracking-tight border-b-2 border-brand-green pb-4 inline-block">Reach Out</h2>
-				<p class="text-slate-700 text-xl leading-relaxed mb-6 font-light">
-					Reach out with any comments/concerns!
-				</p>
-			</div>
-			
-			<div class="md:w-1/2 bg-brand-light rounded-2xl shadow-xl p-10 border border-slate-100 hover:shadow-2xl hover:border-slate-300 transition duration-300 relative">
-				<form id="contact-form" action="https://formspree.io/f/xojzalge" method="POST" class="space-y-8">
-					<div>
-						<label for="name" class="block text-sm font-semibold text-brand-dark mb-1.5">Full Name / Organization</label>
-						<input type="text" name="name" id="name" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-brand-green focus:ring-brand-green p-3.5 border text-lg font-light placeholder:text-slate-400 outline-none transition" placeholder="Jane Doe / Company XYZ">
-					</div>
-					<div>
-						<label for="email" class="block text-sm font-semibold text-brand-dark mb-1.5">Email Address</label>
-						<input type="email" name="email" id="email" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-brand-green focus:ring-brand-green p-3.5 border text-lg font-light placeholder:text-slate-400 outline-none transition" placeholder="jane@example.com">
-					</div>
-					<div>
-						<label for="message" class="block text-sm font-semibold text-brand-dark mb-1.5">Inquiry / Message</label>
-						<textarea id="message" name="message" rows="4" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-brand-green focus:ring-brand-green p-3.5 border text-lg font-light placeholder:text-slate-400 outline-none transition resize-none" placeholder="We are interested in exploring partnership opportunities..."></textarea>
-					</div>
-					
-                    <div id="contact-status" class="hidden font-bold text-center text-sm p-3 rounded-lg"></div>
+    <!-- ══════════════════════════════════════════
+         CONTACT — split panel layout
+    ══════════════════════════════════════════ -->
+    <section class="reveal-on-scroll delay-100">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
 
-                    <button id="contact-submit-btn" type="submit" class="w-full flex justify-center py-4 px-10 border-2 border-transparent rounded-lg shadow-lg text-lg font-bold text-brand-dark bg-brand-gold hover:opacity-90 transition transform duration-200 active:scale-95">
-						Send Message
-					</button>
-				</form>
-			</div>
-		</div>
+        <!-- Dark info panel -->
+        <div class="md:w-2/5 bg-brand-dark p-10 md:p-12 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute bottom-0 right-0 w-36 pointer-events-none opacity-[0.07]" aria-hidden="true">
+            <img src="/bridge-icon.png"
+                 class="w-full h-auto"
+                 style="filter: brightness(0) invert(1);"
+                 alt="" />
+          </div>
+          <div class="relative z-10">
+            <p class="text-brand-green font-semibold text-xs tracking-widest uppercase mb-3">Get in Touch</p>
+            <h2 class="font-serif font-bold text-2xl md:text-3xl text-white mb-4 leading-snug">Have an inquiry?</h2>
+            <div class="w-10 h-[2px] bg-brand-gold rounded mb-5"></div>
+            <p class="text-slate-400 text-sm leading-relaxed font-light">
+              Questions about the tournament, sponsorship, registration, or learning resources? We read every message and respond promptly.
+            </p>
+          </div>
+          <p class="relative z-10 text-slate-600 text-xs mt-8">
+            Allow 1-2 days for a response.
+          </p>
+        </div>
 
-	</div>
+        <!-- Form panel -->
+        <div class="md:w-3/5 p-10 md:p-12">
+          <form id="contact-form" action="https://formspree.io/f/xojzalge" method="POST" class="space-y-5">
+            <input type="hidden" name="subject" value="New IMT Contact Inquiry" />
+
+            <div>
+              <label for="name" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">Name / Organization</label>
+              <input type="text" id="name" name="name" required
+                     class="w-full rounded-lg border border-gray-200 focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 px-4 py-3 text-sm outline-none transition bg-brand-light"
+                     placeholder="Jane Doe / Math Club at Lincoln High" />
+            </div>
+
+            <div>
+              <label for="email" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">Email Address</label>
+              <input type="email" id="email" name="email" required
+                     class="w-full rounded-lg border border-gray-200 focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 px-4 py-3 text-sm outline-none transition bg-brand-light"
+                     placeholder="jane@example.com" />
+            </div>
+
+            <div>
+              <label for="message" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">Message</label>
+              <textarea id="message" name="message" rows="4" required
+                        class="w-full rounded-lg border border-gray-200 focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 px-4 py-3 text-sm outline-none transition resize-none bg-brand-light"
+                        placeholder="We're interested in sponsoring the Fall 2026 IMT…"></textarea>
+            </div>
+
+            <div id="contact-status" class="hidden text-sm font-semibold text-center p-3 rounded-lg"></div>
+
+            <button id="contact-submit-btn" type="submit"
+                    class="w-full bg-brand-dark text-brand-gold font-bold py-3.5 rounded-lg hover:bg-[#1e3152] transition-colors duration-150 text-sm btn-lift">
+              Send Message
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
 </Layout>
 
 <script>
-    const form = document.getElementById('contact-form') as HTMLFormElement;
-    const submitBtn = document.getElementById('contact-submit-btn');
-    const statusDiv = document.getElementById('contact-status');
+  document.addEventListener('DOMContentLoaded', () => {
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
 
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // Stop the default redirect
-            
-            submitBtn.textContent = "Sending...";
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            statusDiv.classList.add('hidden');
+    // Contact form
+    const form   = document.getElementById('contact-form') as HTMLFormElement;
+    const btn    = document.getElementById('contact-submit-btn') as HTMLButtonElement;
+    const status = document.getElementById('contact-status') as HTMLElement;
 
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: { 'Accept': 'application/json' }
-                });
+    form?.addEventListener('submit', async e => {
+      e.preventDefault();
+      btn.textContent = 'Sending…';
+      btn.disabled    = true;
+      status.className = 'hidden';
 
-                if (response.ok) {
-                    form.reset();
-                    statusDiv.textContent = "Success! Your message has been sent.";
-                    statusDiv.className = "font-bold text-center text-sm p-3 rounded-lg bg-green-50 text-brand-green mb-4";
-                } else {
-                    statusDiv.textContent = "Oops! There was a problem sending your message.";
-                    statusDiv.className = "font-bold text-center text-sm p-3 rounded-lg bg-red-50 text-red-500 mb-4";
-                }
-            } catch (error) {
-                statusDiv.textContent = "Network error. Please try again.";
-                statusDiv.className = "font-bold text-center text-sm p-3 rounded-lg bg-red-50 text-red-500 mb-4";
-            }
-
-            submitBtn.textContent = "Send Message";
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body:   new FormData(form),
+          headers: { Accept: 'application/json' },
         });
-    }
+        if (res.ok) {
+          form.reset();
+          status.textContent = "✓ Message sent — we'll be in touch soon.";
+          status.className   = 'text-sm font-semibold text-center p-3 rounded-lg bg-green-50 text-brand-green';
+        } else {
+          throw new Error();
+        }
+      } catch {
+        status.textContent = 'Something went wrong. Please try again.';
+        status.className   = 'text-sm font-semibold text-center p-3 rounded-lg bg-red-50 text-red-600';
+      }
+
+      btn.textContent = 'Send Message';
+      btn.disabled    = false;
+    });
+  });
 </script>
