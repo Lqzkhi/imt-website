@@ -1,57 +1,193 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const fallRegistrationUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdp3uVAAHhcEO5q9WzS2fkNh0fypudgwIUSuC_87fjJBcKVug/viewform?usp=publish-editor';
+
 ---
 
-<Layout title="Home">
-	<section class="relative bg-brand-dark text-brand-light overflow-hidden">
-		<div class="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-28 lg:py-36 flex flex-col items-center text-center">
-			
+<Layout
+  title="Home"
+  description="Integrated Math runs free online tournaments and publishes resources for students interested in proof, modeling, and higher mathematics."
+>
+  <header class="home-intro">
+    <div class="site-container intro-layout">
+      <div>
+        <p class="home-kicker">Integrated Mathematics</p>
+        <h1>Write proofs. Build models. Solve hard problems.</h1>
+        <p class="home-summary">Free online competitions in proof, modeling, and higher mathematics.</p>
+        <div class="home-actions">
+          <a class="button-primary" href="/competitions">View competitions</a>
+          <a class="plain-link" href="/learn">Learning resources</a>
+        </div>
+      </div>
+      <div class="intro-note">
+        <strong>Student-led. Open worldwide.</strong>
+        <p>Problems reward clear reasoning, not memorized steps.</p>
+      </div>
+    </div>
+  </header>
 
-			<h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-8 max-w-4xl leading-tight">
-				IMT: Where <span class="text-brand-gold">Theory</span> and <span class="text-brand-gold">Application</span> Converge
-			</h1>
-			<p class="text-xl md:text-2xl text-gray-300 max-w-3xl mb-12 leading-relaxed font-light">
-				Welcome to the <span class="text-brand-gold">Integrated Mathematics Tournament</span>, an annual online mathematics competition aimed for middle and high schoolers introducing people to a wider range of mathematical topics.
-			</p>
-            
-            <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 w-full max-w-4xl">
-				<a href={`${import.meta.env.BASE_URL}/about`} class="bg-transparent border-2 border-brand-gold text-brand-gold font-bold py-4 px-8 rounded-full hover:bg-brand-gold hover:text-brand-dark transition duration-200 text-lg text-center">
-					Learn More
-				</a>
-                <a class="bg-brand-gold text-brand-dark font-bold py-4 px-8 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition transform duration-200 text-lg text-center">
-					Register Soon!
-				</a>
-				<a href={`${import.meta.env.BASE_URL}/team`} class="bg-transparent border-2 border-brand-gold text-brand-gold font-bold py-4 px-8 rounded-full hover:bg-brand-gold hover:text-brand-dark transition duration-200 text-lg text-center">
-					Meet the Team
-				</a>
-			</div>
-		</div>
-	</section>
+  <section class="next-tournament" aria-labelledby="fall-heading">
+    <div class="site-container tournament-layout">
+      <div>
+        <p>Next tournament</p>
+        <h2 id="fall-heading">Fall 2026 IMT</h2>
+      </div>
+      <dl>
+        <div><dt>Round 1</dt><dd>Sep 26 to Oct 10</dd></div>
+        <div><dt>Live final</dt><dd>Oct 17</dd></div>
+        <div><dt>Format</dt><dd>Online</dd></div>
+      </dl>
+      <div class="tournament-actions">
+        <a href={fallRegistrationUrl} target="_blank" rel="noopener noreferrer">Register for Fall 2026</a>
+        <a href="/competitions/fall-2026">Read the rules</a>
+      </div>
+    </div>
+  </section>
 
-	<section class="py-24 bg-brand-light">
-		<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-			<div class="text-center mb-20 max-w-3xl mx-auto">
-				<h2 class="text-4xl font-extrabold text-brand-dark mb-6 tracking-tight">Mathematics Reimagined</h2>
-				<p class="text-xl text-gray-700 leading-relaxed font-light">We aim to deviate from quick calculations and memorization, and introduce individuals to applied mathematics and deeper thinking skills.</p>
-				<div class="mt-6 w-32 h-1 bg-brand-green mx-auto rounded-full"></div>
-			</div>
-			<div class="grid md:grid-cols-3 gap-12 text-center">
-				<div class="p-8 bg-white rounded-3xl shadow-card group hover:shadow-card-hover hover:border-brand-gold hover:scale-[1.02] transition duration-300 border border-gray-100">
-					<div class="w-20 h-20 bg-brand-green text-brand-light rounded-full flex items-center justify-center mx-auto mb-8 text-3xl font-extrabold group-hover:scale-110 transition transform duration-300">1</div>
-					<h3 class="text-2xl font-semibold mb-5 text-brand-dark group-hover:text-brand-green_dark transition">Bridge the Gap</h3>
-					<p class="text-gray-700 leading-relaxed text-lg font-light">IMT integrates competition math concepts with real-world data and fields of applied mathematics.</p>
-				</div>
-				<div class="p-8 bg-white rounded-3xl shadow-card group hover:shadow-card-hover hover:border-brand-gold hover:scale-[1.02] transition duration-300 border border-gray-100">
-					<div class="w-20 h-20 bg-brand-green text-brand-light rounded-full flex items-center justify-center mx-auto mb-8 text-3xl font-extrabold group-hover:scale-110 transition transform duration-300">2</div>
-					<h3 class="text-2xl font-semibold mb-5 text-brand-dark group-hover:text-brand-green_dark transition">Foster Collaboration</h3>
-					<p class="text-gray-700 leading-relaxed text-lg font-light">IMT encourages teamwork, collaboration, brainstorming, and diverse perspectives.</p>
-				</div>
-				<div class="p-8 bg-white rounded-3xl shadow-card group hover:shadow-card-hover hover:border-brand-gold hover:scale-[1.02] transition duration-300 border border-gray-100">
-					<div class="w-20 h-20 bg-brand-green text-brand-light rounded-full flex items-center justify-center mx-auto mb-8 text-3xl font-extrabold group-hover:scale-110 transition transform duration-300">3</div>
-					<h3 class="text-2xl font-semibold mb-5 text-brand-dark group-hover:text-brand-green_dark transition">Encourage Deep Thinking</h3>
-					<p class="text-gray-700 leading-relaxed text-lg font-light">IMT introduces students to solve open-ended problems that demand analytical depth and critical reasoning, not just speed and calculations.</p>
-				</div>
-			</div>
-		</div>
-	</section>
+  <main class="home-main">
+    <div class="site-container home-columns">
+      <div class="home-primary">
+        <section class="home-section" aria-labelledby="about-heading">
+          <h2 id="about-heading">Why IMT</h2>
+          <p class="lead-sentence">Most math contests reward speed. IMT also asks for proofs, modeling, and clear explanations.</p>
+          <p>Registration and all competition materials are free.</p>
+        </section>
+
+        <section class="home-section" aria-labelledby="format-heading">
+          <h2 id="format-heading">Competition format</h2>
+          <div class="format-list">
+            <div>
+              <h3>Problem solving</h3>
+              <p>Short-answer problems, ordered by difficulty.</p>
+            </div>
+            <div>
+              <h3>Proof</h3>
+              <p>Written solutions graded for reasoning and clarity.</p>
+            </div>
+            <div>
+              <h3>Integrated Round</h3>
+              <p>Team problems using modeling, data, and applied mathematics.</p>
+            </div>
+          </div>
+          <a class="plain-link" href="/competitions">See all competitions</a>
+        </section>
+
+        <section class="home-section" aria-labelledby="learn-heading">
+          <h2 id="learn-heading">Resources</h2>
+          <div class="resource-links">
+            <a href="/learn/diagnostic">
+              <span>Skill diagnostic</span>
+              <small>Check your level in four competition-math subjects.</small>
+            </a>
+            <a href="/competitions/spring-2026">
+              <span>Spring 2026 problems and solutions</span>
+              <small>Download all six rounds.</small>
+            </a>
+          </div>
+        </section>
+      </div>
+
+      <aside class="home-aside" aria-labelledby="updates-heading">
+        <h2 id="updates-heading">Links</h2>
+        <a href="/competitions/spring-2026">
+          <span>Spring 2026 archive</span>
+          <small>Results, statistics, problems, and solutions</small>
+        </a>
+        <a href="/register">
+          <span>Email updates</span>
+          <small>Competition and resource announcements</small>
+        </a>
+      </aside>
+    </div>
+  </main>
+
+  <section class="record" aria-labelledby="record-heading">
+    <div class="site-container record-layout">
+      <div>
+        <h2 id="record-heading">Spring 2026</h2>
+        <p>Our inaugural tournament</p>
+      </div>
+      <dl>
+        <div><dt>200+</dt><dd>registered competitors</dd></div>
+        <div><dt>35+</dt><dd>countries represented</dd></div>
+        <div><dt>$1,000+</dt><dd>in prizes awarded</dd></div>
+      </dl>
+    </div>
+  </section>
+
 </Layout>
+
+<style>
+  .home-intro { border-bottom: 1px solid var(--line); background: var(--paper); }
+  .intro-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.55fr); gap: clamp(3rem, 8vw, 7rem); align-items: end; padding-block: clamp(4.5rem, 8vw, 7rem); }
+  .home-kicker { margin: 0 0 1rem; color: var(--green); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.11em; text-transform: uppercase; }
+  .home-intro h1 { max-width: 780px; margin: 0; color: var(--ink); font-size: clamp(2.8rem, 5.8vw, 5rem); font-weight: 750; letter-spacing: -0.045em; line-height: 1.02; }
+  .home-summary { max-width: 640px; margin: 1.5rem 0 0; color: var(--muted); font-size: clamp(1.05rem, 1.7vw, 1.22rem); line-height: 1.65; }
+  .home-actions { display: flex; align-items: center; gap: 1.25rem; margin-top: 2rem; }
+  .plain-link { color: var(--green); font-size: 0.87rem; font-weight: 700; text-decoration-thickness: 1px; }
+  .intro-note { border-top: 3px solid var(--green); padding-top: 1.1rem; }
+  .intro-note strong { font-size: 0.9rem; }
+  .intro-note p { margin: 0.65rem 0 0; color: var(--muted); font-size: 0.84rem; line-height: 1.6; }
+
+  .next-tournament { background: var(--ink); color: white; }
+  .tournament-layout { display: grid; grid-template-columns: 0.7fr 1.4fr 0.7fr; gap: 2.5rem; align-items: center; padding-block: 1.8rem; }
+  .tournament-layout > div > p { margin: 0 0 0.3rem; color: #aab4c2; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+  .tournament-layout h2 { margin: 0; font-size: 1.25rem; }
+  .tournament-layout dl { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; }
+  .tournament-layout dl div { border-left: 1px solid #36445c; padding-left: 1rem; }
+  .tournament-layout dt { color: #aab4c2; font-size: 0.68rem; text-transform: uppercase; }
+  .tournament-layout dd { margin: 0.3rem 0 0; font-size: 0.82rem; font-weight: 700; }
+  .tournament-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.45rem; }
+  .tournament-actions a { color: white; font-size: 0.78rem; font-weight: 700; }
+
+  .home-main { background: white; }
+  .home-columns { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(250px, 0.55fr); gap: clamp(3.5rem, 9vw, 8rem); padding-block: clamp(3.5rem, 7vw, 6rem); }
+  .home-section { padding-bottom: 3.5rem; }
+  .home-section + .home-section { border-top: 1px solid var(--line); padding-top: 3.5rem; }
+  .home-section h2, .home-aside h2, .record h2 { margin: 0 0 1.25rem; color: var(--ink); font-size: 1.35rem; font-weight: 750; letter-spacing: -0.02em; }
+  .home-section > p { max-width: 720px; color: var(--muted); font-size: 0.95rem; line-height: 1.75; }
+  .home-section .lead-sentence { color: var(--ink); font-size: 1.22rem; line-height: 1.55; }
+  .format-list { margin: 0 0 1.4rem; border-top: 1px solid var(--line); }
+  .format-list > div { display: grid; grid-template-columns: 180px 1fr; gap: 1.5rem; border-bottom: 1px solid var(--line); padding: 1rem 0; }
+  .format-list h3 { margin: 0; font-size: 0.9rem; }
+  .format-list p { margin: 0; color: var(--muted); font-size: 0.87rem; line-height: 1.55; }
+  .resource-links { border-top: 1px solid var(--line); }
+  .resource-links a { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 1.5rem; border-bottom: 1px solid var(--line); padding: 1rem 0; color: var(--ink); text-decoration: none; }
+  .resource-links a:hover span { color: var(--green); text-decoration: underline; }
+  .resource-links span { font-size: 0.9rem; font-weight: 700; }
+  .resource-links small { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+
+  .home-aside { align-self: start; border-top: 3px solid var(--ink); }
+  .home-aside h2 { margin: 0; border-bottom: 1px solid var(--line); padding: 1rem 0; }
+  .home-aside a { display: block; border-bottom: 1px solid var(--line); padding: 1rem 0; color: var(--ink); text-decoration: none; }
+  .home-aside a:hover span { color: var(--green); text-decoration: underline; }
+  .home-aside span { display: block; font-size: 0.85rem; font-weight: 700; }
+  .home-aside small { display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0.74rem; line-height: 1.5; }
+
+  .record { border-block: 1px solid var(--line); background: var(--paper); }
+  .record-layout { display: grid; grid-template-columns: 0.6fr 1.4fr; gap: 4rem; align-items: center; padding-block: 2.7rem; }
+  .record h2 { margin-bottom: 0.25rem; }
+  .record-layout > div > p { margin: 0; color: var(--muted); font-size: 0.8rem; }
+  .record dl { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; }
+  .record dl div { border-left: 1px solid var(--line); padding-left: 1.25rem; }
+  .record dt { font-size: 1.65rem; font-weight: 750; letter-spacing: -0.03em; }
+  .record dd { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.72rem; }
+
+  @media (max-width: 850px) {
+    .intro-layout, .home-columns { grid-template-columns: 1fr; }
+    .intro-note { max-width: 540px; }
+    .tournament-layout { grid-template-columns: 1fr; gap: 1.25rem; }
+    .tournament-actions { align-items: flex-start; }
+    .record-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+  }
+
+  @media (max-width: 620px) {
+    .home-actions { align-items: stretch; flex-direction: column; }
+    .home-actions .plain-link { padding-block: 0.4rem; text-align: center; }
+    .tournament-layout dl, .record dl { grid-template-columns: 1fr; gap: 0.8rem; }
+    .tournament-layout dl div, .record dl div { border-left: 0; border-top: 1px solid var(--line); padding: 0.7rem 0 0; }
+    .tournament-layout dl div { border-color: #36445c; }
+    .format-list > div, .resource-links a { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+</style>

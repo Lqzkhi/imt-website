@@ -1,0 +1,242 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const fallRegistrationUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdp3uVAAHhcEO5q9WzS2fkNh0fypudgwIUSuC_87fjJBcKVug/viewform?usp=publish-editor';
+---
+
+<Layout
+  title="Fall 2026 Integrated Mathematics Tournament"
+  description="Format, dates, rounds, and awards for the Fall 2026 Integrated Mathematics Tournament."
+>
+  <!-- ══════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════ -->
+  <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 pt-10 pb-16 animate-on-load">
+      <a
+        href="/competitions"
+        class="inline-flex items-center text-slate-400 hover:text-brand-gold transition-colors duration-150 text-sm font-medium mb-10 group"
+      >
+        <svg class="w-4 h-4 mr-1.5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Tournament Directory
+      </a>
+
+      <div class="flex flex-wrap items-center gap-3 mb-5">
+        <span class="inline-flex items-center gap-1.5 bg-brand-green/20 text-brand-green text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-green inline-block"></span>
+          Registration open
+        </span>
+        <span class="text-slate-500 text-sm font-medium">Fall 2026</span>
+      </div>
+
+      <h1 class="font-serif font-bold text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight mb-4 max-w-4xl">
+        Fall 2026 Integrated<br />
+        <span class="font-serif font-bold text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight mb-4 max-w-4xl">Mathematics Tournament</span>
+      </h1>
+      <p class="text-slate-400 max-w-2xl text-base font-light leading-relaxed">
+        Two rounds: a timed online qualifier and a live, proctored final on October 17.
+      </p>
+
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-slate-500 font-medium mt-6 pt-5 border-t border-slate-700/40">
+        <span>Round 1: September 26–October 10, 2026</span>
+        <span class="text-slate-700">·</span>
+        <span>Live Final: October 17, 2026</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       TIMELINE
+  ══════════════════════════════════════════ -->
+  <section class="py-16 md:py-20 bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="mb-10 reveal-on-scroll border-l-4 border-brand-gold pl-5">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">At a glance</p>
+        <h2 class="font-serif font-bold text-3xl text-brand-dark">Competition Timeline</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-brand-light border border-gray-200 border-t-4 border-t-brand-green p-7 rounded-xl reveal-on-scroll delay-100">
+          <p class="text-[11px] font-bold text-brand-green uppercase tracking-widest mb-3">Round 1 · Asynchronous</p>
+          <h3 class="font-serif font-bold text-2xl text-brand-dark mb-2">September 26–October 10, 2026</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">Complete both sections anytime during the window. They can be taken separately.</p>
+        </div>
+        <div class="bg-brand-light border border-gray-200 border-t-4 border-t-brand-gold p-7 rounded-xl reveal-on-scroll delay-200">
+          <p class="text-[11px] font-bold text-brand-dark uppercase tracking-widest mb-3">Round 2 · Live Final</p>
+          <h3 class="font-serif font-bold text-2xl text-brand-dark mb-2">October 17, 2026</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">A live final for the top quarter of Round 1.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       ROUND 1
+  ══════════════════════════════════════════ -->
+  <section class="py-16 md:py-24 bg-brand-light border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-12 reveal-on-scroll">
+        <div>
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Qualifying Round</p>
+          <h2 class="font-serif font-bold text-3xl md:text-4xl text-brand-dark">Round 1</h2>
+        </div>
+        <p class="text-slate-500 text-sm max-w-md leading-relaxed md:text-right">Each section counts for half of your Round 1 score: <span class="font-bold text-brand-dark">50% computational, 50% proof.</span></p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <article class="bg-white border border-gray-200 border-t-4 border-t-brand-green p-7 md:p-8 rounded-xl shadow-sm reveal-on-scroll delay-100">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-100">
+            <h3 class="font-serif font-bold text-2xl text-brand-dark">Computational Section</h3>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-brand-green bg-brand-green/10 rounded-full px-3 py-1.5">50%</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div><p class="text-2xl font-serif font-bold text-brand-dark">20</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Problems</p></div>
+            <div><p class="text-2xl font-serif font-bold text-brand-dark">2 hours</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Time limit</p></div>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-500 leading-relaxed">
+            <li class="flex gap-3"><span class="text-brand-green font-bold">•</span><span>Short-answer and computational problem solving.</span></li>
+            <li class="flex gap-3"><span class="text-brand-green font-bold">•</span><span>Problems get harder throughout.</span></li>
+            <li class="flex gap-3"><span class="text-brand-green font-bold">•</span><span>Difficulty describes the ideas involved, not expected solving time.</span></li>
+          </ul>
+        </article>
+
+        <article class="bg-white border border-gray-200 border-t-4 border-t-brand-gold p-7 md:p-8 rounded-xl shadow-sm reveal-on-scroll delay-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-100">
+            <h3 class="font-serif font-bold text-2xl text-brand-dark">Proof Section</h3>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-brand-dark bg-brand-gold/20 rounded-full px-3 py-1.5">50%</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div><p class="text-2xl font-serif font-bold text-brand-dark">5</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Problems</p></div>
+            <div><p class="text-2xl font-serif font-bold text-brand-dark">4.5 hours</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold">Time limit</p></div>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-500 leading-relaxed">
+            <li class="flex gap-3"><span class="text-brand-gold font-bold">•</span><span>Full written proofs are required; partial credit may be awarded.</span></li>
+            <li class="flex gap-3"><span class="text-brand-gold font-bold">•</span><span>Five proofs, ordered by difficulty.</span></li>
+            <li class="flex gap-3"><span class="text-brand-gold font-bold">•</span><span>Each problem is scored out of 7 points.</span></li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       DIFFICULTY AT A GLANCE
+  ══════════════════════════════════════════ -->
+  <section class="py-16 md:py-20 bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="mb-10 reveal-on-scroll">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">What to expect</p>
+        <h2 class="font-serif font-bold text-3xl md:text-4xl text-brand-dark">Difficulty</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <article class="bg-brand-light border border-gray-200 border-l-4 border-l-brand-green p-7 rounded-r-xl reveal-on-scroll delay-100">
+          <h3 class="font-serif font-bold text-2xl text-brand-dark mb-3">Computational</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">The early problems are around AMC 10/12 level. The round gets much harder as it goes, moving through AIME and into olympiad-level ideas.</p>
+        </article>
+        <article class="bg-brand-light border border-gray-200 border-l-4 border-l-brand-gold p-7 rounded-r-xl reveal-on-scroll delay-200">
+          <h3 class="font-serif font-bold text-2xl text-brand-dark mb-3">Proof</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">The proof section starts with approachable AIME-level ideas and builds toward national and international olympiad problems.</p>
+        </article>
+      </div>
+      <p class="mt-5 text-xs text-slate-400 leading-relaxed">These labels describe content, not time.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       ADVANCEMENT + RECOGNITION
+  ══════════════════════════════════════════ -->
+  <section class="py-16 md:py-20 bg-brand-light border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white border border-gray-200 border-l-4 border-l-brand-green p-7 md:p-8 rounded-r-xl reveal-on-scroll">
+          <p class="text-[11px] font-bold text-brand-green uppercase tracking-widest mb-3">Advancement</p>
+          <h2 class="font-serif font-bold text-3xl text-brand-dark mb-3">The top quarter advances</h2>
+          <p class="text-slate-500 text-sm leading-relaxed">About one in four Round 1 competitors will qualify for the live final. The cutoff depends on participation and scores.</p>
+        </div>
+        <div class="bg-white border border-gray-200 border-l-4 border-l-brand-gold p-7 md:p-8 rounded-r-xl reveal-on-scroll delay-100">
+          <p class="text-[11px] font-bold text-brand-dark uppercase tracking-widest mb-3">Round 1 recognition</p>
+          <h2 class="font-serif font-bold text-3xl text-brand-dark mb-3">Top 3 + Honorable Mentions</h2>
+          <p class="text-slate-500 text-sm leading-relaxed">The top three receive awards; nearby scores earn Honorable Mentions. These awards are separate from the live final.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       LIVE FINAL
+  ══════════════════════════════════════════ -->
+  <section class="py-16 md:py-24 bg-brand-dark text-brand-light border-b-4 border-brand-green">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-12 reveal-on-scroll">
+        <div>
+          <p class="text-[11px] font-bold text-brand-gold uppercase tracking-widest mb-2">October 17, 2026</p>
+          <h2 class="font-serif font-bold text-3xl md:text-4xl text-white">Round 2 · Live Final</h2>
+        </div>
+        <span class="inline-flex self-start md:self-auto items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-gold border border-brand-gold/40 rounded-full px-3 py-1.5">Live format</span>
+      </div>
+
+      <div class="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-8 items-start">
+        <div class="bg-white/[0.05] border border-white/10 rounded-xl p-7 md:p-8 reveal-on-scroll delay-100">
+          <p class="text-lg text-slate-200 font-light leading-relaxed mb-7">The final has about 10 short-answer problems, released one at a time. Competitors submit answers live, so <span class="text-white font-semibold">correctness and speed both matter.</span></p>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="border border-white/10 rounded-lg p-4"><p class="text-brand-gold font-serif font-bold text-2xl">10 → 5</p><p class="text-xs text-slate-400 mt-1">The first correct answer earns 10 points, followed by 9, 8, and 7. Later correct answers earn 5.</p></div>
+            <div class="border border-white/10 rounded-lg p-4"><p class="text-brand-gold font-serif font-bold text-2xl">~10 min</p><p class="text-xs text-slate-400 mt-1">Time limit for each problem.</p></div>
+          </div>
+        </div>
+
+        <div class="border border-white/10 rounded-xl p-7 md:p-8 reveal-on-scroll delay-200">
+          <h3 class="font-bold text-sm text-white uppercase tracking-wider mb-5 pb-3 border-b border-white/10">How scoring works</h3>
+          <ul class="space-y-4 text-sm text-slate-300 leading-relaxed">
+            <li class="flex gap-3"><span class="text-brand-gold font-bold">01</span><span>Correct submissions are rewarded in order of arrival: 10, 9, 8, 7, then a smaller base score for later correct answers.</span></li>
+            <li class="flex gap-3"><span class="text-brand-gold font-bold">02</span><span>Each incorrect submission costs about one point on that problem.</span></li>
+            <li class="flex gap-3"><span class="text-brand-gold font-bold">03</span><span>This discourages answer spamming while still letting competitors fix a genuine mistake.</span></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       AWARDS + CTA
+  ══════════════════════════════════════════ -->
+  <section class="py-16 md:py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="grid md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-10 items-start">
+        <div class="reveal-on-scroll">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Live final recognition</p>
+          <h2 class="font-serif font-bold text-3xl md:text-4xl text-brand-dark mb-3">Final Awards</h2>
+          <p class="text-slate-500 text-sm leading-relaxed">The top three final scores receive awards.</p>
+        </div>
+        <div class="grid sm:grid-cols-3 gap-4 reveal-on-scroll delay-100">
+          <div class="bg-brand-light border border-gray-200 border-t-4 border-t-brand-gold rounded-lg p-5"><p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2">1st Place</p><p class="font-serif font-bold text-xl text-brand-dark">Champion</p></div>
+          <div class="bg-brand-light border border-gray-200 border-t-4 border-t-slate-300 rounded-lg p-5"><p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2">2nd Place</p><p class="font-serif font-bold text-xl text-brand-dark">Runner-up</p></div>
+          <div class="bg-brand-light border border-gray-200 border-t-4 border-t-brand-green rounded-lg p-5"><p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2">3rd Place</p><p class="font-serif font-bold text-xl text-brand-dark">Third</p></div>
+          <div class="sm:col-span-3 bg-brand-light border border-gray-200 rounded-lg p-5"><p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2">Additional distinction</p><p class="text-sm text-slate-600">Fourth and fifth place receive Honorable Mentions.</p></div>
+        </div>
+      </div>
+
+      <div class="mt-14 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 reveal-on-scroll">
+        <p class="text-sm font-semibold text-brand-dark">Registration is open for Fall 2026.</p>
+        <a href={fallRegistrationUrl} target="_blank" rel="noopener noreferrer" class="shrink-0 inline-block bg-brand-dark text-brand-gold font-bold py-3 px-7 rounded hover:bg-[#1e3152] transition-colors duration-150 btn-lift text-sm">Register now</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+  });
+</script>

@@ -7,11 +7,28 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "check": "astro check",
+    "build": "node --max-old-space-size=4096 ./node_modules/astro/bin/astro.mjs build",
+    "verify": "npm run check && npm run build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.1.4"
+    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/vercel": "^11.0.4",
+    "@supabase/supabase-js": "^2.111.0",
+    "@vercel/analytics": "^2.0.1",
+    "astro": "^7.1.6",
+    "katex": "^0.18.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/katex": "^0.16.8",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "path-to-regexp": "6.3.0"
   }
 }

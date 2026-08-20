@@ -1,72 +1,122 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const teamMembers = [
+  { name: 'Brandon Jia', role: 'Founder & Director', desc: 'Leads competitions, resources, problem creation, logistics, and web design. High school sophomore.' },
+  { name: 'Christopher Liang', role: 'Founder & Director', desc: 'Leads problem creation and competition development. Incoming college freshman.' },
+  { name: 'Jiwan Kim', role: 'Director & Logistics Lead', desc: 'Leads logistics and day-to-day competition operations. High school sophomore.' },
+  { name: 'Yiran Yang', role: 'Outreach Lead', desc: 'Leads outreach and communications. Incoming college freshman.' },
+];
 ---
 
-<Layout title="Team & Contact">
-	<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-20">
-		
-		<div class="mb-24 border-b-2 border-slate-200 pb-16">
-			<div class="text-center mb-16 max-w-2xl mx-auto">
-				<h1 class="text-5xl font-extrabold text-slate-950 mb-6 tracking-tight">Meet the Organizers</h1>
-				<p class="text-xl text-slate-600 leading-relaxed font-light">The Integrated Mathematics Tournament is student-led. We are passionate about expanding mathematical literacy and introducing like-minded peers to wider forms of mathematics.</p>
-			</div>
+<Layout title="Team & Contact" description="Meet the student team behind Integrated Math and contact us about competitions, resources, or sponsorship.">
+  <header class="team-header">
+    <div class="site-container team-header-grid">
+      <div>
+        <p class="eyebrow">About IMT</p>
+        <h1 class="page-title">The people who built this.</h1>
+      </div>
+      <p class="lede">IMT is organized entirely by high school and college students, including USAMO and USAJMO qualifiers, AMC 12 perfect scorers, and AIME qualifiers. We built the competition we wanted to see.</p>
+    </div>
+  </header>
 
-			<div class="grid md:grid-cols-3 gap-10">
-				<div class="bg-white rounded-3xl shadow-card border border-gray-100 p-8 text-center hover:shadow-card-hover hover:border-slate-300 hover:scale-[1.02] transition duration-300 group">
-					<div class="w-28 h-28 bg-brand-light rounded-full mx-auto mb-6 border-4 border-slate-200 flex items-center justify-center text-slate-400 group-hover:scale-110 transition transform duration-300 group-hover:border-slate-300 shadow-inner">
-						<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-					</div>
-					<h3 class="text-2xl font-bold text-slate-950">Christopher Liang</h3>
-					<p class="text-brand-green_dark font-semibold mb-4 group-hover:text-brand-dark transition">Tournament Director</p>
-					<p class="text-slate-700 text-sm leading-relaxed font-light group-hover:text-brand-dark transition">Christopher is currently a senior at East Chapel Hill High School. He is a multiple time AIME qualifer and a AMC12 perfect scorer.</p>
-				</div>
-				<div class="bg-white rounded-3xl shadow-card border border-gray-100 p-8 text-center hover:shadow-card-hover hover:border-slate-300 hover:scale-[1.02] transition duration-300 group">
-					<div class="w-28 h-28 bg-brand-light rounded-full mx-auto mb-6 border-4 border-slate-200 flex items-center justify-center text-slate-400 group-hover:scale-110 transition transform duration-300 group-hover:border-slate-300 shadow-inner">
-						<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-					</div>
-					<h3 class="text-2xl font-bold text-slate-950">Brandon Jia</h3>
-					<p class="text-brand-green_dark font-semibold mb-4 group-hover:text-brand-dark transition">Tournament Director</p>
-					<p class="text-slate-700 text-sm leading-relaxed font-light group-hover:text-brand-dark transition">Brandon is currently a sophomore at East Chapel Hill High School. He is a multiple time AIME qualifier and USAJMO qualifier.</p>
-				</div>
-				<div class="bg-white rounded-3xl shadow-card border border-gray-100 p-8 text-center hover:shadow-card-hover hover:border-slate-300 hover:scale-[1.02] transition duration-300 group">
-					<div class="w-28 h-28 bg-brand-light rounded-full mx-auto mb-6 border-4 border-slate-200 flex items-center justify-center text-slate-400 group-hover:scale-110 transition transform duration-300 group-hover:border-slate-300 shadow-inner">
-						<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-					</div>
-					<h3 class="text-2xl font-bold text-slate-950">Jiwan Kim</h3>
-					<p class="text-brand-green_dark font-semibold mb-4 group-hover:text-brand-dark transition">Tournament Director</p>
-					<p class="text-slate-700 text-sm leading-relaxed font-light group-hover:text-brand-dark transition">Jiwan is currently a sophomore at Chapel Hill High School. He is a multiple time AIME qualifier.</p>
-				</div>
-			</div>
-		</div>
+  <section class="section team-section">
+    <div class="site-container">
+      <p class="eyebrow">Leadership</p>
+      <div class="team-list">
+        {teamMembers.map(member => (
+          <article>
+            <div>
+              <h2>{member.name}</h2>
+              <p class="role">{member.role}</p>
+            </div>
+            <p>{member.desc}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
 
-		<div class="bg-white rounded-3xl p-10 md:p-16 border-2 border-slate-100 flex flex-col md:flex-row gap-16 shadow-inner hover:border-slate-200 hover:shadow-lg transition duration-300">
-			<div class="md:w-1/2 flex flex-col justify-center">
-				<h2 class="text-4xl font-extrabold text-slate-950 mb-6 tracking-tight border-b-2 border-brand-green pb-4 inline-block">Reach Out</h2>
-				<p class="text-slate-700 text-xl leading-relaxed mb-6 font-light">
-					Reach out with any comments/concerns!
-				</p>
-			</div>
-			
-			<div class="md:w-1/2 bg-brand-light rounded-2xl shadow-xl p-10 border border-slate-100 hover:shadow-2xl hover:border-slate-300 transition duration-300">
-				<form action="#" method="POST" class="space-y-8">
-					<div>
-						<label for="name" class="block text-sm font-semibold text-brand-dark mb-1.5">Full Name / Organization</label>
-						<input type="text" name="name" id="name" class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-secondary-500 focus:ring-secondary-500 p-3.5 border-2 text-lg font-light placeholder:text-slate-400" placeholder="Jane Doe / Company XYZ">
-					</div>
-					<div>
-						<label for="email" class="block text-sm font-semibold text-brand-dark mb-1.5">Email Address</label>
-						<input type="email" name="email" id="email" class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-secondary-500 focus:ring-secondary-500 p-3.5 border-2 text-lg font-light placeholder:text-slate-400" placeholder="jane@example.com">
-					</div>
-					<div>
-						<label for="message" class="block text-sm font-semibold text-brand-dark mb-1.5">Inquiry / Message</label>
-						<textarea id="message" name="message" rows="5" class="mt-1 block w-full rounded-lg border-slate-300 shadow-inner focus:border-secondary-500 focus:ring-secondary-500 p-3.5 border-2 text-lg font-light placeholder:text-slate-400" placeholder="We are interested in exploring partnership opportunities..."></textarea>
-					</div>
-					<button type="submit" class="w-full flex justify-center py-4 px-10 border-2 border-transparent rounded-lg shadow-lg text-lg font-semibold text-white bg-brand-gold hover:opacity-90 transition transform duration-200 group-hover:scale-105 active:scale-95 text-brand-dark">
-						Send Message
-					</button>
-				</form>
-			</div>
-		</div>
+  <section class="section contact-section">
+    <div class="site-container contact-grid">
+      <div>
+        <p class="eyebrow">Contact</p>
+        <h2 class="section-title">Questions?</h2>
+        <p class="lede">Ask about the tournament, registration, resources, or sponsorship. We usually reply within two days.</p>
+      </div>
 
-	</div>
+      <form id="contact-form" action="https://formspree.io/f/xojzalge" method="POST">
+        <input type="hidden" name="subject" value="New IMT Contact Inquiry" />
+        <label for="name">Name or organization</label>
+        <input class="form-control" type="text" id="name" name="name" required autocomplete="name" />
+
+        <label for="email">Email</label>
+        <input class="form-control" type="email" id="email" name="email" required autocomplete="email" />
+
+        <label for="message">Message</label>
+        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+
+        <div id="contact-status" class="form-status" hidden></div>
+        <button id="contact-submit-btn" class="button-primary" type="submit">Send message</button>
+      </form>
+    </div>
+  </section>
 </Layout>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const button = document.getElementById('contact-submit-btn') as HTMLButtonElement;
+  const status = document.getElementById('contact-status') as HTMLElement;
+
+  form?.addEventListener('submit', async event => {
+    event.preventDefault();
+    button.textContent = 'Sending...';
+    button.disabled = true;
+    status.hidden = true;
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) throw new Error();
+      form.reset();
+      status.textContent = "Message sent. We'll be in touch soon.";
+      status.className = 'form-status success';
+    } catch {
+      status.textContent = 'Something went wrong. Please try again.';
+      status.className = 'form-status error';
+    }
+
+    status.hidden = false;
+    button.textContent = 'Send message';
+    button.disabled = false;
+  });
+</script>
+
+<style>
+  .team-header { border-bottom: 1px solid var(--line); background: var(--paper); }
+  .team-header-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: end; padding-block: clamp(3.75rem, 7vw, 6rem); }
+  .team-header-grid .lede { margin: 0; }
+  .team-section { background: white; }
+  .team-list { border-top: 1px solid var(--line); }
+  .team-list article { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 3rem; border-bottom: 1px solid var(--line); padding-block: 1.6rem; }
+  .team-list h2 { margin: 0; font-family: "Inter", Arial, sans-serif; font-size: 1.2rem; font-weight: 750; letter-spacing: -0.02em; }
+  .team-list .role { margin: 0.3rem 0 0; color: var(--green); font-size: 0.72rem; font-weight: 750; text-transform: uppercase; }
+  .team-list article > p { max-width: 600px; margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+  .contact-section { border-top: 1px solid var(--line); background: var(--paper); }
+  .contact-grid { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: clamp(3rem, 8vw, 7rem); align-items: start; }
+  .contact-grid form { display: grid; gap: 0.55rem; }
+  .contact-grid label { margin-top: 0.65rem; font-size: 0.75rem; font-weight: 750; text-transform: uppercase; }
+  .contact-grid button { justify-self: start; margin-top: 0.8rem; }
+  .form-status { margin-top: 0.6rem; padding: 0.8rem; border: 1px solid var(--line); font-size: 0.85rem; }
+  .form-status.success { border-color: #9ec9b8; background: #edf7f2; color: var(--green); }
+  .form-status.error { border-color: #d7aaa5; background: #fff1ef; color: #8b2c23; }
+
+  @media (max-width: 760px) {
+    .team-header-grid,
+    .contact-grid,
+    .team-list article { grid-template-columns: 1fr; gap: 1.2rem; }
+  }
+</style>

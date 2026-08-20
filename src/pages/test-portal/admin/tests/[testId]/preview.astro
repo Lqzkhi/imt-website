@@ -1,0 +1,133 @@
+---
+import Layout from '../../../../../layouts/Layout.astro';
+const { testId } = Astro.params;
+---
+
+<Layout title="Admin Test Preview" description="Preview a Test Portal assessment without creating an attempt.">
+  <section id="preview-root" data-test-id={testId} class="min-h-screen pb-16">
+    <div class="sticky top-[4.5rem] z-30 bg-amber-50 border-b border-amber-200 text-amber-900">
+      <div class="max-w-5xl mx-auto px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <strong class="text-sm">Admin preview</strong>
+          <span class="text-xs ml-2">No timer, attempt, answers, or uploads will be created.</span>
+        </div>
+        <a id="editor-link" href="#" class="text-xs font-bold border border-amber-300 bg-white rounded px-3 py-2">Return to editor</a>
+      </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 py-10">
+      <div id="preview-loader" class="flex justify-center items-center gap-3 py-24 text-slate-500">
+        <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+        <span class="font-semibold">Building preview…</span>
+      </div>
+      <div id="preview-error" class="hidden rounded-lg border border-red-200 bg-red-50 text-red-700 p-5 text-sm font-semibold"></div>
+      <div id="preview-content" class="hidden">
+        <header class="bg-brand-dark text-white rounded-xl p-7 md:p-9 mb-7">
+          <div class="flex flex-wrap items-center gap-3 mb-3">
+            <span id="preview-status" class="rounded-full border border-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-gold"></span>
+            <span id="preview-meta" class="text-xs text-slate-400"></span>
+          </div>
+          <h1 id="preview-title" class="font-serif font-bold text-4xl"></h1>
+          <p id="preview-description" class="text-slate-300 text-sm leading-relaxed mt-4"></p>
+          <div id="preview-instructions-wrap" class="hidden mt-7 pt-6 border-t border-white/10">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3">Instructions</p>
+            <div id="preview-instructions" class="portal-math whitespace-pre-wrap text-sm leading-relaxed"></div>
+          </div>
+        </header>
+        <div id="preview-questions" class="space-y-5"></div>
+        <div id="preview-empty" class="hidden rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">This draft has no problems yet.</div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .preview-math .katex-display, #preview-instructions .katex-display { overflow-x: auto; overflow-y: hidden; padding: .45rem 0; }
+</style>
+
+<script>
+  import { escapeHtml, formatPortalDuration, getPortalSession, portalFetch, renderPortalMath } from '../../../../../lib/testPortalClient';
+
+  interface PreviewQuestion {
+    id: string;
+    position: number;
+    title: string;
+    prompt_latex: string;
+    answer_type: 'numerical' | 'multiple_choice' | 'file_upload';
+    options: { id: string; label: string }[];
+    points: number;
+    file_extensions: string[];
+    max_file_size_mb: number;
+  }
+  interface PreviewPayload {
+    test: {
+      id: string;
+      title: string;
+      description: string;
+      instructions_latex: string;
+      duration_minutes: number;
+      security_mode: 'one_sitting' | 'take_home';
+      status: string;
+    };
+    questions: PreviewQuestion[];
+  }
+
+  const root = document.getElementById('preview-root')!;
+  const testId = root.dataset.testId ?? '';
+
+  function renderPreview(data: PreviewPayload) {
+    document.title = `Preview ${data.test.title} | Integrated Math`;
+    (document.getElementById('editor-link') as HTMLAnchorElement).href = `/test-portal/admin/tests/${testId}`;
+    document.getElementById('preview-status')!.textContent = data.test.status;
+    document.getElementById('preview-title')!.textContent = data.test.title;
+    document.getElementById('preview-description')!.textContent = data.test.description || 'No description provided.';
+    document.getElementById('preview-meta')!.textContent = `${data.questions.length} problems · ${formatPortalDuration(data.test.duration_minutes)} · ${data.test.security_mode === 'one_sitting' ? 'one sitting' : 'take-home'}`;
+    if (data.test.instructions_latex) {
+      document.getElementById('preview-instructions-wrap')!.classList.remove('hidden');
+      document.getElementById('preview-instructions')!.textContent = data.test.instructions_latex;
+    }
+
+    const list = document.getElementById('preview-questions')!;
+    const empty = document.getElementById('preview-empty')!;
+    empty.classList.toggle('hidden', data.questions.length > 0);
+    data.questions.forEach((question, index) => {
+      const card = document.createElement('article');
+      card.className = 'bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm';
+      const answerDescription = question.answer_type === 'numerical'
+        ? '<input disabled class="w-full border border-slate-200 rounded-lg bg-white px-4 py-3 text-sm" placeholder="Numerical answer" />'
+        : question.answer_type === 'multiple_choice'
+          ? `<div class="space-y-2">${question.options.map((option) => `<label class="flex items-start gap-3 border border-slate-200 bg-white rounded-lg p-3"><input type="radio" disabled class="mt-1"/><span class="portal-math">${escapeHtml(option.label)}</span></label>`).join('')}</div>`
+          : `<div class="rounded-lg border-2 border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">File upload · ${escapeHtml(question.file_extensions.join(', ').toUpperCase())} · ${question.max_file_size_mb} MB max</div>`;
+      card.innerHTML = `
+        <div class="p-6 md:p-8 border-b border-slate-100">
+          <div class="flex items-start justify-between gap-4 mb-5">
+            <div><p class="text-[10px] font-bold uppercase tracking-wider text-brand-green">Problem ${index + 1}</p><h2 class="font-serif font-bold text-2xl text-brand-dark mt-1">${escapeHtml(question.title || `Problem ${index + 1}`)}</h2></div>
+            <span class="rounded-full bg-slate-50 border border-slate-200 px-3 py-1 text-xs font-bold text-slate-500">${question.points} point${question.points === 1 ? '' : 's'}</span>
+          </div>
+          <div class="portal-math preview-math whitespace-pre-wrap text-brand-dark leading-relaxed"></div>
+        </div>
+        <div class="p-6 md:p-8 bg-slate-50">${answerDescription}</div>
+      `;
+      card.querySelector<HTMLElement>('.preview-math')!.textContent = question.prompt_latex;
+      list.appendChild(card);
+    });
+    renderPortalMath(document.getElementById('preview-content')!);
+    document.getElementById('preview-loader')!.classList.add('hidden');
+    document.getElementById('preview-content')!.classList.remove('hidden');
+  }
+
+  async function init() {
+    const session = await getPortalSession();
+    if (!session) { location.href = '/test-portal'; return; }
+    try {
+      const data = await portalFetch<PreviewPayload>(`/api/test-portal/admin/tests/${testId}/preview`);
+      renderPreview(data);
+    } catch (error) {
+      document.getElementById('preview-loader')!.classList.add('hidden');
+      const box = document.getElementById('preview-error')!;
+      box.textContent = error instanceof Error ? error.message : 'Preview could not be loaded.';
+      box.classList.remove('hidden');
+    }
+  }
+  init();
+</script>

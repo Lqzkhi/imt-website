@@ -1,0 +1,199 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="My Account">
+    <div id="global-loader" class="flex flex-col items-center justify-center min-h-[60vh]">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-brand-green mb-4"></div>
+        <p class="text-slate-500 font-bold animate-pulse text-lg">Loading team data...</p>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-6 py-12 hidden animate-fade-in-up" id="account-wrapper">
+        
+        <div class="mb-10 border-b-2 border-slate-200 pb-6 flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-extrabold text-brand-dark">Team Settings</h1>
+                <p class="text-brand-green font-bold mt-2" id="display-email">Loading...</p>
+            </div>
+            <a href="/test-portal" class="text-sm font-bold text-slate-500 hover:text-brand-dark transition">← Back to Test Portal</a>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 md:p-10">
+            <form id="update-form" class="space-y-8">
+                
+                <div>
+                    <label for="teamName" class="block text-sm font-bold text-brand-dark mb-2">Official Team Name</label>
+                    <input type="text" id="teamName" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none transition">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-end mb-4">
+                        <label class="block text-sm font-bold text-brand-dark">Team Roster (1-6)</label>
+                        <span id="member-counter-text" class="text-xs font-bold text-slate-400">Loading...</span>
+                    </div>
+                    
+                    <div id="roster-container" class="space-y-3">
+                        </div>
+
+                    <button type="button" id="add-member-btn" class="w-full mt-4 py-3 border-2 border-dashed border-brand-green/50 text-brand-green font-bold rounded-xl hover:bg-brand-green/5 transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Add Teammate
+                    </button>
+                </div>
+
+                <div id="error-message" class="text-red-500 text-sm hidden font-semibold bg-red-50 p-3 rounded-lg"></div>
+                <div id="success-message" class="text-brand-green text-sm hidden font-semibold bg-green-50 p-3 rounded-lg">Team data updated successfully!</div>
+
+                <button type="submit" id="save-btn" class="w-full bg-brand-dark text-brand-gold font-bold text-lg py-4 rounded-xl hover:bg-slate-800 transition shadow-lg">
+                    Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+
+    interface RosterMember { name: string; age: number | string }
+
+    const globalLoader = document.getElementById('global-loader')!;
+    const accountWrapper = document.getElementById('account-wrapper')!;
+    const displayEmail = document.getElementById('display-email')!;
+    const teamNameInput = document.getElementById('teamName') as HTMLInputElement;
+    const rosterContainer = document.getElementById('roster-container')!;
+    const addMemberBtn = document.getElementById('add-member-btn')!;
+    const memberCounterText = document.getElementById('member-counter-text')!;
+    const updateForm = document.getElementById('update-form') as HTMLFormElement;
+
+    const maxMembers = 6;
+    let currentMembers = 0;
+
+    // --- 1. LOAD USER DATA ---
+    async function loadData() {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            window.location.href = '/register';
+            return;
+        }
+
+        // Hide Loader, Show Content
+        globalLoader.classList.add('hidden');
+        accountWrapper.classList.remove('hidden');
+
+        displayEmail.textContent = user.email ?? '';
+        
+        // Populate existing metadata
+        const meta = user.user_metadata || {};
+        if (meta.team_name) teamNameInput.value = meta.team_name;
+        
+        // Populate Roster
+        const savedRoster: RosterMember[] = Array.isArray(meta.roster)
+            ? meta.roster.filter((member: unknown): member is RosterMember => Boolean(
+                member && typeof member === 'object' && typeof (member as RosterMember).name === 'string',
+            ))
+            : [];
+        savedRoster.forEach(member => addMemberRow(member.name, member.age));
+        
+        // If they have no roster saved somehow, add at least one blank row
+        if (savedRoster.length === 0) addMemberRow('', '');
+    }
+
+    // --- 2. ROSTER UI LOGIC ---
+    function updateCounter() {
+        memberCounterText.textContent = `${currentMembers} / ${maxMembers} Members`;
+        addMemberBtn.classList.toggle('hidden', currentMembers >= maxMembers);
+    }
+
+    function addMemberRow(nameValue: string = '', ageValue: string | number = '') {
+        if (currentMembers >= maxMembers) return;
+        currentMembers++;
+        
+        const row = document.createElement('div');
+        row.className = 'flex gap-3 member-row items-center';
+        
+        // Only allow removing if it's not the first member
+        const removeBtnHTML = currentMembers > 1 
+            ? `<button type="button" class="remove-member-btn text-slate-400 hover:text-red-500 transition w-8 flex justify-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>`
+            : `<div class="w-8"></div>`;
+
+        row.innerHTML = `
+            <div class="bg-slate-200 text-slate-600 font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm number-circle">${currentMembers}</div>
+            <input type="text" required class="member-name w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Teammate Name">
+            <input type="number" required min="5" max="25" class="member-age w-24 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Age">
+            ${removeBtnHTML}
+        `;
+        (row.querySelector('.member-name') as HTMLInputElement).value = String(nameValue);
+        (row.querySelector('.member-age') as HTMLInputElement).value = String(ageValue);
+        
+        rosterContainer.appendChild(row);
+        updateCounter();
+    }
+
+    addMemberBtn.addEventListener('click', () => addMemberRow('', ''));
+
+    rosterContainer.addEventListener('click', (e) => {
+        const removeBtn = (e.target as HTMLElement).closest('.remove-member-btn');
+        if (removeBtn) {
+            removeBtn.closest('.member-row')?.remove();
+            currentMembers--;
+            
+            // Renumber
+            const rows = rosterContainer.querySelectorAll('.member-row');
+            rows.forEach((row, index) => {
+                const number = row.querySelector('.number-circle');
+                if (number) number.textContent = (index + 1).toString();
+            });
+            updateCounter();
+        }
+    });
+
+    // --- 3. SAVE CHANGES LOGIC ---
+    updateForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+        const errorMessage = document.getElementById('error-message')!;
+        const successMessage = document.getElementById('success-message')!;
+        
+        errorMessage.classList.add('hidden');
+        successMessage.classList.add('hidden');
+        saveBtn.textContent = 'Saving...';
+
+        // Rebuild roster array
+        const updatedRoster: { name: string; age: number }[] = [];
+        document.querySelectorAll('.member-row').forEach(row => {
+            const name = (row.querySelector('.member-name') as HTMLInputElement).value;
+            const age = (row.querySelector('.member-age') as HTMLInputElement).value;
+            if(name && age) updatedRoster.push({ name, age: parseInt(age) });
+        });
+
+        // Tell Supabase to update the metadata
+        const { error } = await supabase.auth.updateUser({
+            data: {
+                team_name: teamNameInput.value,
+                roster: updatedRoster
+            }
+        });
+
+        if (error) {
+            errorMessage.textContent = error.message;
+            errorMessage.classList.remove('hidden');
+        } else {
+            successMessage.classList.remove('hidden');
+            setTimeout(() => successMessage.classList.add('hidden'), 3000);
+        }
+        saveBtn.textContent = 'Save Changes';
+    });
+
+    // Add animation styles for smooth loading
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    `;
+    document.head.appendChild(style);
+
+    // Kick off
+    loadData();
+</script>

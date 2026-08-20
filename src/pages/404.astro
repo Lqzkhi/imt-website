@@ -1,0 +1,54 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Page Not Found">
+
+  <div class="min-h-[calc(100vh-4.5rem)] bg-brand-light flex items-center justify-center py-20 px-6 relative overflow-hidden">
+
+    <!-- Dot grid -->
+    <div class="absolute inset-0 opacity-[0.025]"
+         style="background-image: radial-gradient(#162236 1px, transparent 1px); background-size: 26px 26px;"
+         aria-hidden="true"></div>
+
+    <!-- Ghost bridge: bottom-left corner -->
+    <div class="absolute bottom-0 left-0 w-64 pointer-events-none select-none opacity-[0.06]" aria-hidden="true">
+      <img src="/bridge-icon.png" class="w-full h-auto" alt="" />
+    </div>
+
+    <div class="relative z-10 max-w-xl mx-auto text-center animate-on-load">
+
+      <!-- 404 display -->
+      <div class="font-serif font-bold text-[7rem] md:text-[9rem] leading-none text-brand-green mb-2 tracking-tighter select-none">
+        404
+      </div>
+
+      <!-- Divider -->
+      <div class="w-16 h-[3px] bg-brand-gold rounded mx-auto mb-6"></div>
+
+      <h1 class="font-serif font-bold text-3xl md:text-4xl text-brand-dark mb-4 tracking-tight">
+        Theory Not Found
+      </h1>
+
+      <p class="text-slate-500 text-base font-light leading-relaxed mb-10 max-w-sm mx-auto">
+        The page you're looking for has been moved, deleted, or may not exist in this mathematical plane. Perhaps it was only conjectured.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/"
+           class="inline-flex items-center gap-2 bg-brand-dark text-white font-bold py-3 px-8 rounded hover:bg-[#1e3152] transition-colors duration-150 btn-lift shadow-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Return Home
+        </a>
+        <a href="/competitions"
+           class="inline-block text-brand-dark font-semibold py-3 px-8 rounded border-2 border-brand-dark/20 hover:border-brand-dark/40 transition-colors duration-150 text-sm">
+          View Competitions
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</Layout>

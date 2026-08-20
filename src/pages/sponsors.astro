@@ -1,0 +1,76 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const sponsors = [
+  { name: 'Art of Problem Solving', logo: '/aops-logo.svg', url: 'https://artofproblemsolving.com/' },
+  { name: 'AwesomeMath', logo: '/AWESOMEMATH.png', url: 'https://awesomemath.org/' },
+  { name: 'Hudson River Trading', logo: '/hrt-logo.svg', url: 'https://www.hudsonrivertrading.com/' },
+  { name: 'Jane Street', logo: '/JANESTREET.png', url: 'https://www.janestreet.com/' },
+  { name: 'Non-Trivial', logo: '/nontrivial.png', url: 'https://www.non-trivial.org/' },
+];
+---
+
+<Layout title="Sponsors" description="Sponsors of the Integrated Mathematics Tournament.">
+  <header class="sponsor-header">
+    <div class="site-container">
+      <h1>Sponsors</h1>
+      <p>These organizations fund IMT competitions, prizes, and learning materials.</p>
+    </div>
+  </header>
+
+  <section class="sponsor-content">
+    <div class="site-container">
+      <div class="sponsor-list-heading">
+        <h2>Current sponsors</h2>
+        <p>Listed alphabetically</p>
+      </div>
+
+      <div class="sponsor-wall">
+        {sponsors.map(sponsor => (
+          <a href={sponsor.url} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${sponsor.name}`}>
+            <img src={sponsor.logo} alt={sponsor.name} loading="lazy" />
+          </a>
+        ))}
+      </div>
+
+      <div class="sponsor-contact">
+        <div>
+          <h2>Support IMT</h2>
+          <p>For sponsorship questions, contact the team.</p>
+        </div>
+        <a class="button-primary" href="/team">Contact the team</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .sponsor-header { border-bottom: 1px solid var(--line); background: var(--paper); }
+  .sponsor-header .site-container { padding-block: clamp(3.5rem, 7vw, 5.5rem); }
+  .sponsor-header h1 { max-width: 760px; margin: 0; color: var(--ink); font-size: clamp(2.35rem, 4.5vw, 4rem); font-weight: 750; letter-spacing: -0.035em; }
+  .sponsor-header p { max-width: 620px; margin: 1rem 0 0; color: var(--muted); font-size: 1rem; line-height: 1.65; }
+
+  .sponsor-content { background: white; padding-block: clamp(3.25rem, 6vw, 5.5rem); }
+  .sponsor-list-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 2rem; margin-bottom: 1rem; }
+  .sponsor-list-heading h2, .sponsor-contact h2 { margin: 0; color: var(--ink); font-size: 1.2rem; font-weight: 750; letter-spacing: -0.015em; }
+  .sponsor-list-heading p { margin: 0; color: var(--muted); font-size: 0.74rem; }
+
+  .sponsor-wall { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: stretch; border-block: 1px solid var(--line); }
+  .sponsor-wall a { display: flex; min-width: 0; height: 150px; align-items: center; justify-content: center; border-right: 1px solid var(--line); padding: 1.5rem; }
+  .sponsor-wall a:first-child { border-left: 1px solid var(--line); }
+  .sponsor-wall img { max-width: 150px; max-height: 66px; object-fit: contain; }
+
+  .sponsor-contact { display: flex; align-items: center; justify-content: space-between; gap: 3rem; margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 2rem; }
+  .sponsor-contact p { max-width: 600px; margin: 0.55rem 0 0; color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
+
+  @media (max-width: 850px) {
+    .sponsor-wall { grid-template-columns: repeat(2, minmax(0, 1fr)); border-left: 1px solid var(--line); border-bottom: 0; }
+    .sponsor-wall a, .sponsor-wall a:first-child { border-left: 0; border-bottom: 1px solid var(--line); }
+  }
+
+  @media (max-width: 560px) {
+    .sponsor-list-heading, .sponsor-contact { align-items: flex-start; flex-direction: column; }
+    .sponsor-wall { grid-template-columns: 1fr; }
+    .sponsor-wall a { height: 125px; }
+  }
+</style>

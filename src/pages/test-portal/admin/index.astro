@@ -1,0 +1,220 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="Test Portal Admin" description="Create and manage Integrated Math tests.">
+  <section class="bg-brand-dark text-white border-b-4 border-brand-gold">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-11">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div>
+          <a href="/test-portal" class="text-xs font-bold text-slate-400 hover:text-brand-gold transition">← Test Portal</a>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-brand-gold mt-5 mb-2">Administrator</p>
+          <h1 class="font-serif font-bold text-4xl">Test workspace</h1>
+          <p class="text-slate-300 text-sm mt-3">Author, preview, publish, and review secure mathematics tests.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="/test-portal/admin/activity" class="border border-white/20 text-white font-bold rounded-lg px-5 py-3 text-sm hover:border-brand-gold hover:text-brand-gold transition">Activity</a>
+          <a href="/test-portal/admin/access" class="border border-white/20 text-white font-bold rounded-lg px-5 py-3 text-sm hover:border-brand-gold hover:text-brand-gold transition">Administrators</a>
+          <button id="new-test-button" type="button" class="bg-brand-gold text-brand-dark font-extrabold rounded-lg px-6 py-3 hover:bg-yellow-300 transition">Create test</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-10 md:py-12 min-h-[520px]">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div id="admin-loader" class="flex justify-center items-center gap-3 py-20 text-slate-500">
+        <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+        <span class="font-semibold">Loading tests…</span>
+      </div>
+      <div id="admin-error" class="hidden border border-red-200 bg-red-50 text-red-700 rounded-lg p-5 text-sm font-semibold"></div>
+
+      <div id="admin-content" class="hidden">
+        <div class="grid sm:grid-cols-3 gap-4 mb-8">
+          <div class="admin-stat"><span>Tests</span><strong id="stat-tests">0</strong></div>
+          <div class="admin-stat"><span>Published</span><strong id="stat-published">0</strong></div>
+          <div class="admin-stat"><span>Total attempts</span><strong id="stat-attempts">0</strong></div>
+        </div>
+        <div id="admin-test-list" class="space-y-4"></div>
+        <div id="admin-empty" class="hidden border border-dashed border-slate-300 rounded-xl bg-white p-12 text-center">
+          <h2 class="font-serif font-bold text-2xl text-brand-dark">Create your first test</h2>
+          <p class="text-sm text-slate-500 mt-2">Start with a draft, add LaTeX problems and answer keys, then preview it before publishing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="new-test-modal" class="hidden fixed inset-0 z-[100] bg-brand-dark/70 backdrop-blur-sm items-center justify-center p-6">
+    <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
+      <div class="h-1 bg-brand-green"></div>
+      <form id="new-test-form" class="p-7">
+        <div class="flex justify-between items-start gap-4 mb-6">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-brand-green mb-1">New draft</p>
+            <h2 class="font-serif font-bold text-2xl text-brand-dark">Create a test</h2>
+          </div>
+          <button id="close-new-test" type="button" class="text-slate-400 hover:text-brand-dark text-xl" aria-label="Close">×</button>
+        </div>
+        <label for="new-test-title" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Test title</label>
+        <input id="new-test-title" type="text" maxlength="160" required class="admin-input" placeholder="Fall Invitational: Individual Round" />
+        <div id="new-test-error" class="hidden text-sm font-semibold text-red-600 mt-4"></div>
+        <button type="submit" class="mt-6 w-full bg-brand-dark text-brand-gold font-extrabold rounded-lg py-3.5 disabled:opacity-50">Create draft</button>
+      </form>
+    </div>
+  </div>
+</Layout>
+
+<style is:global>
+  .admin-input { width: 100%; border: 1px solid rgb(203 213 225); border-radius: .5rem; padding: .75rem 1rem; outline: none; color: #162236; background: white; }
+  .admin-input:focus { border-color: #4A7C59; box-shadow: 0 0 0 3px rgba(74,124,89,.12); }
+  .admin-stat { background: white; border: 1px solid rgb(226 232 240); border-radius: .7rem; padding: 1.2rem; }
+  .admin-stat span { display: block; color: rgb(148 163 184); font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
+  .admin-stat strong { display: block; color: #162236; font-family: 'EB Garamond', serif; font-size: 2rem; margin-top: .2rem; }
+  .admin-action { display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgb(203 213 225); border-radius: .45rem; background: white; color: #162236; padding: .55rem .8rem; font-size: .72rem; font-weight: 700; transition: border-color .15s, color .15s; }
+  .admin-action:hover { border-color: #4A7C59; color: #4A7C59; }
+</style>
+
+<script>
+  import { escapeHtml, formatPortalDate, formatPortalDuration, getPortalSession, portalFetch } from '../../../lib/testPortalClient';
+
+  interface AdminTest {
+    id: string;
+    title: string;
+    description: string;
+    duration_minutes: number;
+    security_mode: string;
+    opens_at: string | null;
+    closes_at: string | null;
+    status: 'draft' | 'published' | 'archived';
+    updated_at: string;
+    question_count: number;
+    attempt_count: number;
+    submitted_count: number;
+  }
+
+  const loader = document.getElementById('admin-loader')!;
+  const content = document.getElementById('admin-content')!;
+  const errorBox = document.getElementById('admin-error')!;
+  const modal = document.getElementById('new-test-modal')!;
+  let tests: AdminTest[] = [];
+
+  function showError(message: string) {
+    errorBox.textContent = message;
+    errorBox.classList.remove('hidden');
+  }
+
+  function openModal() {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    window.setTimeout(() => (document.getElementById('new-test-title') as HTMLInputElement).focus(), 0);
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function renderTests() {
+    const list = document.getElementById('admin-test-list')!;
+    const empty = document.getElementById('admin-empty')!;
+    list.innerHTML = '';
+    empty.classList.toggle('hidden', tests.length > 0);
+    document.getElementById('stat-tests')!.textContent = String(tests.length);
+    document.getElementById('stat-published')!.textContent = String(tests.filter((test) => test.status === 'published').length);
+    document.getElementById('stat-attempts')!.textContent = String(tests.reduce((sum, test) => sum + test.attempt_count, 0));
+
+    for (const test of tests) {
+      const statusClass = test.status === 'published'
+        ? 'bg-green-50 text-green-700 border-green-200'
+        : test.status === 'archived'
+          ? 'bg-slate-100 text-slate-500 border-slate-200'
+          : 'bg-amber-50 text-amber-700 border-amber-200';
+      const article = document.createElement('article');
+      article.className = 'bg-white border border-gray-200 rounded-xl p-6 shadow-sm';
+      article.innerHTML = `
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div class="min-w-0 flex-grow">
+            <div class="flex flex-wrap items-center gap-3 mb-2">
+              <span class="border rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusClass}">${escapeHtml(test.status)}</span>
+              <span class="text-xs text-slate-400">Updated ${escapeHtml(formatPortalDate(test.updated_at))}</span>
+            </div>
+            <h2 class="font-serif font-bold text-2xl text-brand-dark truncate">${escapeHtml(test.title)}</h2>
+            <p class="text-sm text-slate-500 mt-2 line-clamp-2">${escapeHtml(test.description || 'No description')}</p>
+            <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500 mt-4">
+              <span><strong class="text-brand-dark">${test.question_count}</strong> problems</span>
+              <span><strong class="text-brand-dark">${test.attempt_count}</strong> attempts</span>
+              <span><strong class="text-brand-dark">${test.submitted_count}</strong> submitted</span>
+              <span>${escapeHtml(formatPortalDuration(test.duration_minutes))} · ${test.security_mode === 'one_sitting' ? 'one sitting' : 'take-home'}</span>
+            </div>
+          </div>
+          <div class="flex flex-wrap lg:justify-end gap-2 shrink-0">
+            <a class="admin-action" href="/test-portal/admin/tests/${test.id}">Edit</a>
+            <a class="admin-action" href="/test-portal/admin/tests/${test.id}/preview">Preview</a>
+            <a class="admin-action" href="/test-portal/admin/tests/${test.id}/submissions">Submissions</a>
+            <button class="admin-action duplicate-test" type="button" data-test-id="${test.id}">Duplicate</button>
+          </div>
+        </div>
+      `;
+      list.appendChild(article);
+    }
+
+    list.querySelectorAll<HTMLButtonElement>('.duplicate-test').forEach((button) => {
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.textContent = 'Duplicating…';
+        try {
+          const result = await portalFetch<{ test: AdminTest }>(`/api/test-portal/admin/tests/${button.dataset.testId}/duplicate`, { method: 'POST' });
+          location.href = `/test-portal/admin/tests/${result.test.id}`;
+        } catch (error) {
+          showError(error instanceof Error ? error.message : 'The test could not be duplicated.');
+          button.disabled = false;
+          button.textContent = 'Duplicate';
+        }
+      });
+    });
+  }
+
+  async function loadTests() {
+    try {
+      const session = await getPortalSession();
+      if (!session) {
+        location.href = '/test-portal';
+        return;
+      }
+      const data = await portalFetch<{ tests: AdminTest[] }>('/api/test-portal/admin/tests');
+      tests = data.tests;
+      renderTests();
+      loader.classList.add('hidden');
+      content.classList.remove('hidden');
+    } catch (error) {
+      loader.classList.add('hidden');
+      showError(error instanceof Error ? error.message : 'The admin workspace could not be loaded.');
+    }
+  }
+
+  document.getElementById('new-test-button')!.addEventListener('click', openModal);
+  document.getElementById('close-new-test')!.addEventListener('click', closeModal);
+  modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+  document.getElementById('new-test-form')!.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const inlineError = document.getElementById('new-test-error')!;
+    button.disabled = true;
+    inlineError.classList.add('hidden');
+    try {
+      const title = (document.getElementById('new-test-title') as HTMLInputElement).value.trim();
+      const result = await portalFetch<{ test: AdminTest }>('/api/test-portal/admin/tests', {
+        method: 'POST',
+        body: JSON.stringify({ title }),
+      });
+      location.href = `/test-portal/admin/tests/${result.test.id}`;
+    } catch (error) {
+      inlineError.textContent = error instanceof Error ? error.message : 'The draft could not be created.';
+      inlineError.classList.remove('hidden');
+      button.disabled = false;
+    }
+  });
+
+  loadTests();
+</script>

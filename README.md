@@ -1,4 +1,8 @@
-# Astro Starter Kit: Basics
+# Integrated Math website
+
+The secure assessment system lives at `/test-portal`. Before using it, follow [TEST_PORTAL_SETUP.md](./TEST_PORTAL_SETUP.md) to apply the Supabase schema, configure Auth, and grant administrator access.
+
+## Astro development
 
 ```sh
 npm create astro@latest -- --template basics

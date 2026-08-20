@@ -1,0 +1,198 @@
+---
+import Layout from '../../../../../layouts/Layout.astro';
+const { testId } = Astro.params;
+---
+
+<Layout title="Test Submissions" description="Review Test Portal submissions and security activity.">
+  <section id="submissions-root" data-test-id={testId} class="min-h-screen pb-16">
+    <header class="bg-brand-dark text-white border-b-4 border-brand-green">
+      <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-9">
+        <a id="back-editor" href="#" class="text-xs font-bold text-slate-400 hover:text-brand-gold">← Test editor</a>
+        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green mt-5 mb-2">Administrator review</p>
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+          <div>
+            <h1 id="submissions-title" class="font-serif font-bold text-4xl">Submissions</h1>
+            <p id="submissions-description" class="text-sm text-slate-300 mt-2"></p>
+          </div>
+          <button id="download-csv" type="button" class="hidden border border-white/20 rounded-lg px-5 py-3 text-xs font-bold hover:border-brand-gold hover:text-brand-gold transition">Download CSV</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-9">
+      <div id="submissions-loader" class="flex justify-center items-center gap-3 py-24 text-slate-500">
+        <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+        <span class="font-semibold">Loading submissions…</span>
+      </div>
+      <div id="submissions-error" class="hidden rounded-lg border border-red-200 bg-red-50 p-5 text-red-700 text-sm font-semibold"></div>
+
+      <div id="submissions-content" class="hidden">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+          <div class="submission-stat"><span>Total attempts</span><strong id="total-stat">0</strong></div>
+          <div class="submission-stat"><span>Completed</span><strong id="complete-stat">0</strong></div>
+          <div class="submission-stat"><span>Manual review</span><strong id="review-stat">0</strong></div>
+          <div class="submission-stat"><span>Security events</span><strong id="security-stat">0</strong></div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="relative flex-grow max-w-md">
+              <label for="submission-search" class="sr-only">Search submissions</label>
+              <input id="submission-search" type="search" class="w-full border border-slate-200 rounded-lg pl-4 pr-4 py-2.5 text-sm outline-none focus:border-brand-green" placeholder="Search name or email…" />
+            </div>
+            <select id="submission-filter" class="border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-bold text-brand-dark outline-none">
+              <option value="all">All statuses</option>
+              <option value="in_progress">In progress</option>
+              <option value="submitted">Submitted</option>
+              <option value="timed_out">Timed out</option>
+              <option value="pending_manual">Needs manual review</option>
+            </select>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[980px] text-left">
+              <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <tr><th class="px-5 py-3">Participant</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Progress</th><th class="px-5 py-3">Started / submitted</th><th class="px-5 py-3">Score</th><th class="px-5 py-3">Security</th><th class="px-5 py-3"></th></tr>
+              </thead>
+              <tbody id="submission-rows" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <div id="no-submissions" class="hidden p-10 text-center text-sm text-slate-500">No matching submissions.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .submission-stat { background: white; border: 1px solid rgb(226 232 240); border-radius: .7rem; padding: 1rem 1.2rem; }
+  .submission-stat span { display: block; color: rgb(148 163 184); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .submission-stat strong { display: block; font-family: 'EB Garamond', serif; font-size: 1.8rem; color: #162236; margin-top: .2rem; }
+</style>
+
+<script>
+  import { escapeHtml, formatPortalDate, getPortalSession, portalFetch } from '../../../../../lib/testPortalClient';
+
+  interface AttemptSummary {
+    id: string;
+    participant_email: string;
+    participant_name: string;
+    status: 'in_progress' | 'submitted' | 'timed_out';
+    started_at: string;
+    submitted_at: string | null;
+    response_count: number;
+    score: number | null;
+    max_score: number;
+    grading_status: 'pending' | 'pending_manual' | 'complete';
+    auto_submitted: boolean;
+    security_events: Record<string, number>;
+  }
+  interface SubmissionPayload {
+    test: { id: string; title: string; description: string };
+    attempts: AttemptSummary[];
+  }
+
+  const root = document.getElementById('submissions-root')!;
+  const testId = root.dataset.testId ?? '';
+  let data: SubmissionPayload;
+
+  function securityCount(attempt: AttemptSummary) {
+    const tracked = ['visibility_hidden', 'window_blurred', 'fullscreen_exited', 'copy_blocked', 'paste_blocked'];
+    return tracked.reduce((sum, type) => sum + (attempt.security_events[type] ?? 0), 0);
+  }
+
+  function statusBadge(attempt: AttemptSummary) {
+    if (attempt.grading_status === 'pending_manual' && attempt.status !== 'in_progress') return ['Needs review', 'bg-amber-50 text-amber-700 border-amber-200'];
+    if (attempt.status === 'submitted') return ['Submitted', 'bg-green-50 text-green-700 border-green-200'];
+    if (attempt.status === 'timed_out') return ['Timed out', 'bg-red-50 text-red-700 border-red-200'];
+    return ['In progress', 'bg-blue-50 text-blue-700 border-blue-200'];
+  }
+
+  function renderRows() {
+    const search = (document.getElementById('submission-search') as HTMLInputElement).value.trim().toLowerCase();
+    const filter = (document.getElementById('submission-filter') as HTMLSelectElement).value;
+    const attempts = data.attempts.filter((attempt) => {
+      const matchesSearch = !search || `${attempt.participant_name} ${attempt.participant_email}`.toLowerCase().includes(search);
+      const matchesFilter = filter === 'all' || (filter === 'pending_manual' ? attempt.grading_status === 'pending_manual' : attempt.status === filter);
+      return matchesSearch && matchesFilter;
+    });
+    const body = document.getElementById('submission-rows')!;
+    body.innerHTML = '';
+    document.getElementById('no-submissions')!.classList.toggle('hidden', attempts.length > 0);
+    attempts.forEach((attempt) => {
+      const [label, badgeClass] = statusBadge(attempt);
+      const security = securityCount(attempt);
+      const row = document.createElement('tr');
+      row.className = 'text-sm hover:bg-slate-50/60';
+      row.innerHTML = `
+        <td class="px-5 py-4"><strong class="block text-brand-dark">${escapeHtml(attempt.participant_name || 'Unnamed participant')}</strong><span class="text-xs text-slate-400">${escapeHtml(attempt.participant_email)}</span></td>
+        <td class="px-5 py-4"><span class="inline-flex border rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${badgeClass}">${label}</span></td>
+        <td class="px-5 py-4 text-slate-600"><strong class="text-brand-dark">${attempt.response_count}</strong> responses</td>
+        <td class="px-5 py-4 text-xs text-slate-500"><span class="block">${escapeHtml(formatPortalDate(attempt.started_at))}</span><span class="block mt-1">${attempt.submitted_at ? escapeHtml(formatPortalDate(attempt.submitted_at)) : '—'}</span></td>
+        <td class="px-5 py-4 font-bold text-brand-dark">${attempt.score === null ? '—' : `${attempt.score} / ${attempt.max_score}`}</td>
+        <td class="px-5 py-4"><span class="${security ? 'text-amber-700 font-bold' : 'text-slate-400'}">${security} flagged event${security === 1 ? '' : 's'}</span></td>
+        <td class="px-5 py-4 text-right"><a href="/test-portal/admin/attempts/${attempt.id}" class="inline-flex border border-slate-200 bg-white rounded px-3 py-2 text-xs font-bold text-brand-dark hover:border-brand-green hover:text-brand-green">Review</a></td>
+      `;
+      body.appendChild(row);
+    });
+  }
+
+  function csvCell(value: unknown) {
+    let text = String(value ?? '');
+    if (/^[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+
+  function downloadCsv() {
+    const headers = ['Name', 'Email', 'Status', 'Started At', 'Submitted At', 'Responses', 'Score', 'Maximum Score', 'Grading Status', 'Flagged Security Events'];
+    const rows = data.attempts.map((attempt) => [
+      attempt.participant_name,
+      attempt.participant_email,
+      attempt.status,
+      attempt.started_at,
+      attempt.submitted_at ?? '',
+      attempt.response_count,
+      attempt.score ?? '',
+      attempt.max_score,
+      attempt.grading_status,
+      securityCount(attempt),
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${data.test.title.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'test'}-submissions.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function init() {
+    const session = await getPortalSession();
+    if (!session) { location.href = '/test-portal'; return; }
+    try {
+      data = await portalFetch<SubmissionPayload>(`/api/test-portal/admin/tests/${testId}/attempts`);
+      document.title = `${data.test.title} Submissions | Integrated Math`;
+      (document.getElementById('back-editor') as HTMLAnchorElement).href = `/test-portal/admin/tests/${testId}`;
+      document.getElementById('submissions-title')!.textContent = data.test.title;
+      document.getElementById('submissions-description')!.textContent = `${data.attempts.length} participant attempt${data.attempts.length === 1 ? '' : 's'}`;
+      document.getElementById('total-stat')!.textContent = String(data.attempts.length);
+      document.getElementById('complete-stat')!.textContent = String(data.attempts.filter((attempt) => attempt.status !== 'in_progress').length);
+      document.getElementById('review-stat')!.textContent = String(data.attempts.filter((attempt) => attempt.grading_status === 'pending_manual').length);
+      document.getElementById('security-stat')!.textContent = String(data.attempts.reduce((sum, attempt) => sum + securityCount(attempt), 0));
+      document.getElementById('download-csv')!.classList.toggle('hidden', data.attempts.length === 0);
+      renderRows();
+      document.getElementById('submissions-loader')!.classList.add('hidden');
+      document.getElementById('submissions-content')!.classList.remove('hidden');
+    } catch (error) {
+      document.getElementById('submissions-loader')!.classList.add('hidden');
+      const box = document.getElementById('submissions-error')!;
+      box.textContent = error instanceof Error ? error.message : 'Submissions could not be loaded.';
+      box.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('submission-search')!.addEventListener('input', renderRows);
+  document.getElementById('submission-filter')!.addEventListener('change', renderRows);
+  document.getElementById('download-csv')!.addEventListener('click', downloadCsv);
+  init();
+</script>
+

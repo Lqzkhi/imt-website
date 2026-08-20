@@ -1,0 +1,270 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { computeReport, DOMAINS, getOwnedDiagnosticSession } from '../../../../lib/catEngine';
+import { getUserProfileFromCookie } from '../../../../lib/guestSession';
+import {
+  buildSkillTree,
+  groupSkillTreeByDomain,
+  pickRecommendedFocus,
+  statusLabel,
+  type SkillStatus,
+} from '../../../../lib/skillTree';
+import { createServerClient } from '../../../../lib/supabaseServer';
+import { thetaToTier } from '../../../../lib/tiers';
+
+const { sessionId } = Astro.params;
+const supabase = createServerClient();
+const profile = await getUserProfileFromCookie(supabase, Astro.cookies);
+
+if (!profile || !sessionId) {
+  return Astro.redirect('/learn/diagnostic');
+}
+
+const session = await getOwnedDiagnosticSession(supabase, sessionId, profile.id);
+
+if (!session) {
+  return Astro.redirect('/learn/diagnostic');
+}
+
+if (!session.completed_at) {
+  return Astro.redirect(`/learn/diagnostic/session/${sessionId}`);
+}
+
+const report = await computeReport(supabase, sessionId);
+const tier = thetaToTier(report.overall.thetaEAP);
+
+const { data: skillRows } = await supabase
+  .from('skill_nodes')
+  .select('id, domain, name, description, prerequisite_ids, display_order')
+  .order('domain', { ascending: true })
+  .order('display_order', { ascending: true });
+
+const skillTree = buildSkillTree(skillRows ?? [], report.skillCounts);
+const skillGroups = groupSkillTreeByDomain(skillTree);
+const focus = pickRecommendedFocus(skillTree);
+
+const statusClasses: Record<SkillStatus, string> = {
+  not_assessed: 'border-gray-200 bg-white text-slate-500',
+  touched: 'border-slate-300 bg-slate-50 text-slate-700',
+  strong_evidence: 'border-brand-green bg-brand-green/10 text-brand-dark shadow-[inset_0_0_0_1px_rgba(74,124,89,0.18)]',
+  developing: 'border-brand-gold bg-yellow-50 text-brand-dark shadow-[inset_0_0_0_1px_rgba(245,197,24,0.24)]',
+  needs_review: 'border-red-300 bg-red-50 text-red-900 shadow-[inset_0_0_0_1px_rgba(248,113,113,0.18)]',
+};
+
+const statusBarClasses: Record<SkillStatus, string> = {
+  not_assessed: 'bg-gray-200',
+  touched: 'bg-slate-400',
+  strong_evidence: 'bg-brand-green',
+  developing: 'bg-brand-gold',
+  needs_review: 'bg-red-400',
+};
+
+function evidencePercent(correct: number, total: number) {
+  if (total === 0) return 0;
+  return Math.max(12, Math.round((correct / total) * 100));
+}
+
+function domainProgress(nodes: typeof skillTree) {
+  if (nodes.length === 0) return 0;
+  return Math.round((nodes.filter((node) => node.total > 0).length / nodes.length) * 100);
+}
+---
+
+<Layout title="Diagnostic Results" description="Your adaptive competition math diagnostic report.">
+  <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10 py-14 md:py-16">
+      <span class="inline-block text-brand-green font-semibold tracking-widest uppercase text-xs mb-4">
+        Diagnostic Result
+      </span>
+      <div class="grid lg:grid-cols-[1.15fr_0.85fr] gap-8 items-end">
+        <div>
+          <h1 class="font-serif font-bold text-4xl md:text-5xl leading-tight mb-4">
+            {tier.label}
+          </h1>
+          <p class="text-slate-300 leading-relaxed max-w-2xl">
+            Based on {report.responses.length} adaptive questions. This beta report estimates your current competition-math level and highlights skill evidence from this session.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="border border-white/10 rounded p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Theta</p>
+            <p class="text-2xl font-bold text-white mt-1">{report.overall.thetaEAP.toFixed(2)}</p>
+          </div>
+          <div class="border border-white/10 rounded p-4">
+            <p class="text-xs uppercase tracking-widest text-slate-400">95% Range</p>
+            <p class="text-2xl font-bold text-white mt-1">+/-{(1.96 * report.overall.se).toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+        <div>
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Subject Breakdown</p>
+          <h2 class="font-serif font-bold text-3xl text-brand-dark">Where the signal came from</h2>
+        </div>
+        <p class="text-sm text-slate-500 max-w-md">
+          Domain estimates are low-confidence when only a few questions appeared in that subject.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {DOMAINS.map((domain) => {
+          const d = report.domainReports[domain];
+          const domainTier = thetaToTier(d.theta);
+          const accuracy = d.n > 0 ? Math.round((d.correct / d.n) * 100) : null;
+
+          return (
+            <div class="border border-gray-200 rounded-lg p-5">
+              <div class="flex items-start justify-between gap-3">
+                <h3 class="font-bold text-brand-dark">{domain}</h3>
+                <span class="text-xs font-bold text-brand-green">{d.n > 0 ? domainTier.tier : 'None'}</span>
+              </div>
+              <p class="text-2xl font-bold text-brand-dark mt-4">{d.correct}/{d.n}</p>
+              <p class="text-xs text-slate-400 mt-1">
+                {accuracy === null ? 'Not assessed this session' : `${accuracy}% correct`}
+              </p>
+              {d.n > 0 && d.n < 4 && (
+                <p class="text-xs text-slate-400 mt-3">Small sample; treat this as directional.</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 bg-brand-light border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="grid lg:grid-cols-[0.85fr_1.15fr] gap-8 items-start">
+        <div>
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Next Challenge</p>
+          <h2 class="font-serif font-bold text-3xl text-brand-dark mb-4">
+            {focus.node ? focus.node.name : 'Keep building breadth'}
+          </h2>
+          <p class="text-sm text-slate-500 leading-relaxed">
+            {focus.reason}
+          </p>
+          {focus.node && (
+            <div class="mt-5 border border-gray-200 rounded-lg bg-white p-5">
+              <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{focus.node.domain}</p>
+              <p class="text-sm text-slate-600 leading-relaxed">{focus.node.description}</p>
+              <p class="text-sm font-semibold text-brand-dark mt-4">
+                Evidence: {focus.node.correct}/{focus.node.total} correct
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg p-5">
+          <h3 class="font-bold text-brand-dark mb-4">Skill Status</h3>
+          <div class="grid sm:grid-cols-2 gap-2">
+            {(['strong_evidence','developing','needs_review','touched','not_assessed'] as SkillStatus[]).map((status) => (
+              <div class={`border rounded px-3 py-2 text-xs font-semibold ${statusClasses[status]}`}>
+                {statusLabel(status)}
+              </div>
+            ))}
+          </div>
+          <p class="text-xs text-slate-400 mt-4 leading-relaxed">
+            This is not yet a calibrated mastery model. It is a map of what this diagnostic touched and how those attempts went.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 bg-white">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="mb-8">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Skill Tree</p>
+        <h2 class="font-serif font-bold text-3xl text-brand-dark">Your skill map</h2>
+      </div>
+
+      <div class="space-y-8">
+        {DOMAINS.map((domain) => {
+          const nodes = skillGroups[domain] ?? [];
+          const touched = nodes.filter((node) => node.total > 0).length;
+          const strong = nodes.filter((node) => node.status === 'strong_evidence').length;
+          const progress = domainProgress(nodes);
+
+          return (
+            <section class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+              <div class="bg-brand-dark text-white px-5 py-5">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Domain Map</p>
+                    <h3 class="font-bold text-xl mt-1">{domain}</h3>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2 min-w-[240px]">
+                    <div class="rounded border border-white/10 px-3 py-2 text-center">
+                      <p class="text-lg font-bold">{touched}</p>
+                      <p class="text-[10px] uppercase tracking-widest text-slate-500">Touched</p>
+                    </div>
+                    <div class="rounded border border-white/10 px-3 py-2 text-center">
+                      <p class="text-lg font-bold">{strong}</p>
+                      <p class="text-[10px] uppercase tracking-widest text-slate-500">Strong</p>
+                    </div>
+                    <div class="rounded border border-white/10 px-3 py-2 text-center">
+                      <p class="text-lg font-bold">{progress}%</p>
+                      <p class="text-[10px] uppercase tracking-widest text-slate-500">Mapped</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-4 h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div class="h-full rounded-full bg-brand-gold" style={`width: ${progress}%`}></div>
+                </div>
+              </div>
+              <div class="p-5 overflow-x-auto">
+                <div class="grid gap-3 min-w-[720px]" style={`grid-template-columns: repeat(${Math.max(...nodes.map((node) => node.depth), 0) + 1}, minmax(150px, 1fr));`}>
+                  {nodes.map((node) => (
+                    <div
+                      class={`border rounded p-3 min-h-[148px] transition-transform duration-150 hover:-translate-y-0.5 ${statusClasses[node.status]}`}
+                      style={`grid-column: ${node.depth + 1};`}
+                    >
+                      <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="rounded bg-white/70 px-2 py-1 text-[10px] font-bold uppercase tracking-widest">
+                          Stage {node.depth + 1}
+                        </span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest opacity-70">{statusLabel(node.status)}</span>
+                      </div>
+                      <div class="flex items-start justify-between gap-2">
+                        <h4 class="font-bold text-sm leading-snug">{node.name}</h4>
+                      </div>
+                      <p class="text-xs opacity-75 mt-2">{node.id}</p>
+                      <div class="mt-4">
+                        <div class="flex justify-between text-[11px] font-semibold opacity-80 mb-1">
+                          <span>Evidence</span>
+                          <span>{node.total > 0 ? `${node.correct}/${node.total}` : '0/0'}</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-black/10 overflow-hidden">
+                          <div
+                            class={`h-full rounded-full ${statusBarClasses[node.status]}`}
+                            style={`width: ${evidencePercent(node.correct, node.total)}%`}
+                          ></div>
+                        </div>
+                      </div>
+                      {node.prerequisites.length > 0 && (
+                        <p class="text-[11px] opacity-70 mt-2">
+                          Prereq: {node.prerequisites.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <div class="text-center mt-10">
+        <a href="/learn/diagnostic" class="inline-block bg-brand-dark text-brand-gold font-bold py-3 px-8 rounded hover:bg-[#1e3152] transition-colors duration-150 btn-lift">
+          Take Another Diagnostic
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
