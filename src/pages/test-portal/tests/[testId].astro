@@ -1,0 +1,239 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+const { testId } = Astro.params;
+---
+
+<Layout title="Test Details" description="Review test instructions and begin a secure Integrated Math assessment.">
+  <section class="min-h-[calc(100vh-4.5rem)] py-10 md:py-14" data-test-id={testId} id="test-detail-root">
+    <div class="max-w-4xl mx-auto px-6 sm:px-8">
+      <a href="/test-portal" class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-brand-green transition-colors mb-7">
+        <span aria-hidden="true">←</span> Back to Test Portal
+      </a>
+
+      <div id="detail-loader" class="flex items-center justify-center gap-3 py-24 text-slate-500">
+        <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+        <span class="font-semibold">Loading test details…</span>
+      </div>
+
+      <div id="detail-error" class="hidden border border-red-200 bg-red-50 text-red-700 rounded-xl p-5" role="alert"></div>
+
+      <article id="detail-content" class="hidden bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="h-1.5 bg-brand-green"></div>
+        <div class="p-7 md:p-10">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-5 mb-7">
+            <div>
+              <p id="detail-status" class="text-xs font-bold uppercase tracking-[0.18em] text-brand-green mb-3"></p>
+              <h1 id="detail-title" class="font-serif font-bold text-4xl text-brand-dark"></h1>
+              <p id="detail-description" class="text-slate-500 leading-relaxed mt-4 max-w-2xl"></p>
+            </div>
+            <span id="detail-mode" class="shrink-0 inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600"></span>
+          </div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+            <div class="detail-stat"><span>Problems</span><strong id="detail-count"></strong></div>
+            <div class="detail-stat"><span>Duration</span><strong id="detail-duration"></strong></div>
+            <div class="detail-stat"><span>Opens</span><strong id="detail-opens"></strong></div>
+            <div class="detail-stat"><span>Closes</span><strong id="detail-closes"></strong></div>
+          </div>
+
+          <section id="instructions-section" class="hidden border-t border-slate-100 pt-7 mb-8">
+            <h2 class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400 mb-4">Instructions</h2>
+            <div id="detail-instructions" class="portal-math prose-content text-brand-dark leading-relaxed whitespace-pre-wrap"></div>
+          </section>
+
+          <div id="security-notice" class="rounded-xl border p-5 mb-7">
+            <div class="flex items-start gap-3">
+              <div id="security-icon" class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5"></div>
+              <div>
+                <h2 id="security-title" class="font-bold text-brand-dark"></h2>
+                <p id="security-copy" class="text-sm leading-relaxed text-slate-600 mt-1"></p>
+                <ul id="security-features" class="text-xs text-slate-500 mt-3 space-y-1"></ul>
+              </div>
+            </div>
+          </div>
+
+          <label id="acknowledgement-wrap" class="hidden items-start gap-3 rounded-lg border border-slate-200 p-4 cursor-pointer mb-5">
+            <input id="acknowledgement" type="checkbox" class="mt-1 accent-brand-green" />
+            <span class="text-sm text-slate-600">I understand that the timer starts immediately and this one-sitting attempt will be bound to this browser tab.</span>
+          </label>
+
+          <div id="start-error" class="hidden mb-5 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm font-semibold" role="alert"></div>
+          <button id="start-button" type="button" class="w-full bg-brand-dark text-brand-gold font-extrabold py-4 px-6 rounded-lg hover:bg-[#1e3152] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            Begin test
+          </button>
+          <p id="start-helper" class="text-center text-xs text-slate-400 mt-3"></p>
+        </div>
+      </article>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .detail-stat { border: 1px solid rgb(226 232 240); border-radius: .65rem; padding: .9rem; background: rgb(248 250 252); min-width: 0; }
+  .detail-stat span { display: block; color: rgb(148 163 184); font-size: .65rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .3rem; }
+  .detail-stat strong { display: block; color: #162236; font-size: .8rem; overflow-wrap: anywhere; }
+  .prose-content .katex-display { overflow-x: auto; overflow-y: hidden; padding: .5rem 0; }
+</style>
+
+<script>
+  import { attemptSessionStorageKey, formatPortalDate, formatPortalDuration, getPortalSession, newTestSessionToken, portalFetch, renderPortalMath } from '../../../lib/testPortalClient';
+
+  interface TestDetail {
+    id: string;
+    title: string;
+    description: string;
+    instructions_latex: string;
+    duration_minutes: number;
+    security_mode: 'one_sitting' | 'take_home';
+    require_fullscreen: boolean;
+    block_clipboard: boolean;
+    opens_at: string | null;
+    closes_at: string | null;
+    availability: 'open' | 'upcoming' | 'closed';
+    question_count: number;
+  }
+  interface ExistingAttempt { id: string; status: 'in_progress' | 'submitted' | 'timed_out'; }
+
+  const root = document.getElementById('test-detail-root')!;
+  const testId = root.dataset.testId ?? '';
+  const loader = document.getElementById('detail-loader')!;
+  const content = document.getElementById('detail-content')!;
+  const errorBox = document.getElementById('detail-error')!;
+  const startButton = document.getElementById('start-button') as HTMLButtonElement;
+  const acknowledgement = document.getElementById('acknowledgement') as HTMLInputElement;
+  let test: TestDetail;
+  let existingAttempt: ExistingAttempt | null = null;
+
+  function showError(message: string) {
+    errorBox.textContent = message;
+    errorBox.classList.remove('hidden');
+    loader.classList.add('hidden');
+  }
+
+  function renderDetail() {
+    document.getElementById('detail-title')!.textContent = test.title;
+    document.getElementById('detail-description')!.textContent = test.description || 'No additional description was provided.';
+    document.getElementById('detail-count')!.textContent = String(test.question_count);
+    document.getElementById('detail-duration')!.textContent = formatPortalDuration(test.duration_minutes);
+    document.getElementById('detail-opens')!.textContent = formatPortalDate(test.opens_at);
+    document.getElementById('detail-closes')!.textContent = formatPortalDate(test.closes_at);
+    document.getElementById('detail-mode')!.textContent = test.security_mode === 'one_sitting' ? 'One sitting' : 'Take-home';
+    document.getElementById('detail-status')!.textContent = existingAttempt
+      ? existingAttempt.status.replace('_', ' ')
+      : test.availability;
+
+    if (test.instructions_latex) {
+      const instructionSection = document.getElementById('instructions-section')!;
+      const instructionContent = document.getElementById('detail-instructions')!;
+      instructionSection.classList.remove('hidden');
+      instructionContent.textContent = test.instructions_latex;
+    }
+
+    const notice = document.getElementById('security-notice')!;
+    const icon = document.getElementById('security-icon')!;
+    const title = document.getElementById('security-title')!;
+    const copy = document.getElementById('security-copy')!;
+    const features = document.getElementById('security-features')!;
+    if (test.security_mode === 'one_sitting') {
+      notice.className = 'rounded-xl border border-amber-200 bg-amber-50 p-5 mb-7';
+      icon.className = 'w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-amber-100 text-amber-700';
+      icon.textContent = '◷';
+      title.textContent = 'One-sitting security';
+      copy.textContent = 'The server timer cannot be paused. Refreshing this tab is safe, but closing it or opening the attempt in another tab will lock re-entry until an administrator unlocks it.';
+      const items = [
+        test.require_fullscreen ? 'Fullscreen is required and exits are recorded.' : 'Focus and tab visibility changes are recorded.',
+        test.block_clipboard ? 'Copying and pasting are blocked and recorded.' : 'Clipboard use is not blocked.',
+        'Your answers are saved to the server as you work.',
+      ];
+      features.innerHTML = items.map((item) => `<li>• ${item}</li>`).join('');
+    } else {
+      notice.className = 'rounded-xl border border-green-200 bg-green-50 p-5 mb-7';
+      icon.className = 'w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-green-100 text-green-700';
+      icon.textContent = '↻';
+      title.textContent = 'Resumable take-home test';
+      copy.textContent = 'You may leave and return from another browser session. Your personal timer continues running and the earlier of that timer or the test closing time is enforced.';
+      features.innerHTML = '<li>• Progress is saved securely after each response.</li><li>• The timer continues while you are away.</li>';
+    }
+
+    const acknowledgementWrap = document.getElementById('acknowledgement-wrap')!;
+    const helper = document.getElementById('start-helper')!;
+    if (existingAttempt?.status === 'in_progress') {
+      startButton.textContent = 'Continue attempt';
+      helper.textContent = 'The original deadline still applies.';
+    } else if (existingAttempt) {
+      startButton.textContent = 'View submission';
+      helper.textContent = 'This attempt can no longer be changed.';
+    } else if (test.availability === 'open') {
+      startButton.textContent = 'Begin test';
+      helper.textContent = 'The timer begins as soon as you continue.';
+      if (test.security_mode === 'one_sitting') {
+        acknowledgementWrap.classList.remove('hidden');
+        acknowledgementWrap.classList.add('flex');
+        startButton.disabled = true;
+      }
+    } else {
+      startButton.textContent = test.availability === 'upcoming' ? 'Test has not opened' : 'Test is closed';
+      startButton.disabled = true;
+      helper.textContent = 'You cannot start a new attempt at this time.';
+    }
+
+    loader.classList.add('hidden');
+    content.classList.remove('hidden');
+    renderPortalMath(content);
+  }
+
+  acknowledgement.addEventListener('change', () => {
+    startButton.disabled = !acknowledgement.checked;
+  });
+
+  startButton.addEventListener('click', async () => {
+    const error = document.getElementById('start-error')!;
+    error.classList.add('hidden');
+    if (existingAttempt && existingAttempt.status !== 'in_progress') {
+      location.href = `/test-portal/attempts/${existingAttempt.id}`;
+      return;
+    }
+    startButton.disabled = true;
+    const oldText = startButton.textContent;
+    startButton.textContent = existingAttempt ? 'Opening attempt…' : 'Starting secure timer…';
+
+    let sessionToken = '';
+    if (test.security_mode === 'one_sitting') {
+      sessionToken = existingAttempt
+        ? sessionStorage.getItem(attemptSessionStorageKey(existingAttempt.id)) || newTestSessionToken()
+        : newTestSessionToken();
+    }
+
+    try {
+      const result = await portalFetch<{ attempt: ExistingAttempt }>('/api/test-portal/attempts/start', {
+        method: 'POST',
+        body: JSON.stringify({ test_id: test.id, session_token: sessionToken }),
+      }, sessionToken);
+      if (sessionToken) sessionStorage.setItem(attemptSessionStorageKey(result.attempt.id), sessionToken);
+      location.href = `/test-portal/attempts/${result.attempt.id}`;
+    } catch (caught) {
+      error.textContent = caught instanceof Error ? caught.message : 'The attempt could not be opened.';
+      error.classList.remove('hidden');
+      startButton.textContent = oldText;
+      startButton.disabled = false;
+    }
+  });
+
+  async function init() {
+    const session = await getPortalSession();
+    if (!session) {
+      location.href = `/test-portal?next=${encodeURIComponent(location.pathname)}`;
+      return;
+    }
+    try {
+      const data = await portalFetch<{ test: TestDetail; attempt: ExistingAttempt | null }>(`/api/test-portal/tests/${testId}`);
+      test = data.test;
+      existingAttempt = data.attempt;
+      renderDetail();
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : 'The test could not be loaded.');
+    }
+  }
+
+  init();
+</script>

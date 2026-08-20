@@ -2,267 +2,107 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
-<Layout
-  title="Learning Hub"
-  description="Free resources, handouts, and an adaptive competition-math diagnostic from Integrated Math."
->
+<Layout title="Learning Hub" description="Free competition-math diagnostics, problems, solutions, and handouts from Integrated Math.">
+  <header class="learn-header">
+    <div class="site-container learn-header-grid">
+      <div>
+        <p class="eyebrow">Learning hub</p>
+        <h1 class="page-title">Competition math resources</h1>
+      </div>
+      <p class="lede">Free handouts, past problems, and a skill diagnostic.</p>
+    </div>
+  </header>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       HERO
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green">
-    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-16 md:py-20 text-center animate-on-load">
-      <span class="inline-block text-brand-green font-semibold tracking-widest uppercase text-xs mb-5">
-        Learning Hub
-      </span>
-      <h1 class="font-serif font-bold text-4xl sm:text-5xl md:text-6xl leading-[1.1] tracking-tight mb-5 max-w-3xl mx-auto">
-        Master the art of<br />
-        <em class="text-white/65 font-normal not-italic">integrated thinking.</em>
-      </h1>
-      <p class="text-slate-300 text-base sm:text-lg max-w-xl mx-auto font-light leading-relaxed">
-        Free resources, handouts, and diagnostics designed to take students beyond the standard curriculum.
-      </p>
+  <section class="section diagnostic-section">
+    <div class="site-container diagnostic-grid">
+      <div>
+        <p class="eyebrow">Start here</p>
+        <h2 class="section-title">Skill diagnostic</h2>
+        <p class="lede">A 15 to 25 question adaptive test in algebra, geometry, number theory, and combinatorics. Get a subject breakdown and a map of what to study next.</p>
+        <div class="diagnostic-actions">
+          <a class="button-primary" href="/learn/diagnostic">Start the diagnostic</a>
+          <a class="text-link" href="/learn/diagnostic/how-it-works">How it works</a>
+        </div>
+      </div>
+
+      <dl>
+        <div><dt>4</dt><dd>subjects</dd></div>
+        <div><dt>43</dt><dd>skills mapped</dd></div>
+        <div><dt>15–25</dt><dd>questions</dd></div>
+        <div><dt>~45 min</dt><dd>typical time</dd></div>
+      </dl>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       PRIMARY FEATURE — DIAGNOSTIC (live now)
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="py-14 md:py-16 bg-white border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-
-      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5 reveal-on-scroll">
-        Start Here
-      </p>
-
-      <!-- Headline diagnostic card -->
-      <div class="reveal-on-scroll delay-100 relative overflow-hidden rounded-2xl bg-brand-dark text-brand-light shadow-xl shadow-black/10">
-
-        <!-- Faint bridge watermark -->
-        <img src="/bridge-icon.png"
-             class="absolute -bottom-6 -right-6 w-56 max-w-none h-auto pointer-events-none select-none"
-             style="filter: brightness(0) invert(1); opacity: 0.05;"
-             aria-hidden="true" alt="" />
-
-        <div class="relative z-10 grid lg:grid-cols-[1.15fr_0.85fr] gap-8 lg:gap-10 p-8 md:p-12">
-
-          <!-- Left: pitch -->
-          <div class="flex flex-col">
-            <span class="inline-flex w-fit items-center gap-1.5 bg-brand-green/20 text-brand-green text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest mb-5">
-              <span class="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
-              Live now · Free · No account
-            </span>
-
-            <h2 class="font-serif font-bold text-3xl md:text-4xl leading-tight text-white mb-4">
-              Take the Skill Diagnostic
-            </h2>
-            <p class="text-slate-300 text-sm md:text-base font-light leading-relaxed max-w-xl mb-7">
-              An adaptive 15&ndash;25 question diagnostic across Algebra, Geometry, Number Theory, and
-              Combinatorics. It finds your competition-math tier and returns a personalized skill-tree
-              report showing exactly where to focus next.
-            </p>
-
-            <!-- Stat row -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 max-w-2xl">
-              <div class="border border-white/10 rounded-lg p-3">
-                <p class="text-2xl font-bold text-white">4</p>
-                <p class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Domains</p>
-              </div>
-              <div class="border border-white/10 rounded-lg p-3">
-                <p class="text-2xl font-bold text-white">43</p>
-                <p class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Skills mapped</p>
-              </div>
-              <div class="border border-white/10 rounded-lg p-3">
-                <p class="text-2xl font-bold text-white">15&ndash;25</p>
-                <p class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Questions</p>
-              </div>
-              <div class="border border-white/10 rounded-lg p-3">
-                <p class="text-2xl font-bold text-white">~45<span class="text-base font-semibold"> min</span></p>
-                <p class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Typical time</p>
-              </div>
-            </div>
-
-            <div class="mt-auto flex flex-col sm:flex-row sm:items-center gap-4">
-              <a href="/learn/diagnostic"
-                 class="inline-flex items-center justify-center gap-2 bg-brand-gold text-brand-dark font-bold py-3.5 px-8 rounded hover:bg-yellow-400 transition-colors duration-150 btn-lift text-sm whitespace-nowrap">
-                Start the Diagnostic
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                </svg>
-              </a>
-              <a href="/learn/diagnostic/how-it-works" class="inline-flex items-center gap-1.5 text-slate-300 hover:text-brand-green text-xs font-semibold transition-colors">
-                How it works
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Right: "how it works" mini panel -->
-          <div class="border-t lg:border-t-0 lg:border-l border-white/10 pt-8 lg:pt-0 lg:pl-10">
-            <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-5">How it works</p>
-            <ol class="space-y-5">
-              <li class="flex gap-4">
-                <span class="flex-shrink-0 w-7 h-7 rounded-full bg-white/10 text-brand-gold font-bold text-sm flex items-center justify-center">1</span>
-                <div>
-                  <p class="text-sm font-semibold text-white">Tell us your background</p>
-                  <p class="text-xs text-slate-400 leading-relaxed mt-0.5">Pick your highest contest experience so the test starts at the right level.</p>
-                </div>
-              </li>
-              <li class="flex gap-4">
-                <span class="flex-shrink-0 w-7 h-7 rounded-full bg-white/10 text-brand-gold font-bold text-sm flex items-center justify-center">2</span>
-                <div>
-                  <p class="text-sm font-semibold text-white">Answer adaptive questions</p>
-                  <p class="text-xs text-slate-400 leading-relaxed mt-0.5">Difficulty adjusts after every response to zero in on your level.</p>
-                </div>
-              </li>
-              <li class="flex gap-4">
-                <span class="flex-shrink-0 w-7 h-7 rounded-full bg-white/10 text-brand-gold font-bold text-sm flex items-center justify-center">3</span>
-                <div>
-                  <p class="text-sm font-semibold text-white">Get your skill-tree report</p>
-                  <p class="text-xs text-slate-400 leading-relaxed mt-0.5">See your tier, subject breakdown, and a recommended next focus.</p>
-                </div>
-              </li>
-            </ol>
-          </div>
-
-        </div>
+  <section class="section-compact archive-section">
+    <div class="site-container archive-grid">
+      <div>
+        <p class="eyebrow">Problem archive</p>
+        <h2 class="section-title">Spring 2026</h2>
+        <p>All six inaugural IMT events, with full solutions. More than 50 original problems in four subjects.</p>
+      </div>
+      <div class="archive-links">
+        <a class="button-secondary" href="/competitions/spring-2026">Browse problems and solutions</a>
+        <span>Free to download</span>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       ALSO AVAILABLE — Spring 2026 archive
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="py-14 bg-brand-light border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-
-      <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-5 reveal-on-scroll">
-        Also Available
-      </p>
-
-      <div class="reveal-on-scroll delay-100 bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col md:flex-row">
-
-        <!-- Text side -->
-        <div class="p-8 md:p-10 flex-grow">
-          <span class="inline-flex items-center gap-1.5 bg-brand-green/10 text-brand-green text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest mb-4">
-            <span class="w-1.5 h-1.5 rounded-full bg-brand-green"></span>
-            Live
-          </span>
-          <h2 class="font-serif font-bold text-2xl md:text-3xl text-brand-dark mb-2">
-            Spring 2026 Problem Archive
-          </h2>
-          <p class="text-slate-500 text-sm font-light leading-relaxed max-w-lg mb-6">
-            All six events from the inaugural IMT &mdash; Team Round, Integrated Round, and four subject tests &mdash; with full solutions. Over 50 original problems covering Algebra, Geometry, Number Theory, and Combinatorics.
-          </p>
-          <div class="flex flex-wrap gap-2 mb-0">
-            {['Team Round','Integrated Round','Algebra','Geometry','Number Theory','Combinatorics'].map(tag => (
-              <span class="text-[11px] font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">{tag}</span>
-            ))}
-          </div>
+  <section class="section upcoming-section">
+    <div class="site-container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">In development</p>
+          <h2 class="section-title">More resources.</h2>
         </div>
+        <a class="text-link" href="/register">Get updates</a>
+      </div>
 
-        <!-- CTA side -->
-        <div class="md:border-l border-t md:border-t-0 border-gray-200 p-8 md:p-10 flex flex-col justify-center items-start md:items-center shrink-0">
-          <p class="text-slate-400 text-xs mb-4 text-left md:text-center">Free to download</p>
-          <a href="/competitions/spring-2026"
-             class="inline-flex items-center gap-2 bg-brand-dark text-brand-gold font-bold py-3 px-7 rounded hover:bg-[#1e3152] transition-colors duration-150 btn-lift text-sm whitespace-nowrap">
-            Browse Archive
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-            </svg>
-          </a>
-        </div>
-
+      <div class="rule-grid upcoming-grid">
+        <article>
+          <p class="date">Summer 2026</p>
+          <h3>Handouts and modules</h3>
+          <p>Graph theory, generating functions, projective geometry, and other Olympiad topics.</p>
+        </article>
+        <article>
+          <p class="date">Fall 2026</p>
+          <h3>Club curriculum</h3>
+          <p>A semester plan with weekly problems, logistics, handout suggestions, and sample lessons.</p>
+        </article>
       </div>
     </div>
   </section>
-
-  <!-- ═══════════════════════════════════════════════════════════
-       COMING SOON — Summer & Fall 2026
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="py-16 bg-brand-light border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-
-      <div class="flex items-center gap-4 mb-8 reveal-on-scroll">
-        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Coming Soon</p>
-        <div class="flex-grow h-px bg-gray-200"></div>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-6">
-
-        <!-- Handouts & Modules -->
-        <div class="bg-white border border-gray-200 rounded-lg p-8 flex flex-col hover:border-gray-300 transition-colors reveal-on-scroll delay-100">
-          <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
-            </svg>
-          </div>
-          <h3 class="font-bold text-brand-dark text-lg mb-2">Handouts &amp; Modules</h3>
-          <p class="text-slate-500 text-sm leading-relaxed flex-grow mb-6">
-            Topic-focused handouts covering graph theory, generating functions, projective geometry, and other areas that appear constantly in Olympiad math but rarely in a standard classroom.
-          </p>
-          <div class="flex items-center gap-2 pt-4 border-t border-gray-100">
-            <span class="w-2 h-2 rounded-full bg-slate-300 flex-shrink-0"></span>
-            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Expected Summer 2026</span>
-          </div>
-        </div>
-
-        <!-- Club Curriculum -->
-        <div class="bg-white border border-gray-200 rounded-lg p-8 flex flex-col hover:border-gray-300 transition-colors reveal-on-scroll delay-200">
-          <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center mb-5">
-            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M12 6.252l13-7-13-7-13 7 13 7zM12 17.748l13-7-13-7-13 7 13 7z"/>
-            </svg>
-          </div>
-          <h3 class="font-bold text-brand-dark text-lg mb-2">Club Curriculum</h3>
-          <p class="text-slate-500 text-sm leading-relaxed flex-grow mb-6">
-            A complete semester-long framework for student-led math clubs: weekly integrated problem sets, logistics guides, handout recommendations, and model lesson structures. Free to run at any school, any team size.
-          </p>
-          <div class="flex items-center gap-2 pt-4 border-t border-gray-100">
-            <span class="w-2 h-2 rounded-full bg-slate-300 flex-shrink-0"></span>
-            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Expected Fall 2026</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════════════════════════
-       REGISTER CTA
-  ═══════════════════════════════════════════════════════════ -->
-  <section class="py-20 bg-white">
-    <div class="max-w-xl mx-auto px-6 text-center reveal-on-scroll">
-      <div class="w-12 h-12 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
-        <svg class="w-6 h-6 text-brand-green" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-        </svg>
-      </div>
-      <h2 class="font-serif font-bold text-3xl text-brand-dark mb-3">Be the first to know.</h2>
-      <p class="text-slate-500 mb-8 text-base leading-relaxed">
-        Register for our email list and we'll notify you the moment new handouts, diagnostics, and resources go live.
-      </p>
-      <a href="/register"
-         class="inline-block bg-brand-dark text-white font-bold py-3 px-10 rounded hover:bg-[#1e3152] transition-colors duration-150 btn-lift">
-        Get Notified
-      </a>
-    </div>
-  </section>
-
 </Layout>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const observer = new IntersectionObserver((entries, obs) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
-          obs.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
-  });
-</script>
+<style>
+  .learn-header { border-bottom: 1px solid var(--line); background: var(--paper); }
+  .learn-header-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 4rem; align-items: end; padding-block: clamp(3.75rem, 7vw, 6rem); }
+  .learn-header-grid .lede { margin: 0; }
+  .diagnostic-section { background: white; }
+  .diagnostic-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: clamp(3rem, 9vw, 8rem); align-items: center; }
+  .diagnostic-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem; margin-top: 2rem; }
+  .diagnostic-grid dl { display: grid; grid-template-columns: repeat(2, 1fr); margin: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .diagnostic-grid dl div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 1.35rem; }
+  .diagnostic-grid dt { font-family: "Inter", Arial, sans-serif; font-size: 2rem; font-weight: 750; letter-spacing: -0.04em; }
+  .diagnostic-grid dd { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.75rem; }
+  .archive-section { border-block: 1px solid var(--line); background: var(--paper); }
+  .archive-grid { display: grid; grid-template-columns: 1fr auto; gap: 3rem; align-items: center; }
+  .archive-grid > div > p:not(.eyebrow) { max-width: 650px; color: var(--muted); line-height: 1.6; }
+  .archive-links { display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
+  .archive-links span { color: var(--muted); font-size: 0.72rem; }
+  .upcoming-section { background: white; }
+  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
+  .upcoming-grid { grid-template-columns: repeat(2, 1fr); }
+  .upcoming-grid article { padding: 1.6rem; }
+  .upcoming-grid .date { color: var(--green); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+  .upcoming-grid h3 { margin: 2.5rem 0 0.6rem; font-family: "Inter", Arial, sans-serif; font-size: 1.25rem; }
+  .upcoming-grid article > p:last-child { max-width: 480px; margin-bottom: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+  @media (max-width: 760px) {
+    .learn-header-grid,
+    .diagnostic-grid,
+    .archive-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .archive-links { align-items: flex-start; }
+    .upcoming-grid { grid-template-columns: 1fr; }
+    .section-heading { align-items: flex-start; flex-direction: column; }
+  }
+</style>

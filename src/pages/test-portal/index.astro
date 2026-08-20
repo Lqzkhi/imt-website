@@ -1,0 +1,359 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Test Portal" description="Take secure Integrated Math assessments and submit mathematical work online.">
+  <section class="bg-brand-dark border-b-4 border-brand-green text-white">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-14 md:py-16">
+      <div class="max-w-3xl animate-on-load">
+        <span class="inline-flex items-center gap-2 text-brand-gold font-bold tracking-[0.2em] uppercase text-xs mb-4">
+          <span class="h-px w-8 bg-brand-gold"></span>
+          Assessments
+        </span>
+        <h1 class="font-serif font-bold text-4xl md:text-5xl tracking-tight">Test Portal</h1>
+        <p class="text-slate-300 mt-4 leading-relaxed max-w-2xl">
+          Take timed mathematics tests, save your work securely, and return to eligible take-home assessments.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-10 md:py-14 min-h-[520px]">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div id="portal-loader" class="flex items-center justify-center gap-3 py-24 text-slate-500" aria-live="polite">
+        <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+        <span class="font-semibold">Loading the Test Portal…</span>
+      </div>
+
+      <div id="portal-notice" class="hidden mb-6 rounded-lg border px-4 py-3 text-sm font-semibold" role="status"></div>
+
+      <div id="auth-panel" class="hidden max-w-md mx-auto">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="grid grid-cols-2 border-b border-gray-200" role="tablist" aria-label="Account access">
+            <button id="signin-tab" class="auth-tab px-5 py-4 text-sm font-bold text-brand-dark border-b-2 border-brand-green" type="button" role="tab" aria-selected="true">Sign in</button>
+            <button id="signup-tab" class="auth-tab px-5 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent" type="button" role="tab" aria-selected="false">Create account</button>
+          </div>
+
+          <form id="signin-form" class="p-6 md:p-8 space-y-5">
+            <div>
+              <label for="signin-email" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Email</label>
+              <input id="signin-email" type="email" autocomplete="email" required class="portal-input" placeholder="student@example.com" />
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label for="signin-password" class="text-xs font-bold uppercase tracking-wider text-brand-dark">Password</label>
+                <button id="forgot-password" type="button" class="text-xs font-semibold text-brand-green hover:underline">Forgot password?</button>
+              </div>
+              <input id="signin-password" type="password" autocomplete="current-password" minlength="8" required class="portal-input" />
+            </div>
+            <button type="submit" class="portal-primary w-full">Sign in to Test Portal</button>
+          </form>
+
+          <form id="signup-form" class="hidden p-6 md:p-8 space-y-5">
+            <div>
+              <label for="signup-name" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Display name</label>
+              <input id="signup-name" type="text" autocomplete="name" maxlength="160" required class="portal-input" placeholder="Your name" />
+            </div>
+            <div>
+              <label for="signup-email" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Email</label>
+              <input id="signup-email" type="email" autocomplete="email" required class="portal-input" placeholder="student@example.com" />
+            </div>
+            <div>
+              <label for="signup-password" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Password</label>
+              <input id="signup-password" type="password" autocomplete="new-password" minlength="8" required class="portal-input" />
+              <p class="text-xs text-slate-400 mt-2">Use at least 8 characters.</p>
+            </div>
+            <button type="submit" class="portal-primary w-full">Create account</button>
+          </form>
+
+          <form id="recovery-form" class="hidden p-6 md:p-8 space-y-5">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-brand-green mb-2">Password recovery</p>
+              <h2 class="font-serif font-bold text-2xl text-brand-dark">Choose a new password</h2>
+            </div>
+            <div>
+              <label for="recovery-password" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">New password</label>
+              <input id="recovery-password" type="password" autocomplete="new-password" minlength="8" required class="portal-input" />
+            </div>
+            <button type="submit" class="portal-primary w-full">Update password</button>
+          </form>
+        </div>
+        <p class="text-center text-xs text-slate-400 mt-5">
+          Accounts are used to protect attempts and associate submissions with their test taker.
+        </p>
+      </div>
+
+      <div id="dashboard" class="hidden">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-8">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand-green mb-2">Your assessments</p>
+            <h2 id="welcome-heading" class="font-serif font-bold text-3xl text-brand-dark">Welcome</h2>
+            <p id="account-email" class="text-sm text-slate-500 mt-1"></p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <a id="admin-link" href="/test-portal/admin" class="hidden portal-secondary">Admin workspace</a>
+            <button id="signout-button" type="button" class="portal-secondary">Sign out</button>
+          </div>
+        </div>
+
+        <div id="test-list" class="grid lg:grid-cols-2 gap-5"></div>
+        <div id="empty-tests" class="hidden bg-white border border-dashed border-slate-300 rounded-xl p-10 text-center">
+          <div class="w-12 h-12 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l3.414 3.414A1 1 0 0117 7.414V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <h3 class="font-bold text-brand-dark">No tests are available yet</h3>
+          <p class="text-sm text-slate-500 mt-2">Published tests will appear here when an administrator opens them.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .portal-input { width: 100%; border: 1px solid rgb(203 213 225); border-radius: .5rem; padding: .75rem 1rem; background: white; color: #162236; outline: none; transition: border-color .15s, box-shadow .15s; }
+  .portal-input:focus { border-color: #4A7C59; box-shadow: 0 0 0 3px rgba(74,124,89,.12); }
+  .portal-primary { display: inline-flex; align-items: center; justify-content: center; border-radius: .5rem; background: #162236; color: #F5C518; padding: .8rem 1.1rem; font-size: .875rem; font-weight: 800; transition: background .15s, transform .15s; }
+  .portal-primary:hover { background: #1e3152; transform: translateY(-1px); }
+  .portal-primary:disabled { opacity: .55; cursor: wait; transform: none; }
+  .portal-secondary { display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgb(203 213 225); border-radius: .5rem; background: white; color: #162236; padding: .65rem 1rem; font-size: .8rem; font-weight: 700; transition: border-color .15s, color .15s; }
+  .portal-secondary:hover { border-color: #4A7C59; color: #4A7C59; }
+</style>
+
+<script>
+  import { escapeHtml, formatPortalDate, formatPortalDuration, getPortalSession, portalFetch, supabase } from '../../lib/testPortalClient';
+
+  interface TestSummary {
+    id: string;
+    title: string;
+    description: string;
+    duration_minutes: number;
+    security_mode: 'one_sitting' | 'take_home';
+    opens_at: string | null;
+    closes_at: string | null;
+    availability: 'open' | 'upcoming' | 'closed';
+    question_count: number;
+    attempt: null | {
+      id: string;
+      status: 'in_progress' | 'submitted' | 'timed_out';
+      expires_at: string;
+      submitted_at: string | null;
+      grading_status: string;
+      score?: number;
+      max_score?: number;
+    };
+  }
+
+  const loader = document.getElementById('portal-loader')!;
+  const authPanel = document.getElementById('auth-panel')!;
+  const dashboard = document.getElementById('dashboard')!;
+  const notice = document.getElementById('portal-notice')!;
+  const signinForm = document.getElementById('signin-form') as HTMLFormElement;
+  const signupForm = document.getElementById('signup-form') as HTMLFormElement;
+  const recoveryForm = document.getElementById('recovery-form') as HTMLFormElement;
+  let recoveryMode = location.hash.includes('type=recovery');
+
+  function showNotice(message: string, kind: 'error' | 'success' = 'error') {
+    notice.textContent = message;
+    notice.className = `mb-6 rounded-lg border px-4 py-3 text-sm font-semibold ${kind === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`;
+  }
+
+  function clearNotice() {
+    notice.classList.add('hidden');
+  }
+
+  function setBusy(form: HTMLFormElement, busy: boolean) {
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (button) button.disabled = busy;
+  }
+
+  async function continueAfterAuth() {
+    const next = new URLSearchParams(location.search).get('next');
+    if (next?.startsWith('/test-portal/') && !next.startsWith('//')) {
+      location.href = next;
+      return;
+    }
+    await loadDashboard();
+  }
+
+  function showAuth(mode: 'signin' | 'signup' | 'recovery' = 'signin') {
+    loader.classList.add('hidden');
+    dashboard.classList.add('hidden');
+    authPanel.classList.remove('hidden');
+    signinForm.classList.toggle('hidden', mode !== 'signin');
+    signupForm.classList.toggle('hidden', mode !== 'signup');
+    recoveryForm.classList.toggle('hidden', mode !== 'recovery');
+    document.querySelectorAll('.auth-tab').forEach((tab) => tab.classList.toggle('hidden', mode === 'recovery'));
+    const signinTab = document.getElementById('signin-tab')!;
+    const signupTab = document.getElementById('signup-tab')!;
+    signinTab.setAttribute('aria-selected', String(mode === 'signin'));
+    signupTab.setAttribute('aria-selected', String(mode === 'signup'));
+    signinTab.className = `auth-tab px-5 py-4 text-sm font-bold border-b-2 ${mode === 'signin' ? 'text-brand-dark border-brand-green' : 'text-slate-400 border-transparent'}`;
+    signupTab.className = `auth-tab px-5 py-4 text-sm font-bold border-b-2 ${mode === 'signup' ? 'text-brand-dark border-brand-green' : 'text-slate-400 border-transparent'}`;
+  }
+
+  function renderTests(tests: TestSummary[]) {
+    const list = document.getElementById('test-list')!;
+    const empty = document.getElementById('empty-tests')!;
+    list.innerHTML = '';
+    empty.classList.toggle('hidden', tests.length > 0);
+
+    for (const test of tests) {
+      const attempt = test.attempt;
+      const status = attempt?.status === 'in_progress'
+        ? 'In progress'
+        : attempt?.status === 'submitted'
+          ? 'Submitted'
+          : attempt?.status === 'timed_out'
+            ? 'Time expired'
+            : test.availability === 'open'
+              ? 'Open'
+              : test.availability === 'upcoming'
+                ? 'Upcoming'
+                : 'Closed';
+      const statusClass = status === 'Open' || status === 'Submitted'
+        ? 'bg-green-50 text-green-700 border-green-200'
+        : status === 'In progress'
+          ? 'bg-blue-50 text-blue-700 border-blue-200'
+          : 'bg-slate-50 text-slate-600 border-slate-200';
+      const actionHref = attempt && attempt.status !== 'in_progress'
+        ? `/test-portal/attempts/${attempt.id}`
+        : `/test-portal/tests/${test.id}`;
+      const actionLabel = attempt?.status === 'in_progress'
+        ? 'Continue test'
+        : attempt
+          ? 'View submission'
+          : test.availability === 'open'
+            ? 'View and begin'
+            : 'View details';
+      const score = attempt && typeof attempt.score === 'number'
+        ? `<p class="text-sm font-bold text-brand-dark mt-3">Score: ${attempt.score} / ${attempt.max_score ?? 0}</p>`
+        : '';
+
+      const card = document.createElement('article');
+      card.className = 'bg-white border border-gray-200 rounded-xl p-6 md:p-7 flex flex-col shadow-sm';
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-green mb-2">${test.question_count} problem${test.question_count === 1 ? '' : 's'}</p>
+            <h3 class="font-serif font-bold text-2xl text-brand-dark">${escapeHtml(test.title)}</h3>
+          </div>
+          <span class="shrink-0 border rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${statusClass}">${status}</span>
+        </div>
+        <p class="text-sm text-slate-500 leading-relaxed flex-grow">${escapeHtml(test.description || 'No description has been added.')}</p>
+        ${score}
+        <div class="grid grid-cols-2 gap-3 py-5 my-5 border-y border-slate-100 text-xs">
+          <div><span class="block text-slate-400 mb-1">Duration</span><strong class="text-brand-dark">${formatPortalDuration(test.duration_minutes)}</strong></div>
+          <div><span class="block text-slate-400 mb-1">Format</span><strong class="text-brand-dark">${test.security_mode === 'one_sitting' ? 'One sitting' : 'Take-home'}</strong></div>
+          <div><span class="block text-slate-400 mb-1">Opens</span><strong class="text-brand-dark">${escapeHtml(formatPortalDate(test.opens_at))}</strong></div>
+          <div><span class="block text-slate-400 mb-1">Closes</span><strong class="text-brand-dark">${escapeHtml(formatPortalDate(test.closes_at))}</strong></div>
+        </div>
+        <a href="${actionHref}" class="portal-primary w-full">${actionLabel}</a>
+      `;
+      list.appendChild(card);
+    }
+  }
+
+  async function loadDashboard() {
+    clearNotice();
+    const session = await getPortalSession();
+    if (!session) {
+      showAuth(recoveryMode ? 'recovery' : 'signin');
+      return;
+    }
+    if (recoveryMode) {
+      showAuth('recovery');
+      return;
+    }
+
+    try {
+      const [me, testData] = await Promise.all([
+        portalFetch<{ user: { email: string; display_name: string }; is_admin: boolean }>('/api/test-portal/me'),
+        portalFetch<{ tests: TestSummary[] }>('/api/test-portal/tests'),
+      ]);
+      document.getElementById('welcome-heading')!.textContent = me.user.display_name ? `Welcome, ${me.user.display_name}` : 'Your tests';
+      document.getElementById('account-email')!.textContent = me.user.email;
+      document.getElementById('admin-link')!.classList.toggle('hidden', !me.is_admin);
+      renderTests(testData.tests);
+      loader.classList.add('hidden');
+      authPanel.classList.add('hidden');
+      dashboard.classList.remove('hidden');
+    } catch (error) {
+      loader.classList.add('hidden');
+      showNotice(error instanceof Error ? error.message : 'The portal could not be loaded.');
+      authPanel.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('signin-tab')!.addEventListener('click', () => showAuth('signin'));
+  document.getElementById('signup-tab')!.addEventListener('click', () => showAuth('signup'));
+
+  signinForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearNotice();
+    setBusy(signinForm, true);
+    const email = (document.getElementById('signin-email') as HTMLInputElement).value.trim();
+    const password = (document.getElementById('signin-password') as HTMLInputElement).value;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setBusy(signinForm, false);
+    if (error) return showNotice(error.message);
+    await continueAfterAuth();
+  });
+
+  signupForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearNotice();
+    setBusy(signupForm, true);
+    const displayName = (document.getElementById('signup-name') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('signup-email') as HTMLInputElement).value.trim();
+    const password = (document.getElementById('signup-password') as HTMLInputElement).value;
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { display_name: displayName }, emailRedirectTo: `${location.origin}/test-portal` },
+    });
+    setBusy(signupForm, false);
+    if (error) return showNotice(error.message);
+    if (!data.session) {
+      showNotice('Account created. Check your email to confirm it, then return here to sign in.', 'success');
+      showAuth('signin');
+    } else {
+      await continueAfterAuth();
+    }
+  });
+
+  document.getElementById('forgot-password')!.addEventListener('click', async () => {
+    const email = (document.getElementById('signin-email') as HTMLInputElement).value.trim();
+    if (!email) return showNotice('Enter your email address first.');
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/test-portal` });
+    if (error) return showNotice(error.message);
+    showNotice('Password reset email sent. Follow its link to choose a new password.', 'success');
+  });
+
+  recoveryForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearNotice();
+    setBusy(recoveryForm, true);
+    const password = (document.getElementById('recovery-password') as HTMLInputElement).value;
+    const { error } = await supabase.auth.updateUser({ password });
+    setBusy(recoveryForm, false);
+    if (error) return showNotice(error.message);
+    recoveryMode = false;
+    history.replaceState({}, '', '/test-portal');
+    showNotice('Password updated successfully.', 'success');
+    await loadDashboard();
+  });
+
+  document.getElementById('signout-button')!.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    location.href = '/test-portal';
+  });
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      recoveryMode = true;
+      showAuth('recovery');
+    }
+  });
+
+  loadDashboard();
+</script>

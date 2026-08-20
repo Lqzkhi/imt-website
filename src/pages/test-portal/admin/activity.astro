@@ -1,0 +1,96 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="Test Portal Activity" description="Administrator audit activity for the Test Portal.">
+  <section class="min-h-screen pb-16">
+    <header class="bg-brand-dark text-white border-b-4 border-brand-green">
+      <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-9">
+        <a href="/test-portal/admin" class="text-xs font-bold text-slate-400 hover:text-brand-gold">← Admin workspace</a>
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mt-5">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green mb-2">Bookkeeping</p>
+            <h1 class="font-serif font-bold text-4xl">Administrator activity</h1>
+            <p class="text-sm text-slate-300 mt-2">The 250 most recent changes to tests, access, attempts, and grades.</p>
+          </div>
+          <label class="block min-w-[240px]"><span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Filter activity</span><input id="activity-search" type="search" placeholder="Action, admin, test, participant…" class="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-brand-gold" /></label>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-9">
+      <div id="activity-loader" class="flex justify-center items-center gap-3 py-24 text-slate-500"><span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span><span class="font-semibold">Loading activity…</span></div>
+      <div id="activity-alert" class="hidden rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm font-semibold"></div>
+      <div id="activity-list" class="hidden space-y-3"></div>
+      <div id="activity-empty" class="hidden rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">No administrator activity matches this filter.</div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { escapeHtml, formatPortalDate, getPortalSession, portalFetch } from '../../../lib/testPortalClient';
+
+  interface AuditEvent {
+    id: number;
+    action: string;
+    actor_email: string;
+    test_id: string | null;
+    test_title: string | null;
+    attempt_id: string | null;
+    participant: { email: string; name: string } | null;
+    metadata: Record<string, unknown>;
+    created_at: string;
+  }
+
+  let events: AuditEvent[] = [];
+
+  function actionLabel(action: string) {
+    return action.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  }
+
+  function renderActivity() {
+    const query = (document.getElementById('activity-search') as HTMLInputElement).value.trim().toLowerCase();
+    const filtered = events.filter((event) => JSON.stringify({
+      action: event.action,
+      actor: event.actor_email,
+      test: event.test_title,
+      participant: event.participant,
+      metadata: event.metadata,
+    }).toLowerCase().includes(query));
+    const list = document.getElementById('activity-list')!;
+    list.innerHTML = filtered.map((event) => {
+      const target = [event.test_title, event.participant?.name || event.participant?.email].filter(Boolean).join(' · ') || 'Portal administration';
+      const metadata = Object.keys(event.metadata ?? {}).length ? JSON.stringify(event.metadata, null, 2) : '';
+      return `
+        <article class="rounded-xl border border-slate-200 bg-white shadow-sm p-5">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div class="min-w-0"><p class="text-[10px] font-bold uppercase tracking-wider text-brand-green">${escapeHtml(actionLabel(event.action))}</p><h2 class="font-bold text-brand-dark mt-1 break-words">${escapeHtml(target)}</h2><p class="text-xs text-slate-500 mt-2">${escapeHtml(event.actor_email)} · ${escapeHtml(formatPortalDate(event.created_at))}</p></div>
+            ${event.attempt_id ? `<a href="/test-portal/admin/attempts/${encodeURIComponent(event.attempt_id)}" class="text-xs font-bold text-brand-green hover:underline">Review attempt</a>` : event.test_id ? `<a href="/test-portal/admin/tests/${encodeURIComponent(event.test_id)}" class="text-xs font-bold text-brand-green hover:underline">Open test</a>` : ''}
+          </div>
+          ${metadata ? `<details class="mt-4"><summary class="cursor-pointer text-xs font-bold text-slate-500">Change details</summary><pre class="mt-2 max-h-64 overflow-auto rounded-lg bg-slate-950 text-slate-200 p-4 text-[11px] whitespace-pre-wrap break-all">${escapeHtml(metadata)}</pre></details>` : ''}
+        </article>
+      `;
+    }).join('');
+    list.classList.toggle('hidden', filtered.length === 0);
+    document.getElementById('activity-empty')!.classList.toggle('hidden', filtered.length > 0);
+  }
+
+  async function loadActivity() {
+    const session = await getPortalSession();
+    if (!session) { location.href = '/test-portal'; return; }
+    try {
+      const result = await portalFetch<{ events: AuditEvent[] }>('/api/test-portal/admin/audit');
+      events = result.events;
+      document.getElementById('activity-loader')!.classList.add('hidden');
+      renderActivity();
+    } catch (error) {
+      document.getElementById('activity-loader')!.classList.add('hidden');
+      const alert = document.getElementById('activity-alert')!;
+      alert.textContent = error instanceof Error ? error.message : 'Administrator activity could not be loaded.';
+      alert.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('activity-search')!.addEventListener('input', renderActivity);
+  void loadActivity();
+</script>

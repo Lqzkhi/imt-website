@@ -2,10 +2,10 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
-<Layout title="Spring 2026 — Inaugural Tournament">
+<Layout title="Spring 2026: Inaugural Tournament">
 
   <!-- ══════════════════════════════════════════
-       ARCHIVE HEADER — document / report feel
+       ARCHIVE HEADER: document / report feel
   ══════════════════════════════════════════ -->
   <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green">
     <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 pt-10 pb-16 animate-on-load">
@@ -326,7 +326,7 @@ import Layout from '../../layouts/Layout.astro';
   });
 </script>
 
-<script type="module">
+<script type="module" is:inline>
   import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
   import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3/+esm";
 
@@ -370,7 +370,7 @@ import Layout from '../../layouts/Layout.astro';
       .attr('fill',         d => activeCountries.includes(d.properties.name) ? '#4A7C59' : '#1e293b')
       .attr('stroke',       '#334155')
       .attr('stroke-width', 0.5)
-      .on('mouseover', function(event, d) {
+      .on('mouseover', function(_event, d) {
         if (!activeCountries.includes(d.properties.name)) return;
         d3.select(this).attr('fill','#386044').attr('stroke','#F5C518').attr('stroke-width', 1.5).raise();
         tooltip.classed('hidden', false).style('opacity', 1).text(d.properties.name);
@@ -379,7 +379,7 @@ import Layout from '../../layouts/Layout.astro';
         const [x, y] = d3.pointer(event, container);
         tooltip.style('left', (x + 14) + 'px').style('top', (y - 14) + 'px');
       })
-      .on('mouseout', function(event, d) {
+      .on('mouseout', function(_event, d) {
         if (!activeCountries.includes(d.properties.name)) return;
         d3.select(this).attr('fill','#4A7C59').attr('stroke','#334155').attr('stroke-width', 0.5);
         tooltip.style('opacity', 0).classed('hidden', true);

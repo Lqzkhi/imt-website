@@ -1,0 +1,337 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+const { attemptId } = Astro.params;
+---
+
+<Layout title="Review Test Attempt" description="Review participant responses, file uploads, grading, and test security events.">
+  <section id="review-root" data-attempt-id={attemptId} class="min-h-screen pb-16">
+    <header class="bg-brand-dark text-white border-b-4 border-brand-green">
+      <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-9">
+        <a id="back-submissions" href="#" class="text-xs font-bold text-slate-400 hover:text-brand-gold">← All submissions</a>
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mt-5">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green mb-2">Attempt review</p>
+            <h1 id="review-name" class="font-serif font-bold text-4xl">Participant</h1>
+            <p id="review-email" class="text-sm text-slate-300 mt-2"></p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="extend-attempt" type="button" class="hidden review-header-action">Add time</button>
+            <button id="unlock-attempt" type="button" class="hidden review-header-action">Unlock session</button>
+            <button id="force-submit" type="button" class="hidden review-header-action !border-brand-gold !text-brand-gold">Force submit</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-9">
+      <div id="review-loader" class="flex justify-center items-center gap-3 py-24 text-slate-500">
+        <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+        <span class="font-semibold">Loading attempt…</span>
+      </div>
+      <div id="review-alert" class="hidden mb-6 rounded-lg border px-4 py-3 text-sm font-semibold"></div>
+
+      <div id="review-content" class="hidden space-y-9">
+        <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div class="review-stat"><span>Status</span><strong id="review-status"></strong></div>
+          <div class="review-stat"><span>Score</span><strong id="review-score"></strong></div>
+          <div class="review-stat"><span>Started</span><strong id="review-started"></strong></div>
+          <div class="review-stat"><span>Deadline</span><strong id="review-expires"></strong></div>
+          <div class="review-stat"><span>Submitted</span><strong id="review-submitted"></strong></div>
+          <div class="review-stat"><span>Grading</span><strong id="review-grading"></strong></div>
+        </section>
+
+        <section>
+          <div class="mb-5">
+            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-green">Response review</p>
+            <h2 id="review-test-title" class="font-serif font-bold text-3xl text-brand-dark mt-1"></h2>
+          </div>
+          <div id="review-problems" class="space-y-5"></div>
+        </section>
+
+        <section class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div class="px-6 py-5 border-b border-slate-100">
+            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-green">Security log</p>
+            <h2 class="font-serif font-bold text-2xl text-brand-dark mt-1">Attempt activity</h2>
+            <p class="text-xs text-slate-500 mt-2">Events are context for review, not automatic evidence of misconduct.</p>
+          </div>
+          <div id="security-summary" class="grid grid-cols-2 md:grid-cols-4 gap-3 p-5 border-b border-slate-100"></div>
+          <div class="overflow-x-auto max-h-[420px]">
+            <table class="w-full min-w-[700px] text-left">
+              <thead class="sticky top-0 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400"><tr><th class="px-5 py-3">Time</th><th class="px-5 py-3">Event</th><th class="px-5 py-3">Details</th></tr></thead>
+              <tbody id="security-events" class="divide-y divide-slate-100 text-sm"></tbody>
+            </table>
+          </div>
+          <div id="security-empty" class="hidden p-8 text-center text-sm text-slate-500">No activity events were recorded.</div>
+        </section>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .review-header-action { border: 1px solid rgba(255,255,255,.22); border-radius: .5rem; padding: .7rem 1rem; font-size: .75rem; font-weight: 700; color: white; }
+  .review-stat { background: white; border: 1px solid rgb(226 232 240); border-radius: .7rem; padding: 1rem; min-width: 0; }
+  .review-stat span { display: block; color: rgb(148 163 184); font-size: .6rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .review-stat strong { display: block; color: #162236; font-size: .78rem; margin-top: .4rem; overflow-wrap: anywhere; }
+  .review-math .katex-display { overflow-x: auto; overflow-y: hidden; padding: .4rem 0; }
+  .grade-input { width: 100%; border: 1px solid rgb(203 213 225); border-radius: .45rem; padding: .6rem .75rem; outline: none; color: #162236; }
+  .grade-input:focus { border-color: #4A7C59; box-shadow: 0 0 0 3px rgba(74,124,89,.12); }
+</style>
+
+<script>
+  import { escapeHtml, formatPortalDate, getPortalSession, portalFetch, renderPortalMath } from '../../../../lib/testPortalClient';
+
+  interface ReviewQuestion {
+    id: string;
+    position: number;
+    title: string;
+    prompt_latex: string;
+    answer_type: 'numerical' | 'multiple_choice' | 'file_upload';
+    options: { id: string; label: string }[];
+    points: number;
+  }
+  interface ReviewResponse {
+    id: string;
+    response_text: string | null;
+    selected_choice: string | null;
+    file_name: string | null;
+    file_url: string | null;
+    is_correct: boolean | null;
+    points_awarded: number | null;
+    grading_status: string;
+    feedback: string;
+  }
+  interface ProblemReview {
+    question: ReviewQuestion;
+    answer_key: { numerical_answer: number | null; numerical_tolerance: number; choice_key: string | null; grading_notes: string } | null;
+    response: ReviewResponse | null;
+  }
+  interface ReviewPayload {
+    test: { id: string; title: string; security_mode: string };
+    attempt: {
+      id: string;
+      participant_name: string;
+      participant_email: string;
+      status: 'in_progress' | 'submitted' | 'timed_out';
+      started_at: string;
+      expires_at: string;
+      submitted_at: string | null;
+      extension_minutes: number;
+      score: number | null;
+      max_score: number;
+      grading_status: string;
+      session_locked: boolean;
+    };
+    problems: ProblemReview[];
+    events: { id: number; event_type: string; metadata: Record<string, unknown>; created_at: string }[];
+  }
+
+  const root = document.getElementById('review-root')!;
+  const attemptId = root.dataset.attemptId ?? '';
+  let data: ReviewPayload;
+
+  function showAlert(message: string, kind: 'success' | 'error' = 'success') {
+    const alert = document.getElementById('review-alert')!;
+    alert.textContent = message;
+    alert.className = `mb-6 rounded-lg border px-4 py-3 text-sm font-semibold ${kind === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`;
+  }
+
+  function keyDescription(problem: ProblemReview) {
+    if (problem.question.answer_type === 'numerical') {
+      return `Correct answer: ${problem.answer_key?.numerical_answer ?? 'not set'} · tolerance: ${problem.answer_key?.numerical_tolerance ?? 0}`;
+    }
+    if (problem.question.answer_type === 'multiple_choice') return `Correct choice: ${problem.answer_key?.choice_key ?? 'not set'}`;
+    return 'Manual grading required';
+  }
+
+  function renderProblems() {
+    const list = document.getElementById('review-problems')!;
+    list.innerHTML = '';
+    data.problems.forEach((problem, index) => {
+      const { question, response } = problem;
+      const resultBadge = !response
+        ? '<span class="rounded-full border border-slate-200 bg-slate-50 text-slate-500 px-3 py-1 text-[10px] font-bold">No response</span>'
+        : response.grading_status === 'pending_manual'
+          ? '<span class="rounded-full border border-amber-200 bg-amber-50 text-amber-700 px-3 py-1 text-[10px] font-bold">Needs review</span>'
+          : response.grading_status === 'manually_graded'
+            ? '<span class="rounded-full border border-green-200 bg-green-50 text-green-700 px-3 py-1 text-[10px] font-bold">Manually graded</span>'
+            : `<span class="rounded-full border ${response.is_correct ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'} px-3 py-1 text-[10px] font-bold">${response.is_correct ? 'Correct' : 'Incorrect'}</span>`;
+      const responseHtml = question.answer_type === 'numerical'
+        ? `<p class="text-sm"><span class="text-slate-400">Submitted:</span> <strong class="text-brand-dark">${escapeHtml(response?.response_text ?? '—')}</strong></p>`
+        : question.answer_type === 'multiple_choice'
+          ? `<div class="space-y-2">${question.options.map((option) => {
+              const selected = response?.selected_choice === option.id;
+              const correct = problem.answer_key?.choice_key === option.id;
+              return `<div class="flex items-start gap-3 rounded border p-3 ${correct ? 'border-green-300 bg-green-50' : selected ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-white'}"><span class="font-bold text-brand-dark">${escapeHtml(option.id)}.</span><span class="portal-math">${escapeHtml(option.label)}</span>${selected ? '<span class="ml-auto text-[10px] font-bold uppercase text-slate-500">Selected</span>' : ''}</div>`;
+            }).join('')}</div>`
+          : response?.file_url
+            ? `<a href="${escapeHtml(response.file_url)}" target="_blank" rel="noopener noreferrer" class="inline-flex bg-brand-dark text-brand-gold font-bold rounded-lg px-5 py-3 text-sm">Open ${escapeHtml(response.file_name || 'uploaded work')}</a>`
+            : '<p class="text-sm text-slate-500">No file was submitted.</p>';
+      const manualForm = response && data.attempt.status !== 'in_progress'
+        ? `
+          <form class="manual-grade mt-5 rounded-lg border border-slate-200 bg-white p-4" data-response-id="${response.id}" data-max-points="${question.points}">
+            <div class="mb-3"><p class="text-xs font-bold uppercase tracking-wider text-brand-green">${question.answer_type === 'file_upload' ? 'Manual grade' : 'Grade override'}</p><p class="text-[11px] text-slate-500 mt-1">Saving records the administrator, original score, and new score in the audit log.</p></div>
+            <div class="grid sm:grid-cols-[140px_1fr_auto] gap-3 items-end">
+              <label><span class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Points / ${question.points}</span><input type="number" name="points" min="0" max="${question.points}" step="0.01" required value="${response.points_awarded ?? ''}" class="grade-input" /></label>
+              <label><span class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Feedback (optional)</span><input type="text" name="feedback" maxlength="10000" value="${escapeHtml(response.feedback || '')}" class="grade-input" /></label>
+              <button type="submit" class="bg-brand-dark text-brand-gold font-bold rounded-lg px-4 py-2.5 text-xs">Save ${question.answer_type === 'file_upload' ? 'grade' : 'override'}</button>
+            </div>
+          </form>
+        `
+        : '';
+
+      const card = document.createElement('article');
+      card.className = 'bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm';
+      card.innerHTML = `
+        <div class="p-6 md:p-7 border-b border-slate-100">
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div><p class="text-[10px] font-bold uppercase tracking-wider text-brand-green">Problem ${index + 1}</p><h3 class="font-serif font-bold text-2xl text-brand-dark mt-1">${escapeHtml(question.title || `Problem ${index + 1}`)}</h3></div>
+            <div class="flex items-center gap-2">${resultBadge}<span class="text-xs text-slate-400">${response?.points_awarded ?? 0} / ${question.points}</span></div>
+          </div>
+          <div class="portal-math review-math whitespace-pre-wrap text-brand-dark leading-relaxed"></div>
+        </div>
+        <div class="p-6 md:p-7 bg-slate-50">
+          ${responseHtml}
+          <div class="mt-4 rounded bg-white border border-slate-200 p-3 text-xs text-slate-500"><strong class="text-brand-dark">Answer key:</strong> ${escapeHtml(keyDescription(problem))}${problem.answer_key?.grading_notes ? `<p class="mt-2"><strong class="text-brand-dark">Private notes:</strong> ${escapeHtml(problem.answer_key.grading_notes)}</p>` : ''}</div>
+          ${manualForm}
+        </div>
+      `;
+      card.querySelector<HTMLElement>('.review-math')!.textContent = question.prompt_latex;
+      list.appendChild(card);
+    });
+    renderPortalMath(list);
+    list.querySelectorAll<HTMLFormElement>('.manual-grade').forEach((form) => form.addEventListener('submit', (event) => void saveManualGrade(event)));
+  }
+
+  const eventLabels: Record<string, string> = {
+    attempt_started: 'Attempt started', attempt_resumed: 'Attempt resumed', visibility_hidden: 'Tab hidden', visibility_visible: 'Tab visible',
+    window_blurred: 'Window lost focus', window_focused: 'Window focused', fullscreen_entered: 'Entered fullscreen', fullscreen_exited: 'Exited fullscreen',
+    fullscreen_unsupported: 'Fullscreen unsupported', copy_blocked: 'Clipboard copy blocked', paste_blocked: 'Clipboard paste blocked',
+    session_unlocked_by_admin: 'Session unlocked by admin', deadline_extended_by_admin: 'Deadline extended by admin',
+    grade_overridden_by_admin: 'Grade overridden by admin', submitted: 'Submitted', timed_out: 'Timed out',
+  };
+
+  function renderEvents() {
+    const counts = new Map<string, number>();
+    data.events.forEach((event) => counts.set(event.event_type, (counts.get(event.event_type) ?? 0) + 1));
+    const summaryItems = [
+      ['Tab hidden', counts.get('visibility_hidden') ?? 0],
+      ['Window blur', counts.get('window_blurred') ?? 0],
+      ['Fullscreen exits', counts.get('fullscreen_exited') ?? 0],
+      ['Clipboard blocks', (counts.get('copy_blocked') ?? 0) + (counts.get('paste_blocked') ?? 0)],
+    ];
+    document.getElementById('security-summary')!.innerHTML = summaryItems.map(([label, count]) => `<div class="rounded-lg bg-slate-50 border border-slate-200 p-3"><span class="block text-[10px] uppercase tracking-wider text-slate-400">${label}</span><strong class="text-xl text-brand-dark">${count}</strong></div>`).join('');
+    const body = document.getElementById('security-events')!;
+    body.innerHTML = '';
+    document.getElementById('security-empty')!.classList.toggle('hidden', data.events.length > 0);
+    data.events.forEach((event) => {
+      const row = document.createElement('tr');
+      const metadata = Object.keys(event.metadata ?? {}).length ? JSON.stringify(event.metadata) : '—';
+      row.innerHTML = `<td class="px-5 py-3 text-xs text-slate-500">${escapeHtml(formatPortalDate(event.created_at))}</td><td class="px-5 py-3 font-semibold text-brand-dark">${escapeHtml(eventLabels[event.event_type] ?? event.event_type)}</td><td class="px-5 py-3 text-xs text-slate-400 font-mono">${escapeHtml(metadata)}</td>`;
+      body.appendChild(row);
+    });
+  }
+
+  function renderPage() {
+    document.title = `Review ${data.attempt.participant_email} | Integrated Math`;
+    (document.getElementById('back-submissions') as HTMLAnchorElement).href = `/test-portal/admin/tests/${data.test.id}/submissions`;
+    document.getElementById('review-name')!.textContent = data.attempt.participant_name || 'Unnamed participant';
+    document.getElementById('review-email')!.textContent = data.attempt.participant_email;
+    document.getElementById('review-test-title')!.textContent = data.test.title;
+    document.getElementById('review-status')!.textContent = data.attempt.status.replace('_', ' ');
+    document.getElementById('review-score')!.textContent = data.attempt.score === null ? 'Not graded' : `${data.attempt.score} / ${data.attempt.max_score}`;
+    document.getElementById('review-started')!.textContent = formatPortalDate(data.attempt.started_at);
+    document.getElementById('review-expires')!.textContent = `${formatPortalDate(data.attempt.expires_at)}${data.attempt.extension_minutes ? ` (+${data.attempt.extension_minutes}m)` : ''}`;
+    document.getElementById('review-submitted')!.textContent = data.attempt.submitted_at ? formatPortalDate(data.attempt.submitted_at) : '—';
+    document.getElementById('review-grading')!.textContent = data.attempt.grading_status.replace('_', ' ');
+    document.getElementById('force-submit')!.classList.toggle('hidden', data.attempt.status !== 'in_progress');
+    document.getElementById('extend-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress');
+    document.getElementById('unlock-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress' || data.test.security_mode !== 'one_sitting' || !data.attempt.session_locked);
+    renderProblems();
+    renderEvents();
+    document.getElementById('review-loader')!.classList.add('hidden');
+    document.getElementById('review-content')!.classList.remove('hidden');
+  }
+
+  async function saveManualGrade(event: Event) {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    button.disabled = true;
+    button.textContent = 'Saving…';
+    try {
+      await portalFetch(`/api/test-portal/admin/attempts/${attemptId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          action: 'override_grade',
+          response_id: form.dataset.responseId,
+          points_awarded: Number((form.elements.namedItem('points') as HTMLInputElement).value),
+          feedback: (form.elements.namedItem('feedback') as HTMLInputElement).value,
+        }),
+      });
+      showAlert('Grade saved and added to the audit trail.');
+      await loadAttempt();
+    } catch (error) {
+      showAlert(error instanceof Error ? error.message : 'The grade could not be saved.', 'error');
+      button.disabled = false;
+      button.textContent = 'Save grade';
+    }
+  }
+
+  async function performAction(action: 'unlock_session' | 'force_submit') {
+    if (action === 'force_submit' && !confirm('Force-submit this active attempt using its currently saved responses?')) return;
+    const button = document.getElementById(action === 'force_submit' ? 'force-submit' : 'unlock-attempt') as HTMLButtonElement;
+    button.disabled = true;
+    try {
+      await portalFetch(`/api/test-portal/admin/attempts/${attemptId}`, { method: 'PATCH', body: JSON.stringify({ action }) });
+      showAlert(action === 'force_submit' ? 'Attempt submitted.' : 'Session unlocked. The participant can bind a new tab from the test details page.');
+      await loadAttempt();
+    } catch (error) {
+      showAlert(error instanceof Error ? error.message : 'The action could not be completed.', 'error');
+      button.disabled = false;
+    }
+  }
+
+  async function extendDeadline() {
+    const entered = prompt('How many minutes should be added to this attempt?', '30');
+    if (entered === null) return;
+    const minutes = Number(entered);
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
+      showAlert('Enter a whole number from 1 to 1,440 minutes.', 'error');
+      return;
+    }
+    const button = document.getElementById('extend-attempt') as HTMLButtonElement;
+    button.disabled = true;
+    button.textContent = 'Adding time…';
+    try {
+      await portalFetch(`/api/test-portal/admin/attempts/${attemptId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action: 'extend_deadline', extension_minutes: minutes }),
+      });
+      showAlert(`${minutes} minute${minutes === 1 ? '' : 's'} added to the attempt.`);
+      await loadAttempt();
+    } catch (error) {
+      showAlert(error instanceof Error ? error.message : 'The deadline could not be extended.', 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Add time';
+    }
+  }
+
+  async function loadAttempt() {
+    const session = await getPortalSession();
+    if (!session) { location.href = '/test-portal'; return; }
+    try {
+      data = await portalFetch<ReviewPayload>(`/api/test-portal/admin/attempts/${attemptId}`);
+      renderPage();
+    } catch (error) {
+      document.getElementById('review-loader')!.classList.add('hidden');
+      showAlert(error instanceof Error ? error.message : 'The attempt could not be loaded.', 'error');
+    }
+  }
+
+  document.getElementById('unlock-attempt')!.addEventListener('click', () => void performAction('unlock_session'));
+  document.getElementById('force-submit')!.addEventListener('click', () => void performAction('force_submit'));
+  document.getElementById('extend-attempt')!.addEventListener('click', () => void extendDeadline());
+  loadAttempt();
+</script>

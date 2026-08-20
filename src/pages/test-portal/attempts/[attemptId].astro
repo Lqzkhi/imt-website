@@ -1,0 +1,733 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+const { attemptId } = Astro.params;
+---
+
+<Layout title="Test in Progress" description="Secure Integrated Math test attempt.">
+  <section id="attempt-root" data-attempt-id={attemptId} class="min-h-screen bg-[#f5f4ee]">
+    <div id="attempt-loader" class="flex items-center justify-center gap-3 py-32 text-slate-500">
+      <span class="w-7 h-7 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+      <span class="font-semibold">Opening your secure attempt…</span>
+    </div>
+
+    <div id="attempt-error" class="hidden max-w-xl mx-auto px-6 py-20">
+      <div class="bg-white border border-red-200 rounded-xl p-7 text-center shadow-sm">
+        <div class="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4">!</div>
+        <h1 class="font-serif font-bold text-2xl text-brand-dark mb-3">Attempt unavailable</h1>
+        <p id="attempt-error-message" class="text-sm text-slate-600 leading-relaxed"></p>
+        <a href="/test-portal" class="inline-flex mt-6 bg-brand-dark text-brand-gold font-bold rounded-lg px-6 py-3">Return to Test Portal</a>
+      </div>
+    </div>
+
+    <div id="finished-panel" class="hidden max-w-4xl mx-auto px-6 py-20">
+      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm text-center">
+        <div class="h-1.5 bg-brand-green"></div>
+        <div class="p-8 md:p-11">
+          <div class="w-14 h-14 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center mx-auto mb-5">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <p id="finished-kicker" class="text-xs font-bold uppercase tracking-[0.18em] text-brand-green mb-2">Submitted</p>
+          <h1 id="finished-title" class="font-serif font-bold text-3xl text-brand-dark"></h1>
+          <p id="finished-copy" class="text-slate-500 mt-4 leading-relaxed"></p>
+          <div id="score-panel" class="hidden grid grid-cols-2 gap-3 mt-7">
+            <div class="rounded-lg bg-brand-dark text-white p-5"><span class="block text-xs text-slate-400 uppercase tracking-wider">Score</span><strong id="finished-score" class="text-3xl mt-1 block"></strong></div>
+            <div class="rounded-lg bg-slate-50 border border-slate-200 p-5"><span class="block text-xs text-slate-400 uppercase tracking-wider">Grading</span><strong id="finished-grading" class="text-sm text-brand-dark mt-2 block"></strong></div>
+          </div>
+          <section id="result-breakdown" class="hidden mt-10 pt-8 border-t border-slate-200 text-left">
+            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-green">Response details</p>
+            <h2 class="font-serif font-bold text-2xl text-brand-dark mt-1">Your results</h2>
+            <p class="text-xs text-slate-500 mt-2">This shows your submitted work and grading. Answer keys remain private.</p>
+            <div id="result-items" class="space-y-4 mt-5"></div>
+          </section>
+          <a href="/test-portal" class="inline-flex mt-8 bg-brand-dark text-brand-gold font-bold rounded-lg px-7 py-3">Back to Test Portal</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="attempt-workspace" class="hidden">
+      <header class="sticky top-[4.5rem] z-30 bg-brand-dark text-white border-b border-slate-700 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span id="security-mode-badge" class="text-[10px] font-bold uppercase tracking-widest text-brand-gold"></span>
+              <span class="text-slate-600">•</span>
+              <span id="save-indicator" class="text-[11px] font-semibold text-slate-400" aria-live="polite">All changes saved</span>
+            </div>
+            <h1 id="workspace-title" class="font-serif font-bold text-xl truncate mt-0.5"></h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <div id="timer-box" class="rounded-lg border border-white/10 bg-white/5 px-4 py-2 min-w-[132px] text-center">
+              <span class="block text-[9px] font-bold uppercase tracking-[0.17em] text-slate-400">Time remaining</span>
+              <strong id="timer-text" class="font-mono text-lg text-white tabular-nums">--:--:--</strong>
+            </div>
+            <button id="submit-attempt" type="button" class="bg-brand-green text-white font-extrabold text-sm rounded-lg px-5 py-3 hover:bg-[#3d694a] transition disabled:opacity-50">Submit test</button>
+          </div>
+        </div>
+      </header>
+
+      <div id="security-warning" class="hidden bg-amber-50 border-b border-amber-200 text-amber-900">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+          <span id="security-warning-text" class="font-semibold"></span>
+          <button id="reenter-fullscreen" type="button" class="hidden border border-amber-300 bg-white rounded px-3 py-1.5 text-xs font-bold">Re-enter fullscreen</button>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-8 grid lg:grid-cols-[240px_minmax(0,1fr)] gap-6">
+        <aside class="lg:sticky lg:top-[10.5rem] lg:self-start bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Problems</h2>
+            <span id="progress-count" class="text-xs font-bold text-brand-green">0 / 0</span>
+          </div>
+          <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden mb-4"><div id="progress-bar" class="h-full bg-brand-green rounded-full transition-all" style="width:0%"></div></div>
+          <nav id="problem-nav" class="grid grid-cols-5 lg:grid-cols-4 gap-2" aria-label="Test problems"></nav>
+          <div class="mt-5 pt-4 border-t border-slate-100 space-y-2 text-[11px] text-slate-500">
+            <p class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-brand-green"></span> Answer saved</p>
+            <p class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full border border-slate-300 bg-white"></span> Not answered</p>
+          </div>
+        </aside>
+
+        <main class="min-w-0">
+          <div id="question-card" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-6 md:p-8 border-b border-slate-100">
+              <div class="flex items-start justify-between gap-4 mb-6">
+                <div>
+                  <p id="question-kicker" class="text-xs font-bold uppercase tracking-[0.17em] text-brand-green"></p>
+                  <h2 id="question-title" class="font-serif font-bold text-2xl text-brand-dark mt-1"></h2>
+                </div>
+                <span id="question-points" class="shrink-0 rounded-full bg-slate-50 border border-slate-200 px-3 py-1 text-xs font-bold text-slate-500"></span>
+              </div>
+              <div id="question-prompt" class="portal-math problem-math text-brand-dark text-lg leading-relaxed whitespace-pre-wrap"></div>
+            </div>
+            <div id="answer-area" class="p-6 md:p-8 bg-slate-50/60"></div>
+            <div class="px-6 md:px-8 py-4 border-t border-slate-100 flex items-center justify-between gap-4">
+              <button id="previous-question" type="button" class="question-move">← Previous</button>
+              <span id="question-save-status" class="text-xs font-semibold text-slate-400" aria-live="polite"></span>
+              <button id="next-question" type="button" class="question-move">Next →</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="fullscreen-gate" class="hidden fixed inset-0 z-[100] bg-brand-dark/95 backdrop-blur-sm items-center justify-center p-6">
+      <div class="max-w-md text-center text-white">
+        <div class="w-16 h-16 mx-auto rounded-full bg-white/10 text-brand-gold flex items-center justify-center mb-6">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+        </div>
+        <p class="text-xs uppercase tracking-[0.2em] font-bold text-brand-gold mb-3">Secure session</p>
+        <h2 class="font-serif font-bold text-3xl">Enter fullscreen to continue</h2>
+        <p class="text-slate-300 text-sm leading-relaxed mt-4">The test timer is already running. Leaving fullscreen will be recorded for the administrator.</p>
+        <button id="enter-fullscreen" type="button" class="mt-7 w-full bg-brand-gold text-brand-dark font-extrabold py-3.5 rounded-lg">Enter fullscreen</button>
+        <p id="fullscreen-error" class="hidden text-sm text-amber-200 mt-4"></p>
+      </div>
+    </div>
+
+    <div id="attempt-toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[110] max-w-sm bg-brand-dark text-white rounded-lg shadow-2xl px-5 py-3 text-sm font-semibold" role="status"></div>
+  </section>
+</Layout>
+
+<style is:global>
+  .question-move { border: 1px solid rgb(203 213 225); background: white; color: #162236; font-size: .75rem; font-weight: 700; padding: .55rem .8rem; border-radius: .45rem; transition: border-color .15s, color .15s; }
+  .question-move:hover { border-color: #4A7C59; color: #4A7C59; }
+  .question-move:disabled { opacity: .35; cursor: default; }
+  .problem-math .katex-display { overflow-x: auto; overflow-y: hidden; padding: .65rem 0; }
+  .answer-input { width: 100%; border: 1px solid rgb(203 213 225); border-radius: .65rem; background: white; padding: .9rem 1rem; font-size: 1rem; color: #162236; outline: none; }
+  .answer-input:focus { border-color: #4A7C59; box-shadow: 0 0 0 3px rgba(74,124,89,.12); }
+</style>
+
+<script>
+  import { attemptSessionStorageKey, escapeHtml, getPortalSession, PortalClientError, portalFetch, renderPortalMath, supabase } from '../../../lib/testPortalClient';
+
+  interface PortalQuestion {
+    id: string;
+    position: number;
+    title: string;
+    prompt_latex: string;
+    answer_type: 'numerical' | 'multiple_choice' | 'file_upload';
+    options: { id: string; label: string }[];
+    points: number;
+    file_extensions: string[];
+    max_file_size_mb: number;
+  }
+  interface PortalResponse {
+    id: string;
+    question_id: string;
+    response_text: string | null;
+    selected_choice: string | null;
+    file_name: string | null;
+    is_correct?: boolean | null;
+    points_awarded?: number | null;
+    grading_status?: string;
+    feedback?: string;
+  }
+  interface AttemptPayload {
+    server_now: string;
+    test: {
+      id: string;
+      title: string;
+      security_mode: 'one_sitting' | 'take_home';
+      require_fullscreen: boolean;
+      block_clipboard: boolean;
+      show_results: boolean;
+    };
+    attempt: {
+      id: string;
+      status: 'in_progress' | 'submitted' | 'timed_out';
+      expires_at: string;
+      auto_submitted: boolean;
+      grading_status: string;
+      score?: number;
+      max_score?: number;
+    };
+    questions: PortalQuestion[];
+    responses: PortalResponse[];
+  }
+
+  const root = document.getElementById('attempt-root')!;
+  const attemptId = root.dataset.attemptId ?? '';
+  const sessionToken = sessionStorage.getItem(attemptSessionStorageKey(attemptId)) ?? '';
+  const loader = document.getElementById('attempt-loader')!;
+  const workspace = document.getElementById('attempt-workspace')!;
+  const saveIndicator = document.getElementById('save-indicator')!;
+  const saveStatus = document.getElementById('question-save-status')!;
+  let payload: AttemptPayload;
+  let currentIndex = 0;
+  let clockOffset = 0;
+  let timerHandle = 0;
+  let heartbeatHandle = 0;
+  let numericSaveTimer = 0;
+  let timeoutHandled = false;
+  let busyOperations = 0;
+  const responses = new Map<string, PortalResponse>();
+
+  const attemptFetch = <T,>(path: string, options: RequestInit = {}) => portalFetch<T>(path, options, sessionToken);
+
+  function toast(message: string) {
+    const element = document.getElementById('attempt-toast')!;
+    element.textContent = message;
+    element.classList.remove('hidden');
+    window.setTimeout(() => element.classList.add('hidden'), 2500);
+  }
+
+  function showFatalError(message: string) {
+    loader.classList.add('hidden');
+    workspace.classList.add('hidden');
+    const panel = document.getElementById('attempt-error')!;
+    document.getElementById('attempt-error-message')!.textContent = message;
+    panel.classList.remove('hidden');
+  }
+
+  function hasAnswer(questionId: string) {
+    const response = responses.get(questionId);
+    return Boolean(response && (response.response_text || response.selected_choice || response.file_name));
+  }
+
+  function setSaving(saving: boolean, message = '') {
+    busyOperations += saving ? 1 : -1;
+    busyOperations = Math.max(0, busyOperations);
+    saveIndicator.textContent = busyOperations > 0 ? 'Saving…' : 'All changes saved';
+    saveIndicator.className = `text-[11px] font-semibold ${busyOperations > 0 ? 'text-brand-gold' : 'text-slate-400'}`;
+    if (message) saveStatus.textContent = message;
+  }
+
+  function renderNavigation() {
+    const nav = document.getElementById('problem-nav')!;
+    nav.innerHTML = '';
+    payload.questions.forEach((question, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = String(index + 1);
+      button.setAttribute('aria-label', `Problem ${index + 1}${hasAnswer(question.id) ? ', answered' : ''}`);
+      const active = index === currentIndex;
+      const answered = hasAnswer(question.id);
+      button.className = `aspect-square rounded-md text-xs font-bold border transition ${active ? 'ring-2 ring-brand-gold ring-offset-1 border-brand-dark bg-brand-dark text-white' : answered ? 'border-brand-green bg-brand-green text-white' : 'border-slate-200 bg-white text-slate-500 hover:border-brand-green'}`;
+      button.addEventListener('click', async () => {
+        if (index === currentIndex || !(await flushNumericalAnswer())) return;
+        currentIndex = index;
+        renderQuestion();
+      });
+      nav.appendChild(button);
+    });
+    const answered = payload.questions.filter((question) => hasAnswer(question.id)).length;
+    document.getElementById('progress-count')!.textContent = `${answered} / ${payload.questions.length}`;
+    document.getElementById('progress-bar')!.style.width = `${payload.questions.length ? (answered / payload.questions.length) * 100 : 0}%`;
+  }
+
+  async function saveAnswer(question: PortalQuestion, answer: Record<string, unknown>) {
+    setSaving(true, 'Saving…');
+    try {
+      const result = await attemptFetch<{ response: PortalResponse | null; saved_at: string }>(`/api/test-portal/attempts/${attemptId}/answer`, {
+        method: 'POST',
+        body: JSON.stringify({ question_id: question.id, ...answer }),
+      });
+      if (result.response) responses.set(question.id, result.response);
+      else responses.delete(question.id);
+      saveStatus.textContent = `Saved ${new Date(result.saved_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+      renderNavigation();
+      return true;
+    } catch (error) {
+      saveStatus.textContent = error instanceof Error ? error.message : 'Could not save';
+      saveStatus.className = 'text-xs font-semibold text-red-600';
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function uploadFile(question: PortalQuestion, file: File, status: HTMLElement) {
+    if (file.size > question.max_file_size_mb * 1024 * 1024) {
+      status.textContent = `Choose a file smaller than ${question.max_file_size_mb} MB.`;
+      status.className = 'text-sm font-semibold text-red-600 mt-3';
+      return;
+    }
+    setSaving(true);
+    status.textContent = 'Preparing secure upload…';
+    status.className = 'text-sm font-semibold text-slate-500 mt-3';
+    try {
+      const signed = await attemptFetch<{ path: string; token: string; file_name: string; mime_type: string }>(`/api/test-portal/attempts/${attemptId}/upload`, {
+        method: 'POST',
+        body: JSON.stringify({ question_id: question.id, file_name: file.name, mime_type: file.type, size: file.size }),
+      });
+      status.textContent = 'Uploading file…';
+      const { error } = await supabase.storage
+        .from('test-submissions')
+        .uploadToSignedUrl(signed.path, signed.token, file, { contentType: signed.mime_type });
+      if (error) throw error;
+      status.textContent = 'Linking file to your response…';
+      const saved = await saveAnswer(question, {
+        file_path: signed.path,
+        file_name: signed.file_name,
+        file_mime_type: signed.mime_type,
+      });
+      if (saved) {
+        status.textContent = `${file.name} uploaded and saved.`;
+        status.className = 'text-sm font-semibold text-brand-green mt-3';
+        renderQuestion();
+      }
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : 'The upload failed.';
+      status.className = 'text-sm font-semibold text-red-600 mt-3';
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function renderQuestion() {
+    window.clearTimeout(numericSaveTimer);
+    saveStatus.textContent = '';
+    saveStatus.className = 'text-xs font-semibold text-slate-400';
+    const question = payload.questions[currentIndex];
+    if (!question) return;
+    const response = responses.get(question.id);
+    document.getElementById('question-kicker')!.textContent = `Problem ${currentIndex + 1} of ${payload.questions.length}`;
+    document.getElementById('question-title')!.textContent = question.title || `Problem ${currentIndex + 1}`;
+    document.getElementById('question-points')!.textContent = `${question.points} point${question.points === 1 ? '' : 's'}`;
+    const prompt = document.getElementById('question-prompt')!;
+    prompt.textContent = question.prompt_latex;
+    prompt.removeAttribute('data-math-rendered');
+    const answerArea = document.getElementById('answer-area')!;
+    answerArea.innerHTML = '';
+
+    if (question.answer_type === 'numerical') {
+      const label = document.createElement('label');
+      label.className = 'block';
+      label.innerHTML = '<span class="block text-sm font-bold text-brand-dark mb-2">Numerical answer</span>';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.inputMode = 'decimal';
+      input.autocomplete = 'off';
+      input.placeholder = 'Enter a number';
+      input.value = response?.response_text ?? '';
+      input.className = 'answer-input';
+      input.addEventListener('input', () => {
+        window.clearTimeout(numericSaveTimer);
+        saveStatus.textContent = input.value.trim() ? 'Waiting to save…' : 'Clearing answer…';
+        numericSaveTimer = window.setTimeout(() => {
+          const value = input.value.trim();
+          if (!value) void saveAnswer(question, { clear: true });
+          else if (Number.isFinite(Number(value))) void saveAnswer(question, { response_text: value });
+          else {
+            saveStatus.textContent = 'Enter a valid number before moving on.';
+            saveStatus.className = 'text-xs font-semibold text-amber-700';
+          }
+        }, 700);
+      });
+      label.appendChild(input);
+      const help = document.createElement('p');
+      help.className = 'text-xs text-slate-400 mt-2';
+      help.textContent = 'Decimals and scientific notation are accepted.';
+      label.appendChild(help);
+      answerArea.appendChild(label);
+    } else if (question.answer_type === 'multiple_choice') {
+      const heading = document.createElement('p');
+      heading.className = 'text-sm font-bold text-brand-dark mb-3';
+      heading.textContent = 'Choose one answer';
+      answerArea.appendChild(heading);
+      const list = document.createElement('div');
+      list.className = 'space-y-2';
+      question.options.forEach((option) => {
+        const label = document.createElement('label');
+        label.className = 'flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-4 cursor-pointer hover:border-brand-green transition';
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = `answer-${question.id}`;
+        radio.value = option.id;
+        radio.checked = response?.selected_choice === option.id;
+        radio.className = 'mt-1 accent-brand-green';
+        radio.addEventListener('change', () => void saveAnswer(question, { selected_choice: option.id }));
+        const text = document.createElement('span');
+        text.className = 'portal-math text-sm leading-relaxed text-brand-dark';
+        text.textContent = option.label;
+        label.append(radio, text);
+        list.appendChild(label);
+      });
+      answerArea.appendChild(list);
+    } else {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'rounded-xl border-2 border-dashed border-slate-300 bg-white p-6 text-center';
+      wrapper.innerHTML = `
+        <div class="w-11 h-11 mx-auto rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center mb-3">↑</div>
+        <h3 class="font-bold text-brand-dark">Upload your work</h3>
+        <p class="text-xs text-slate-500 mt-2">${escapeHtml(question.file_extensions.join(', ').toUpperCase())} • Maximum ${question.max_file_size_mb} MB</p>
+      `;
+      if (response?.file_name) {
+        const current = document.createElement('div');
+        current.className = 'mt-4 flex flex-col sm:flex-row items-center justify-center gap-2';
+        const chip = document.createElement('p');
+        chip.className = 'inline-flex max-w-full rounded-full bg-green-50 border border-green-200 text-green-800 px-4 py-2 text-xs font-bold break-all';
+        chip.textContent = `Saved: ${response.file_name}`;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'text-xs font-bold text-red-600 hover:text-red-800 px-3 py-2';
+        remove.textContent = 'Remove file';
+        remove.addEventListener('click', () => {
+          if (!confirm('Remove this uploaded answer? You can upload another file while the attempt remains open.')) return;
+          remove.disabled = true;
+          remove.textContent = 'Removing…';
+          void saveAnswer(question, { clear: true }).then((saved) => {
+            if (saved) renderQuestion();
+            else {
+              remove.disabled = false;
+              remove.textContent = 'Remove file';
+            }
+          });
+        });
+        current.append(chip, remove);
+        wrapper.appendChild(current);
+      }
+      const pickerLabel = document.createElement('label');
+      pickerLabel.className = 'block mt-5 cursor-pointer';
+      pickerLabel.innerHTML = `<span class="inline-flex bg-brand-dark text-brand-gold font-bold text-sm rounded-lg px-5 py-3">${response?.file_name ? 'Replace file' : 'Choose file'}</span>`;
+      const picker = document.createElement('input');
+      picker.type = 'file';
+      picker.accept = question.file_extensions.map((extension) => `.${extension}`).join(',');
+      picker.className = 'sr-only';
+      const uploadStatus = document.createElement('p');
+      uploadStatus.className = 'text-sm font-semibold text-slate-500 mt-3';
+      picker.addEventListener('change', () => {
+        const file = picker.files?.[0];
+        if (file) void uploadFile(question, file, uploadStatus);
+      });
+      pickerLabel.appendChild(picker);
+      wrapper.append(pickerLabel, uploadStatus);
+      answerArea.appendChild(wrapper);
+    }
+
+    (document.getElementById('previous-question') as HTMLButtonElement).disabled = currentIndex === 0;
+    (document.getElementById('next-question') as HTMLButtonElement).disabled = currentIndex === payload.questions.length - 1;
+    renderNavigation();
+    renderPortalMath(document.getElementById('question-card')!);
+  }
+
+  function formatCountdown(milliseconds: number) {
+    const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const clock = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    return days ? `${days}d ${clock}` : clock;
+  }
+
+  function startTimer() {
+    window.clearInterval(timerHandle);
+    const tick = () => {
+      const remaining = new Date(payload.attempt.expires_at).getTime() - (Date.now() + clockOffset);
+      const timerText = document.getElementById('timer-text')!;
+      const timerBox = document.getElementById('timer-box')!;
+      timerText.textContent = formatCountdown(remaining);
+      if (remaining <= 5 * 60_000) timerBox.classList.add('border-red-400', 'bg-red-500/20');
+      if (remaining <= 0 && !timeoutHandled) {
+        timeoutHandled = true;
+        void submitAttempt(true);
+      }
+    };
+    tick();
+    timerHandle = window.setInterval(tick, 1000);
+  }
+
+  async function logEvent(eventType: string, metadata: Record<string, unknown> = {}) {
+    try {
+      await attemptFetch(`/api/test-portal/attempts/${attemptId}/events`, {
+        method: 'POST',
+        body: JSON.stringify({ event_type: eventType, metadata }),
+      });
+    } catch {
+      // Security telemetry must never erase or block a participant's answer.
+    }
+  }
+
+  function configureSecurity() {
+    if (payload.test.security_mode !== 'one_sitting') return;
+    document.addEventListener('visibilitychange', () => {
+      void logEvent(document.hidden ? 'visibility_hidden' : 'visibility_visible');
+    });
+    window.addEventListener('blur', () => void logEvent('window_blurred'));
+    window.addEventListener('focus', () => void logEvent('window_focused'));
+
+    const gate = document.getElementById('fullscreen-gate')!;
+    if (payload.test.require_fullscreen) {
+      gate.classList.remove('hidden');
+      gate.classList.add('flex');
+      document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+          gate.classList.add('hidden');
+          gate.classList.remove('flex');
+          document.getElementById('security-warning')!.classList.add('hidden');
+          void logEvent('fullscreen_entered');
+        } else {
+          const warning = document.getElementById('security-warning')!;
+          document.getElementById('security-warning-text')!.textContent = 'Fullscreen was exited. This event has been recorded.';
+          document.getElementById('reenter-fullscreen')!.classList.remove('hidden');
+          warning.classList.remove('hidden');
+          void logEvent('fullscreen_exited');
+        }
+      });
+    }
+
+    if (payload.test.block_clipboard) {
+      root.addEventListener('copy', (event) => {
+        event.preventDefault();
+        toast('Copying is disabled for this test.');
+        void logEvent('copy_blocked');
+      });
+      root.addEventListener('cut', (event) => {
+        event.preventDefault();
+        toast('Cutting is disabled for this test.');
+        void logEvent('copy_blocked', { action: 'cut' });
+      });
+      root.addEventListener('paste', (event) => {
+        event.preventDefault();
+        toast('Pasting is disabled for this test.');
+        void logEvent('paste_blocked');
+      });
+    }
+  }
+
+  async function enterFullscreen() {
+    const message = document.getElementById('fullscreen-error')!;
+    try {
+      if (!document.documentElement.requestFullscreen) {
+        message.textContent = 'Fullscreen is not supported by this browser. You may continue, and the limitation has been recorded.';
+        message.classList.remove('hidden');
+        document.getElementById('fullscreen-gate')!.classList.add('hidden');
+        void logEvent('fullscreen_unsupported');
+        return;
+      }
+      await document.documentElement.requestFullscreen();
+    } catch {
+      message.textContent = 'Fullscreen could not be started. Check your browser permissions and try again.';
+      message.classList.remove('hidden');
+    }
+  }
+
+  async function flushNumericalAnswer() {
+    window.clearTimeout(numericSaveTimer);
+    const question = payload.questions[currentIndex];
+    if (question?.answer_type !== 'numerical') return true;
+    const input = document.querySelector<HTMLInputElement>('#answer-area .answer-input');
+    if (!input) return true;
+    const value = input.value.trim();
+    const existing = responses.get(question.id)?.response_text ?? '';
+    if (value === existing) return true;
+    if (!value) return saveAnswer(question, { clear: true });
+    if (!Number.isFinite(Number(value))) {
+      toast('Finish or clear the numerical answer before submitting.');
+      return false;
+    }
+    return saveAnswer(question, { response_text: value });
+  }
+
+  async function submitAttempt(fromTimeout = false) {
+    const submitButton = document.getElementById('submit-attempt') as HTMLButtonElement;
+    if (!fromTimeout) {
+      if (busyOperations > 0) {
+        toast('Wait for the current save or upload to finish.');
+        return;
+      }
+      const saved = await flushNumericalAnswer();
+      if (!saved) return;
+      const unanswered = payload.questions.filter((question) => !hasAnswer(question.id)).length;
+      const warning = unanswered ? ` ${unanswered} problem${unanswered === 1 ? ' is' : 's are'} unanswered.` : '';
+      if (!confirm(`Submit this test now?${warning} You cannot change answers afterward.`)) return;
+    }
+    submitButton.disabled = true;
+    submitButton.textContent = fromTimeout ? 'Time expired…' : 'Submitting…';
+    try {
+      await attemptFetch(`/api/test-portal/attempts/${attemptId}/submit`, { method: 'POST' });
+      window.clearInterval(timerHandle);
+      window.clearInterval(heartbeatHandle);
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      await loadAttempt();
+    } catch (error) {
+      if (error instanceof PortalClientError && error.code === 'ATTEMPT_CLOSED') {
+        await loadAttempt();
+        return;
+      }
+      toast(error instanceof Error ? error.message : 'The test could not be submitted.');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Submit test';
+    }
+  }
+
+  function renderResultBreakdown() {
+    const section = document.getElementById('result-breakdown')!;
+    const list = document.getElementById('result-items')!;
+    list.innerHTML = '';
+    section.classList.add('hidden');
+    if (typeof payload.attempt.score !== 'number' || !payload.test.show_results) return;
+
+    payload.questions.forEach((question, index) => {
+      const response = responses.get(question.id);
+      const selectedOption = question.options.find((option) => option.id === response?.selected_choice);
+      const submitted = question.answer_type === 'numerical'
+        ? response?.response_text ?? 'No answer submitted'
+        : question.answer_type === 'multiple_choice'
+          ? selectedOption ? `${selectedOption.id}. ${selectedOption.label}` : 'No answer selected'
+          : response?.file_name ?? 'No file submitted';
+      const resultLabel = !response
+        ? 'No response'
+        : response.grading_status === 'pending_manual'
+          ? 'Pending review'
+          : response.grading_status === 'manually_graded'
+            ? 'Graded'
+            : response.is_correct ? 'Correct' : 'Incorrect';
+      const resultClasses = !response
+        ? 'border-slate-200 bg-slate-50 text-slate-500'
+        : response.grading_status === 'pending_manual'
+          ? 'border-amber-200 bg-amber-50 text-amber-700'
+          : response.grading_status === 'manually_graded'
+            ? 'border-blue-200 bg-blue-50 text-blue-700'
+            : response.is_correct
+              ? 'border-green-200 bg-green-50 text-green-700'
+              : 'border-red-200 bg-red-50 text-red-700';
+      const card = document.createElement('article');
+      card.className = 'rounded-xl border border-slate-200 bg-slate-50 overflow-hidden';
+      card.innerHTML = `
+        <div class="bg-white border-b border-slate-200 p-5">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div><p class="text-[10px] font-bold uppercase tracking-wider text-brand-green">Problem ${index + 1}</p><h3 class="font-bold text-brand-dark mt-1">${escapeHtml(question.title || `Problem ${index + 1}`)}</h3></div>
+            <div class="flex items-center gap-2"><span class="rounded-full border px-3 py-1 text-[10px] font-bold ${resultClasses}">${resultLabel}</span><strong class="text-xs text-brand-dark">${response?.points_awarded ?? 0} / ${question.points}</strong></div>
+          </div>
+          <div class="result-prompt portal-math problem-math whitespace-pre-wrap text-sm text-brand-dark mt-4"></div>
+        </div>
+        <div class="p-5 text-sm">
+          <p class="text-slate-500">Your answer</p>
+          <div class="portal-math text-brand-dark font-semibold mt-1 whitespace-pre-wrap break-words">${escapeHtml(submitted)}</div>
+          ${response?.feedback ? `<div class="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-3"><p class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Administrator feedback</p><p class="text-sm text-blue-900 mt-1 whitespace-pre-wrap">${escapeHtml(response.feedback)}</p></div>` : ''}
+        </div>
+      `;
+      card.querySelector<HTMLElement>('.result-prompt')!.textContent = question.prompt_latex;
+      list.appendChild(card);
+    });
+    renderPortalMath(list);
+    section.classList.remove('hidden');
+  }
+
+  function renderFinished() {
+    loader.classList.add('hidden');
+    workspace.classList.add('hidden');
+    const panel = document.getElementById('finished-panel')!;
+    document.getElementById('finished-title')!.textContent = payload.test.title;
+    document.getElementById('finished-kicker')!.textContent = payload.attempt.status === 'timed_out' ? 'Time expired' : 'Submitted';
+    document.getElementById('finished-copy')!.textContent = payload.attempt.status === 'timed_out'
+      ? 'Your saved responses were submitted automatically when the server deadline passed.'
+      : payload.attempt.grading_status === 'pending_manual'
+        ? 'Your work was received. File uploads are awaiting an administrator’s review.'
+        : 'Your responses were received successfully.';
+    if (typeof payload.attempt.score === 'number') {
+      document.getElementById('score-panel')!.classList.remove('hidden');
+      document.getElementById('finished-score')!.textContent = `${payload.attempt.score} / ${payload.attempt.max_score ?? 0}`;
+      document.getElementById('finished-grading')!.textContent = payload.attempt.grading_status === 'pending_manual' ? 'Pending manual review' : 'Complete';
+    }
+    renderResultBreakdown();
+    panel.classList.remove('hidden');
+  }
+
+  async function loadAttempt() {
+    const session = await getPortalSession();
+    if (!session) {
+      location.href = '/test-portal';
+      return;
+    }
+    try {
+      payload = await attemptFetch<AttemptPayload>(`/api/test-portal/attempts/${attemptId}`);
+      clockOffset = new Date(payload.server_now).getTime() - Date.now();
+      responses.clear();
+      payload.responses.forEach((response) => responses.set(response.question_id, response));
+      if (payload.attempt.status !== 'in_progress') {
+        renderFinished();
+        return;
+      }
+      document.title = `${payload.test.title} | Integrated Math`;
+      document.getElementById('workspace-title')!.textContent = payload.test.title;
+      document.getElementById('security-mode-badge')!.textContent = payload.test.security_mode === 'one_sitting' ? 'Secure one-sitting test' : 'Resumable take-home test';
+      loader.classList.add('hidden');
+      document.getElementById('finished-panel')!.classList.add('hidden');
+      workspace.classList.remove('hidden');
+      renderQuestion();
+      startTimer();
+      configureSecurity();
+      heartbeatHandle = window.setInterval(async () => {
+        try {
+          const heartbeat = await attemptFetch<{ server_now: string; status: string; expires_at: string }>(`/api/test-portal/attempts/${attemptId}/heartbeat`, { method: 'POST' });
+          clockOffset = new Date(heartbeat.server_now).getTime() - Date.now();
+          payload.attempt.expires_at = heartbeat.expires_at;
+          if (heartbeat.status !== 'in_progress') await loadAttempt();
+        } catch {
+          saveIndicator.textContent = 'Connection interrupted';
+          saveIndicator.className = 'text-[11px] font-semibold text-red-300';
+        }
+      }, 30_000);
+    } catch (error) {
+      showFatalError(error instanceof Error ? error.message : 'The attempt could not be loaded.');
+    }
+  }
+
+  document.getElementById('previous-question')!.addEventListener('click', () => {
+    void (async () => {
+      if (currentIndex > 0 && await flushNumericalAnswer()) {
+      currentIndex -= 1;
+      renderQuestion();
+      }
+    })();
+  });
+  document.getElementById('next-question')!.addEventListener('click', () => {
+    void (async () => {
+      if (currentIndex < payload.questions.length - 1 && await flushNumericalAnswer()) {
+        currentIndex += 1;
+        renderQuestion();
+      }
+    })();
+  });
+  document.getElementById('submit-attempt')!.addEventListener('click', () => void submitAttempt(false));
+  document.getElementById('enter-fullscreen')!.addEventListener('click', () => void enterFullscreen());
+  document.getElementById('reenter-fullscreen')!.addEventListener('click', () => void enterFullscreen());
+  window.addEventListener('beforeunload', (event) => {
+    if (busyOperations > 0) {
+      event.preventDefault();
+    }
+  });
+
+  loadAttempt();
+</script>

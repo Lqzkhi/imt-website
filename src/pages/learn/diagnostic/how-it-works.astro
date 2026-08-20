@@ -23,7 +23,7 @@ const FAQ = [
   },
   {
     q: 'What if I have never done a competition before?',
-    a: 'That is fine — choose "I haven\'t taken one / not sure" at the start. The test simply begins at an easier point and adapts upward as you answer.',
+    a: 'That is fine. Choose "I haven\'t taken one / not sure" at the start. The test begins at an easier point and adapts upward as you answer.',
   },
   {
     q: 'Can I retake it?',
@@ -38,7 +38,7 @@ const FAQ = [
 
 <Layout
   title="How the Diagnostic Works"
-  description="A plain-English guide to Integrated Math's adaptive competition-math diagnostic — what it measures, how it adapts, and what your report tells you."
+  description="A plain-English guide to what the adaptive competition-math diagnostic measures and how it works."
 >
 
   <!-- ═══════════════════════════════════════════════════════════
@@ -46,21 +46,21 @@ const FAQ = [
   ═══════════════════════════════════════════════════════════ -->
   <section class="bg-brand-dark text-brand-light border-b-4 border-brand-green">
     <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10 py-16 md:py-20 animate-on-load">
-      <a href="/learn/diagnostic" class="inline-flex items-center gap-2 text-slate-400 hover:text-brand-green text-sm font-medium transition-colors mb-6">
+      <a href="/learn/diagnostic" class="flex w-fit items-center gap-2 text-slate-400 hover:text-brand-green text-sm font-medium transition-colors mb-8">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
         Back to the diagnostic
       </a>
-      <span class="inline-block text-brand-green font-semibold tracking-widest uppercase text-xs mb-5">
+      <span class="block text-brand-green font-semibold tracking-widest uppercase text-xs mb-4">
         Learning Diagnostic
       </span>
-      <h1 class="font-serif font-bold text-4xl md:text-5xl leading-tight mb-5 max-w-3xl">
+      <h1 class="font-serif font-bold text-3xl md:text-4xl leading-tight mb-5 max-w-3xl">
         How the diagnostic works
       </h1>
       <p class="text-slate-300 text-base md:text-lg font-light leading-relaxed max-w-2xl">
         It is an <strong class="text-white font-semibold">adaptive</strong> competition-math test: every question
-        is chosen based on how you answered the last one, so it pinpoints your level fast &mdash; without wasting
+        is chosen based on how you answered the last one. It pinpoints your level without wasting
         your time on problems that are far too easy or far too hard.
       </p>
     </div>
@@ -80,7 +80,7 @@ const FAQ = [
           <span class="flex w-9 h-9 rounded-full bg-brand-dark text-brand-gold font-bold text-sm items-center justify-center mb-5">1</span>
           <h3 class="font-bold text-brand-dark text-lg mb-2">Tell us your background</h3>
           <p class="text-slate-500 text-sm leading-relaxed">
-            Pick your highest contest experience &mdash; from "never taken one" up to USAMO/Olympiad. This sets a smart
+            Pick your highest contest experience, from "never taken one" up to USAMO/Olympiad. This sets a useful
             starting difficulty so you are not stuck answering questions far from your level.
           </p>
         </div>
@@ -88,7 +88,7 @@ const FAQ = [
           <span class="flex w-9 h-9 rounded-full bg-brand-dark text-brand-gold font-bold text-sm items-center justify-center mb-5">2</span>
           <h3 class="font-bold text-brand-dark text-lg mb-2">Answer adaptive questions</h3>
           <p class="text-slate-500 text-sm leading-relaxed">
-            After each answer, the test re-estimates your level and serves the most informative next problem &mdash;
+            After each answer, the test re-estimates your level and serves the most informative next problem:
             harder when you are right, easier when you are wrong, while balancing all four subjects.
           </p>
         </div>
@@ -140,7 +140,7 @@ const FAQ = [
             ))}
           </ol>
           <p class="text-xs text-slate-400 mt-4 leading-relaxed">
-            Tiers run from foundational skills up to elite Olympiad. Most students land somewhere in the middle &mdash;
+            Tiers run from foundational skills up to elite Olympiad. Most students land somewhere in the middle;
             the point is to find your edge, not to rank you.
           </p>
         </div>
@@ -196,8 +196,7 @@ const FAQ = [
         <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">For the curious</p>
         <h2 class="font-serif font-bold text-3xl text-brand-dark mb-3">Under the hood</h2>
         <p class="text-slate-500 text-sm leading-relaxed mb-6">
-          You do not need any of this to take the diagnostic &mdash; but if you like knowing how the machinery works,
-          here it is.
+          Optional technical details for anyone curious about the model.
         </p>
       </div>
 
@@ -229,7 +228,7 @@ const FAQ = [
           <p>
             After each answer, we update a probability distribution over your ability (a Bayesian posterior, computed
             on a grid). The next item picked is the one expected to be <strong>most informative</strong> about your
-            true level &mdash; for the first few "cold-start" questions this uses expected information across the whole
+            true level. For the first few "cold-start" questions this uses expected information across the whole
             distribution, then switches to maximizing information right at your current estimate.
           </p>
           <p>
@@ -241,7 +240,7 @@ const FAQ = [
 
       <details class="group bg-white border border-gray-200 rounded-lg p-6 reveal-on-scroll delay-100">
         <summary class="cursor-pointer font-bold text-brand-dark flex items-center justify-between">
-          When &mdash; and why &mdash; it stops
+          When the test stops
           <span class="text-brand-green group-open:rotate-45 transition-transform text-xl leading-none">+</span>
         </summary>
         <div class="text-sm text-slate-500 leading-relaxed mt-4 space-y-3">
@@ -251,7 +250,7 @@ const FAQ = [
             below a set threshold) <em>and</em> every subject has met a minimum number of questions.
           </p>
           <p>
-            That is why two people can finish after a different number of questions &mdash; the test stops as soon as
+            Two people can finish after a different number of questions. The test stops as soon as
             it is confident, rather than making everyone answer a fixed list.
           </p>
         </div>

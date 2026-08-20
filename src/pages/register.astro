@@ -2,128 +2,75 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Register for Updates">
-
-  <div class="min-h-[calc(100vh-4.5rem)] bg-brand-light flex items-center justify-center py-16 px-6 relative overflow-hidden">
-
-    <!-- Subtle dot grid -->
-    <div class="absolute inset-0 opacity-[0.025]"
-         style="background-image: radial-gradient(#162236 1px, transparent 1px); background-size: 26px 26px;"
-         aria-hidden="true"></div>
-
-    <!-- Card -->
-    <div class="bg-white max-w-lg w-full rounded-2xl shadow-xl border border-gray-200 relative z-10 animate-on-load overflow-hidden">
-
-      <!-- Top accent bar -->
-      <div class="h-1 bg-brand-green w-full"></div>
-
-      <div class="p-10 md:p-12">
-
-        <!-- Icon + heading -->
-        <div class="text-center mb-8">
-          <div class="w-14 h-14 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-5">
-            <svg class="w-7 h-7 text-brand-green" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-            </svg>
-          </div>
-          <h1 class="font-serif font-bold text-3xl text-brand-dark mb-2 tracking-tight">Stay in the loop.</h1>
-          <p class="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto">
-            Register your email and we'll reach out when any of the following go live:
-          </p>
-        </div>
-
-        <!-- What you'll receive -->
-        <ul class="space-y-2.5 mb-8 bg-brand-light rounded-lg p-5 text-sm text-slate-600">
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-brand-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-            </svg>
-            <span>Registration opening for the <strong class="text-brand-dark font-semibold">Fall 2026 IMT</strong></span>
-          </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-brand-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-            </svg>
-            <span>New <strong class="text-brand-dark font-semibold">handouts and learning modules</strong>.</span>
-          </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-brand-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-            </svg>
-            <span>Competition <strong class="text-brand-dark font-semibold">results, archives, and announcements</strong></span>
-          </li>
+<Layout title="Email Updates" description="Get Integrated Math competition dates, results, and new learning resources by email.">
+  <section class="signup-section">
+    <div class="site-container signup-grid">
+      <div>
+        <p class="eyebrow">Email updates</p>
+        <h1 class="page-title">Stay in the loop.</h1>
+        <p class="lede">Register your email for competition dates, results, and new resources.</p>
+        <ul>
+          <li>Fall 2026 reminders</li>
+          <li>Results and archives</li>
+          <li>New handouts and resources</li>
         </ul>
-
-        <!-- Form -->
-        <form id="waitlist-form" action="https://formspree.io/f/xojzalge" method="POST" class="space-y-4">
-          <input type="hidden" name="subject" value="New Waitlist Registration" />
-
-          <div>
-            <label for="email" class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">
-              Email Address
-            </label>
-            <input type="email" id="email" name="email" required
-                   class="w-full rounded-lg border border-gray-200 focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 px-4 py-3.5 text-sm outline-none transition bg-brand-light"
-                   placeholder="student@example.com" />
-          </div>
-
-          <div id="status-message" class="hidden text-sm font-semibold text-center p-3 rounded-lg"></div>
-
-          <button type="submit" id="submit-btn"
-                  class="w-full bg-brand-dark text-brand-gold font-bold py-4 rounded-lg hover:bg-[#1e3152] transition-colors duration-150 btn-lift flex justify-center items-center gap-2 text-sm">
-            Get Notified
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-            </svg>
-          </button>
-        </form>
-
-        <!-- Trust line -->
-        <p class="text-center text-slate-400 text-xs mt-6">
-          Unsubscribe any time by contacting us.
-        </p>
-
       </div>
-    </div>
-  </div>
 
+      <form id="registration-form" action="https://formspree.io/f/xojzalge" method="POST">
+        <input type="hidden" name="subject" value="New Waitlist Registration" />
+        <label for="email">Email address</label>
+        <input class="form-control" type="email" id="email" name="email" required autocomplete="email" placeholder="student@example.com" />
+        <div id="status-message" class="form-status" hidden></div>
+        <button class="button-primary" type="submit" id="submit-btn">Get updates</button>
+        <small>Unsubscribe at any time by contacting us.</small>
+      </form>
+    </div>
+  </section>
 </Layout>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const form    = document.getElementById('waitlist-form') as HTMLFormElement;
-    const btn     = document.getElementById('submit-btn')    as HTMLButtonElement;
-    const status  = document.getElementById('status-message') as HTMLElement;
+  const form = document.getElementById('registration-form') as HTMLFormElement;
+  const button = document.getElementById('submit-btn') as HTMLButtonElement;
+  const status = document.getElementById('status-message') as HTMLElement;
 
-    form?.addEventListener('submit', async e => {
-      e.preventDefault();
+  form?.addEventListener('submit', async event => {
+    event.preventDefault();
+    button.textContent = 'Submitting...';
+    button.disabled = true;
+    status.hidden = true;
 
-      const original   = btn.innerHTML;
-      btn.textContent  = 'Submitting…';
-      btn.disabled     = true;
-      status.className = 'hidden';
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) throw new Error();
+      form.reset();
+      status.textContent = "You're on the list.";
+      status.className = 'form-status success';
+    } catch {
+      status.textContent = 'Something went wrong. Please try again.';
+      status.className = 'form-status error';
+    }
 
-      try {
-        const res = await fetch(form.action, {
-          method:  'POST',
-          body:    new FormData(form),
-          headers: { Accept: 'application/json' },
-        });
-
-        if (res.ok) {
-          form.reset();
-          status.textContent = "✓ You're on the list! Keep an eye on your inbox.";
-          status.className   = 'text-sm font-semibold text-center p-3 rounded-lg bg-green-50 text-brand-green';
-        } else {
-          throw new Error();
-        }
-      } catch {
-        status.textContent = 'Something went wrong. Please try again.';
-        status.className   = 'text-sm font-semibold text-center p-3 rounded-lg bg-red-50 text-red-600';
-      }
-
-      btn.innerHTML = original;
-      btn.disabled  = false;
-    });
+    status.hidden = false;
+    button.textContent = 'Get updates';
+    button.disabled = false;
   });
 </script>
+
+<style>
+  .signup-section { min-height: 70vh; border-bottom: 1px solid var(--line); background: var(--paper); }
+  .signup-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 0.65fr); gap: clamp(3rem, 10vw, 8rem); align-items: center; padding-block: clamp(5rem, 11vw, 9rem); }
+  .signup-grid ul { display: grid; gap: 0.6rem; margin: 2rem 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 0.9rem; }
+  .signup-grid li::before { content: "•"; margin-right: 0.7rem; color: var(--green); }
+  .signup-grid form { border-top: 3px solid var(--green); padding-top: 1.4rem; }
+  .signup-grid label { display: block; margin-bottom: 0.6rem; font-size: 0.75rem; font-weight: 750; text-transform: uppercase; }
+  .signup-grid button { width: 100%; margin-top: 0.8rem; }
+  .signup-grid small { display: block; margin-top: 0.8rem; color: var(--muted); font-size: 0.72rem; }
+  .form-status { margin-top: 0.8rem; padding: 0.75rem; border: 1px solid var(--line); font-size: 0.84rem; }
+  .form-status.success { border-color: #9ec9b8; background: #edf7f2; color: var(--green); }
+  .form-status.error { border-color: #d7aaa5; background: #fff1ef; color: #8b2c23; }
+  @media (max-width: 760px) { .signup-grid { grid-template-columns: 1fr; } }
+</style>

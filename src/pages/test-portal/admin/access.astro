@@ -1,0 +1,183 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="Test Portal Administrators" description="Manage administrator access for the Test Portal.">
+  <section class="bg-brand-dark text-white border-b-4 border-brand-gold">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10 py-10">
+      <a href="/test-portal/admin" class="text-xs font-bold text-slate-400 hover:text-brand-gold">← Admin workspace</a>
+      <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold mt-5 mb-2">Access control</p>
+      <h1 class="font-serif font-bold text-4xl">Administrators</h1>
+      <p class="text-sm text-slate-300 mt-3 max-w-2xl">Grant access only to trusted accounts. Administrators can view answer keys, participant submissions, and private uploads.</p>
+    </div>
+  </section>
+
+  <section class="py-10 min-h-[520px]">
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div id="access-loader" class="flex justify-center items-center gap-3 py-20 text-slate-500">
+        <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
+        <span class="font-semibold">Loading access list…</span>
+      </div>
+      <div id="access-alert" class="hidden mb-6 rounded-lg border px-4 py-3 text-sm font-semibold" role="status"></div>
+
+      <div id="access-content" class="hidden grid lg:grid-cols-[.8fr_1.2fr] gap-7 items-start">
+        <aside class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden lg:sticky lg:top-24">
+          <div class="p-6 border-b border-slate-100">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-brand-green">Grant access</p>
+            <h2 class="font-serif font-bold text-2xl text-brand-dark mt-1">Add administrator</h2>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">The person must create a Test Portal account before they can be added.</p>
+          </div>
+          <form id="add-admin-form" class="p-6 space-y-4">
+            <div>
+              <label for="admin-email" class="access-label">Account email</label>
+              <input id="admin-email" type="email" required maxlength="320" class="access-input" placeholder="admin@example.com" />
+            </div>
+            <div>
+              <label for="admin-note" class="access-label">Internal note (optional)</label>
+              <textarea id="admin-note" rows="3" maxlength="1000" class="access-input" placeholder="Role or reason for access"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-brand-dark text-brand-gold font-extrabold rounded-lg py-3 text-sm disabled:opacity-50">Grant administrator access</button>
+          </form>
+        </aside>
+
+        <main class="space-y-7">
+          <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-brand-green">Current access</p>
+              <h2 class="font-serif font-bold text-2xl text-brand-dark mt-1">Authorized accounts</h2>
+            </div>
+            <div id="admin-list" class="divide-y divide-slate-100"></div>
+          </section>
+
+          <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-brand-green">Audit trail</p>
+              <h2 class="font-serif font-bold text-2xl text-brand-dark mt-1">Recent role changes</h2>
+            </div>
+            <div id="access-audit" class="divide-y divide-slate-100"></div>
+            <p id="audit-empty" class="hidden p-6 text-sm text-slate-500">No role changes have been recorded yet.</p>
+          </section>
+        </main>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .access-label { display: block; color: #162236; font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .45rem; }
+  .access-input { width: 100%; border: 1px solid rgb(203 213 225); border-radius: .5rem; padding: .7rem .85rem; outline: none; color: #162236; }
+  .access-input:focus { border-color: #4a7c59; box-shadow: 0 0 0 3px rgba(74,124,89,.12); }
+</style>
+
+<script>
+  import { escapeHtml, formatPortalDate, getPortalSession, portalFetch } from '../../../lib/testPortalClient';
+
+  interface AdminRow {
+    user_id: string;
+    email: string;
+    display_name: string;
+    created_at: string;
+    note: string;
+    is_self: boolean;
+  }
+  interface AuditRow {
+    id: number;
+    actor_email: string;
+    action: string;
+    metadata: { target_email?: string };
+    created_at: string;
+  }
+  let admins: AdminRow[] = [];
+  let audit: AuditRow[] = [];
+
+  function showAlert(message: string, kind: 'success' | 'error' = 'success') {
+    const element = document.getElementById('access-alert')!;
+    element.textContent = message;
+    element.className = `mb-6 rounded-lg border px-4 py-3 text-sm font-semibold ${kind === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`;
+  }
+
+  function render() {
+    const list = document.getElementById('admin-list')!;
+    list.innerHTML = '';
+    admins.forEach((admin) => {
+      const row = document.createElement('div');
+      row.className = 'p-5 flex items-start justify-between gap-4';
+      row.innerHTML = `
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2"><strong class="text-brand-dark text-sm">${escapeHtml(admin.display_name || admin.email)}</strong>${admin.is_self ? '<span class="rounded-full bg-green-50 border border-green-200 text-green-700 px-2 py-0.5 text-[9px] font-bold uppercase">You</span>' : ''}</div>
+          <p class="text-xs text-slate-500 mt-1">${escapeHtml(admin.email)}</p>
+          <p class="text-[11px] text-slate-400 mt-2">Granted ${escapeHtml(formatPortalDate(admin.created_at))}${admin.note ? ` · ${escapeHtml(admin.note)}` : ''}</p>
+        </div>
+        ${admin.is_self ? '' : `<button type="button" class="remove-admin shrink-0 border border-red-200 text-red-600 rounded px-3 py-2 text-xs font-bold hover:bg-red-50" data-user-id="${admin.user_id}">Remove</button>`}
+      `;
+      list.appendChild(row);
+    });
+    list.querySelectorAll<HTMLButtonElement>('.remove-admin').forEach((button) => button.addEventListener('click', () => void removeAdmin(button)));
+
+    const auditList = document.getElementById('access-audit')!;
+    auditList.innerHTML = '';
+    document.getElementById('audit-empty')!.classList.toggle('hidden', audit.length > 0);
+    audit.forEach((entry) => {
+      const row = document.createElement('div');
+      row.className = 'p-5 text-sm';
+      const action = entry.action === 'admin_role_granted' ? 'granted access to' : 'removed access from';
+      row.innerHTML = `<p class="text-slate-600"><strong class="text-brand-dark">${escapeHtml(entry.actor_email)}</strong> ${action} <strong class="text-brand-dark">${escapeHtml(entry.metadata?.target_email || 'an account')}</strong>.</p><p class="text-[11px] text-slate-400 mt-1">${escapeHtml(formatPortalDate(entry.created_at))}</p>`;
+      auditList.appendChild(row);
+    });
+  }
+
+  async function removeAdmin(button: HTMLButtonElement) {
+    const admin = admins.find((entry) => entry.user_id === button.dataset.userId);
+    if (!admin || !confirm(`Remove Test Portal administrator access from ${admin.email}?`)) return;
+    button.disabled = true;
+    try {
+      await portalFetch(`/api/test-portal/admin/admins/${admin.user_id}`, { method: 'DELETE' });
+      showAlert('Administrator access removed.');
+      await loadAccess();
+    } catch (error) {
+      showAlert(error instanceof Error ? error.message : 'Access could not be removed.', 'error');
+      button.disabled = false;
+    }
+  }
+
+  async function loadAccess() {
+    const session = await getPortalSession();
+    if (!session) { location.href = '/test-portal'; return; }
+    try {
+      const data = await portalFetch<{ admins: AdminRow[]; audit: AuditRow[] }>('/api/test-portal/admin/admins');
+      admins = data.admins;
+      audit = data.audit;
+      render();
+      document.getElementById('access-loader')!.classList.add('hidden');
+      document.getElementById('access-content')!.classList.remove('hidden');
+    } catch (error) {
+      document.getElementById('access-loader')!.classList.add('hidden');
+      showAlert(error instanceof Error ? error.message : 'Administrator access could not be loaded.', 'error');
+    }
+  }
+
+  document.getElementById('add-admin-form')!.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    button.disabled = true;
+    try {
+      await portalFetch('/api/test-portal/admin/admins', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: (document.getElementById('admin-email') as HTMLInputElement).value,
+          note: (document.getElementById('admin-note') as HTMLTextAreaElement).value,
+        }),
+      });
+      form.reset();
+      showAlert('Administrator access granted.');
+      await loadAccess();
+    } catch (error) {
+      showAlert(error instanceof Error ? error.message : 'Access could not be granted.', 'error');
+      button.disabled = false;
+    }
+  });
+
+  loadAccess();
+</script>
+

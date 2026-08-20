@@ -15,7 +15,7 @@ import Layout from '../layouts/Layout.astro';
                 <h1 class="text-4xl font-extrabold text-brand-dark">Team Settings</h1>
                 <p class="text-brand-green font-bold mt-2" id="display-email">Loading...</p>
             </div>
-            <a href="/portal" class="text-sm font-bold text-slate-500 hover:text-brand-dark transition">← Back to Portal</a>
+            <a href="/test-portal" class="text-sm font-bold text-slate-500 hover:text-brand-dark transition">← Back to Test Portal</a>
         </div>
 
         <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 md:p-10">
@@ -55,14 +55,16 @@ import Layout from '../layouts/Layout.astro';
 <script>
     import { supabase } from '../lib/supabase.js';
 
-    const globalLoader = document.getElementById('global-loader');
-    const accountWrapper = document.getElementById('account-wrapper');
-    const displayEmail = document.getElementById('display-email');
+    interface RosterMember { name: string; age: number | string }
+
+    const globalLoader = document.getElementById('global-loader')!;
+    const accountWrapper = document.getElementById('account-wrapper')!;
+    const displayEmail = document.getElementById('display-email')!;
     const teamNameInput = document.getElementById('teamName') as HTMLInputElement;
-    const rosterContainer = document.getElementById('roster-container');
-    const addMemberBtn = document.getElementById('add-member-btn');
-    const memberCounterText = document.getElementById('member-counter-text');
-    const updateForm = document.getElementById('update-form');
+    const rosterContainer = document.getElementById('roster-container')!;
+    const addMemberBtn = document.getElementById('add-member-btn')!;
+    const memberCounterText = document.getElementById('member-counter-text')!;
+    const updateForm = document.getElementById('update-form') as HTMLFormElement;
 
     const maxMembers = 6;
     let currentMembers = 0;
@@ -77,17 +79,21 @@ import Layout from '../layouts/Layout.astro';
         }
 
         // Hide Loader, Show Content
-        if (globalLoader) globalLoader.classList.add('hidden');
-        if (accountWrapper) accountWrapper.classList.remove('hidden');
+        globalLoader.classList.add('hidden');
+        accountWrapper.classList.remove('hidden');
 
-        displayEmail.textContent = user.email;
+        displayEmail.textContent = user.email ?? '';
         
         // Populate existing metadata
         const meta = user.user_metadata || {};
         if (meta.team_name) teamNameInput.value = meta.team_name;
         
         // Populate Roster
-        const savedRoster = meta.roster || [];
+        const savedRoster: RosterMember[] = Array.isArray(meta.roster)
+            ? meta.roster.filter((member: unknown): member is RosterMember => Boolean(
+                member && typeof member === 'object' && typeof (member as RosterMember).name === 'string',
+            ))
+            : [];
         savedRoster.forEach(member => addMemberRow(member.name, member.age));
         
         // If they have no roster saved somehow, add at least one blank row
@@ -100,7 +106,7 @@ import Layout from '../layouts/Layout.astro';
         addMemberBtn.classList.toggle('hidden', currentMembers >= maxMembers);
     }
 
-    function addMemberRow(nameValue = '', ageValue = '') {
+    function addMemberRow(nameValue: string = '', ageValue: string | number = '') {
         if (currentMembers >= maxMembers) return;
         currentMembers++;
         
@@ -114,10 +120,12 @@ import Layout from '../layouts/Layout.astro';
 
         row.innerHTML = `
             <div class="bg-slate-200 text-slate-600 font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm number-circle">${currentMembers}</div>
-            <input type="text" required value="${nameValue}" class="member-name w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Teammate Name">
-            <input type="number" required min="5" max="25" value="${ageValue}" class="member-age w-24 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Age">
+            <input type="text" required class="member-name w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Teammate Name">
+            <input type="number" required min="5" max="25" class="member-age w-24 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-green outline-none" placeholder="Age">
             ${removeBtnHTML}
         `;
+        (row.querySelector('.member-name') as HTMLInputElement).value = String(nameValue);
+        (row.querySelector('.member-age') as HTMLInputElement).value = String(ageValue);
         
         rosterContainer.appendChild(row);
         updateCounter();
@@ -128,13 +136,14 @@ import Layout from '../layouts/Layout.astro';
     rosterContainer.addEventListener('click', (e) => {
         const removeBtn = (e.target as HTMLElement).closest('.remove-member-btn');
         if (removeBtn) {
-            removeBtn.closest('.member-row').remove();
+            removeBtn.closest('.member-row')?.remove();
             currentMembers--;
             
             // Renumber
             const rows = rosterContainer.querySelectorAll('.member-row');
             rows.forEach((row, index) => {
-                row.querySelector('.number-circle').textContent = (index + 1).toString();
+                const number = row.querySelector('.number-circle');
+                if (number) number.textContent = (index + 1).toString();
             });
             updateCounter();
         }
@@ -143,16 +152,16 @@ import Layout from '../layouts/Layout.astro';
     // --- 3. SAVE CHANGES LOGIC ---
     updateForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const saveBtn = document.getElementById('save-btn');
-        const errorMessage = document.getElementById('error-message');
-        const successMessage = document.getElementById('success-message');
+        const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+        const errorMessage = document.getElementById('error-message')!;
+        const successMessage = document.getElementById('success-message')!;
         
         errorMessage.classList.add('hidden');
         successMessage.classList.add('hidden');
         saveBtn.textContent = 'Saving...';
 
         // Rebuild roster array
-        const updatedRoster = [];
+        const updatedRoster: { name: string; age: number }[] = [];
         document.querySelectorAll('.member-row').forEach(row => {
             const name = (row.querySelector('.member-name') as HTMLInputElement).value;
             const age = (row.querySelector('.member-age') as HTMLInputElement).value;
