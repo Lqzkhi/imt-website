@@ -7,7 +7,7 @@ Scope: participant portal, both Round 1 contests, authentication, uploads, deadl
 | Area | Finding and resulting behavior |
 | --- | --- |
 | Discovery | Portal was absent from primary navigation; added a contest portal link. The navigation's Register link led to email updates; it now uses the existing Fall registration form. |
-| Participant landing | Generic test copy replaced with the actual two-section format, continuous timer explanation, and support/details links. Google sign-in is available after provider configuration. |
+| Participant landing | Generic test copy replaced with the actual two-section format, continuous timer explanation, and support/details links. Account access uses email sign-in. |
 | Authoring | Two correctly timed drafts and 25 explicit placeholders are seeded. Publication requires the expected section format, real statements, and valid computational keys. |
 | Automatic submission | Expired attempts previously finalized only on requests. Added a once-per-minute database worker, visible worker heartbeat, and immediate database rejection of late content writes. |
 | Deadline changes | Per-attempt extensions could exceed the contest cutoff; extensions now cap at closing time. Contest edits synchronize active deadlines in one transaction. |
@@ -35,10 +35,10 @@ The Fall section identifiers currently designate these two contests. Create ordi
 
 The regression test applies the actual portal migrations to PGlite (PostgreSQL-compatible), substituting fixture Auth/Storage schemas and omitting pgcrypto extension installation. It checks seeded format, atomic submission, duplicate-finalization idempotency, auto-scoring, timeout receipt time, scratch limits, closed-write rejection, access grants, partial-credit grading, stale-grader rejection, audit records, and active deadline synchronization.
 
-See [TEST_PORTAL_SETUP.md](./TEST_PORTAL_SETUP.md) for migrations, Google OAuth, Cron activation, actual-domain acceptance checks, authoring, and post-contest release. Production Auth/Storage/Cron and signed-in contest/grading browser flows require those configured services and separate live validation. No production migration or deployment is implied by a local build.
+See [TEST_PORTAL_SETUP.md](./TEST_PORTAL_SETUP.md) for migrations, Cron activation, actual-domain acceptance checks, authoring, and post-contest release. Production Auth/Storage/Cron and signed-in contest/grading browser flows require those configured services and separate live validation. No production migration or deployment is implied by a local build.
 
-Local verification completed: Astro check passed with zero errors/warnings; server build passed; SQL regression suite passed; npm audit reported zero vulnerabilities. Participant landing/sign-in/create-account tabs and mobile navigation were inspected in the local browser at desktop and 390px width. Signed-in attempts, proof grading, Google OAuth, hosted Storage, and Cron have not been validated against production.
+Local verification completed: Astro check passed with zero errors/warnings; server build passed; SQL regression suite passed; npm audit reported zero vulnerabilities. Participant landing/sign-in/create-account tabs and mobile navigation were inspected in the local browser at desktop and 390px width. Signed-in attempts, proof grading, hosted Storage, and Cron have not been validated against production.
 
 ## September 26 final content
 
-Prepared private import of 25 final statements, integer keys, prior-task solutions, and proof rubrics. Added AMC-style terms with a pre-timer acknowledgement and saved rules snapshot, integer-only UI/API/database enforcement, and safe LaTeX list rendering. Production inspection is underway; hosted import, Cron, Auth, Storage, Google OAuth, and deployment still require live verification.
+Prepared private import of 25 final statements, integer keys, prior-task solutions, and proof rubrics. Added AMC-style terms with a pre-timer acknowledgement and saved rules snapshot, integer-only UI/API/database enforcement, and safe LaTeX list rendering. Production inspection is underway; hosted import, Cron, Auth, Storage, and deployment still require live verification.

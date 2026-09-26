@@ -48,7 +48,7 @@ In **Authentication → URL Configuration**:
 
 The portal supports account creation, email confirmation, sign-in, sign-out, and password recovery. Enable email confirmation and set reasonable Supabase Auth rate limits; configure SMTP so confirmation and recovery messages are delivered reliably.
 
-For Google sign-in, configure a Google OAuth web client and enable **Authentication → Providers → Google** with its client ID and secret. Use the callback URL Supabase displays as the Google authorized redirect URI. Add the production `/test-portal` URL to Supabase's redirect allowlist, then set `PUBLIC_GOOGLE_AUTH_ENABLED=true` in the deployment and rebuild. Keep this flag false until the provider works. OAuth redirects return to the portal and preserve the requested portal destination in the same browser tab. Check Google sign-in with an actual non-admin account before announcing it. Account sign-in is separate from the public tournament registration form; use the same email for both.
+Account sign-in uses email and is separate from the public tournament registration form; use the same email for both.
 
 ## 4. Grant the first administrator
 
@@ -116,7 +116,7 @@ After the contest closes and all submissions for a section are fully graded, ena
 
 Before opening the real contests, verify with an admin and a separate participant account on the deployed domain:
 
-- Email confirmation/recovery and, if enabled, Google sign-in complete successfully.
+- Email confirmation and password recovery complete successfully.
 - Drafts and protected keys are inaccessible to students; another participant cannot open your attempt or upload to it.
 - Refresh preserves the one-sitting tab; a different tab is locked; admin unlock restores access.
 - Both proof and scratch uploads save, can be removed before submission, and appear in the admin review after submission. Invalid content and oversized files fail.

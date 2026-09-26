@@ -4,7 +4,7 @@ The portal is at [integratedmath.org/test-portal](https://www.integratedmath.org
 
 ## Competitor flow
 
-1. Sign in, create an email account, or request password recovery. Google sign-in appears only after its provider is configured and enabled in the deployment.
+1. Sign in with email, create an email account, or request password recovery.
 2. Open a published section, read the rules and problem-format preamble, and acknowledge the terms before starting the timer. The portal saves the accepted rules and acceptance time.
 3. Complete the computational section's 20 integer extractions in two hours, or the proof section's five written problems in four and a half hours. Each is one continuous sitting; the server enforces the earlier of the personal deadline and the contest cutoff.
 4. Computational answers save in order. The save indicator reports pending or failed writes. Integers have no three-digit limit; decimal, fractional, and scientific-notation answers are rejected. The problem tells the competitor which integer to extract.

@@ -46,7 +46,6 @@ import Layout from '../../layouts/Layout.astro';
           </div>
 
 
-          <div id="google-auth" class="p-6 pb-0"><button id="google-signin" type="button" class="portal-secondary w-full">Continue with Google</button><p class="text-center text-xs text-slate-400 mt-4">or use your email</p></div>
           <form id="signin-form" role="tabpanel" aria-labelledby="signin-tab" class="p-6 md:p-8 space-y-5">
             <div>
               <label for="signin-email" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Email</label>
@@ -172,7 +171,6 @@ import Layout from '../../layouts/Layout.astro';
   const signinForm = document.getElementById('signin-form') as HTMLFormElement;
   const signupForm = document.getElementById('signup-form') as HTMLFormElement;
   const recoveryForm = document.getElementById('recovery-form') as HTMLFormElement;
-  document.getElementById('google-auth')!.classList.toggle('hidden', import.meta.env.PUBLIC_GOOGLE_AUTH_ENABLED !== 'true');
   let recoveryMode = location.hash.includes('type=recovery');
 
 
@@ -194,8 +192,7 @@ import Layout from '../../layouts/Layout.astro';
 
 
   async function continueAfterAuth() {
-    const next = new URLSearchParams(location.search).get('next') ?? sessionStorage.getItem('imt_auth_next');
-    sessionStorage.removeItem('imt_auth_next');
+    const next = new URLSearchParams(location.search).get('next');
     if (next?.startsWith('/test-portal/') && !next.includes('\\')) {
       location.href = next;
       return;
@@ -211,7 +208,6 @@ import Layout from '../../layouts/Layout.astro';
     signinForm.classList.toggle('hidden', mode !== 'signin');
     signupForm.classList.toggle('hidden', mode !== 'signup');
     recoveryForm.classList.toggle('hidden', mode !== 'recovery');
-    document.getElementById('google-auth')!.classList.toggle('hidden', mode === 'recovery' || import.meta.env.PUBLIC_GOOGLE_AUTH_ENABLED !== 'true');
     document.querySelectorAll('.auth-tab').forEach((tab) => tab.classList.toggle('hidden', mode === 'recovery'));
     const signinTab = document.getElementById('signin-tab')!;
     const signupTab = document.getElementById('signup-tab')!;
@@ -334,18 +330,6 @@ import Layout from '../../layouts/Layout.astro';
     const mode = event.key === 'Home' ? 'signin' : event.key === 'End' ? 'signup' : tab.id === 'signin-tab' ? 'signup' : 'signin';
     showAuth(mode); document.getElementById(`${mode}-tab`)!.focus();
   }));
-
-  document.getElementById('google-signin')!.addEventListener('click', async () => {
-    const button = document.getElementById('google-signin') as HTMLButtonElement;
-    button.disabled = true;
-    try {
-      const next = new URLSearchParams(location.search).get('next');
-      if (next?.startsWith('/test-portal/') && !next.includes('\\')) sessionStorage.setItem('imt_auth_next', next);
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}/test-portal` } });
-      if (error) throw error;
-    } catch (error) { showNotice(error instanceof Error ? error.message : 'Google sign-in failed.'); button.disabled = false; }
-  });
-
 
   signinForm.addEventListener('submit', async (event) => {
     event.preventDefault();

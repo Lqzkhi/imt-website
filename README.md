@@ -2,7 +2,7 @@
 
 Astro server application for Integrated Math, deployed with the Vercel adapter. The Fall 2026 contest portal lives at `/test-portal`.
 
-Read [TEST_PORTAL_SETUP.md](./TEST_PORTAL_SETUP.md) for Supabase migrations, Auth/Google setup, the submission worker, problem authoring, and post-contest grading. [PORTAL_AUDIT.md](./PORTAL_AUDIT.md) records the Fall portal changes and verification limits.
+Read [TEST_PORTAL_SETUP.md](./TEST_PORTAL_SETUP.md) for Supabase migrations, email Auth setup, the submission worker, problem authoring, and post-contest grading. [PORTAL_AUDIT.md](./PORTAL_AUDIT.md) records the Fall portal changes and verification limits.
 
 ```sh
 npm ci
