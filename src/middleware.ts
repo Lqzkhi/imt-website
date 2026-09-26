@@ -11,7 +11,7 @@ function contentSecurityPolicy(pathname: string) {
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
-    ...(pathname.startsWith('/test-portal/admin/attempts/') ? ["frame-src blob:"] : []),
+    ...(pathname.startsWith('/test-portal/admin/attempts/') || pathname === '/test-portal/admin/grading' ? ["frame-src blob:"] : []),
     "frame-ancestors 'none'",
     "form-action 'self' https://formspree.io",
     scripts,

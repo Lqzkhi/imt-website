@@ -11,7 +11,7 @@ import Layout from '../../layouts/Layout.astro';
           <span class="h-px w-8 bg-brand-gold"></span>
           Fall 2026 · Round 1
         </span>
-        <h1 class="font-serif font-bold text-4xl md:text-5xl tracking-tight">Your tournament starts here</h1>
+        <h1 class="font-serif font-bold text-4xl md:text-5xl tracking-tight">Fall 2026 Round 1 is now open</h1>
         <p class="text-slate-300 mt-4 leading-relaxed max-w-2xl">
           Complete the computational and proof sections separately, in either order. Each counts for 50% of your Round 1 score.
         </p>
@@ -24,8 +24,8 @@ import Layout from '../../layouts/Layout.astro';
   <section class="py-10 md:py-14 min-h-[520px]">
     <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10">
       <div class="grid md:grid-cols-2 gap-5 mb-8" aria-label="Fall 2026 contest format">
-        <article class="bg-white border border-slate-200 rounded-xl p-6"><p class="text-xs font-bold text-brand-green uppercase tracking-wider">Computational · 50%</p><h2 class="font-serif text-2xl font-bold mt-2">20 problems. 2 hours.</h2><p class="text-sm text-slate-500 mt-2">Integer answers, saved as you work. Optional scratch-paper uploads.</p></article>
-        <article class="bg-white border border-slate-200 rounded-xl p-6"><p class="text-xs font-bold text-brand-green uppercase tracking-wider">Proof · 50%</p><h2 class="font-serif text-2xl font-bold mt-2">5 proofs. 4½ hours.</h2><p class="text-sm text-slate-500 mt-2">Upload a PDF or image for each proof. Each problem is worth 7 points; partial credit is available.</p></article>
+        <article class="bg-white border border-slate-200 rounded-xl p-6"><p class="text-xs font-bold text-brand-green uppercase tracking-wider">Computational · 50%</p><h2 class="font-serif text-2xl font-bold mt-2">20 problems. 3 hours.</h2><p class="text-sm text-slate-500 mt-2">Integer answers, saved as you work. Optional scratch-paper uploads.</p></article>
+        <article class="bg-white border border-slate-200 rounded-xl p-6"><p class="text-xs font-bold text-brand-green uppercase tracking-wider">Proof · 50%</p><h2 class="font-serif text-2xl font-bold mt-2">5 proofs. 4½ hours.</h2><p class="text-sm text-slate-500 mt-2">Upload up to 10 PDFs or images for each proof. Each problem is worth 7 points; partial credit is available.</p></article>
       </div>
       <p class="text-sm text-slate-600 mb-8">Round 1: September 26–October 10. Each section has one continuous timer and one attempt. Contest cards below show the current deadline in your local time, including any extensions. <a class="text-brand-green underline" href="/competitions/fall-2026">Tournament details</a> · <a class="text-brand-green underline" href="/team">Portal support</a></p>
       <noscript><p>Enable JavaScript to sign in and save contest work.</p></noscript>
@@ -191,13 +191,13 @@ import Layout from '../../layouts/Layout.astro';
   }
 
 
-  async function continueAfterAuth() {
+  async function continueAfterAuth(session?: Awaited<ReturnType<typeof getPortalSession>>) {
     const next = new URLSearchParams(location.search).get('next');
     if (next?.startsWith('/test-portal/') && !next.includes('\\')) {
       location.href = next;
       return;
     }
-    await loadDashboard();
+    await loadDashboard(session);
   }
 
 
@@ -286,11 +286,12 @@ import Layout from '../../layouts/Layout.astro';
 
 
   let dashboardRequest = 0;
-  async function loadDashboard() {
+  async function loadDashboard(knownSession?: Awaited<ReturnType<typeof getPortalSession>>) {
     const requestId = ++dashboardRequest;
     document.getElementById('admin-actions')!.replaceChildren();
     clearNotice();
-    const session = await getPortalSession();
+    const session = knownSession ?? await getPortalSession();
+    if (requestId !== dashboardRequest) return;
     if (!session) {
       showAuth(recoveryMode ? 'recovery' : 'signin');
       return;
@@ -349,10 +350,10 @@ import Layout from '../../layouts/Layout.astro';
     setBusy(signinForm, true);
     const email = (document.getElementById('signin-email') as HTMLInputElement).value.trim();
     const password = (document.getElementById('signin-password') as HTMLInputElement).value;
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(signinForm, false);
     if (error) return showNotice(error.message);
-    await continueAfterAuth();
+    await continueAfterAuth(data.session);
   });
 
 
@@ -411,19 +412,17 @@ import Layout from '../../layouts/Layout.astro';
   });
 
 
-  supabase.auth.onAuthStateChange((event) => {
+  supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-      ++dashboardRequest;
-      document.getElementById('admin-actions')!.replaceChildren();
-      dashboard.classList.add('hidden');
-      // Refresh permissions outside the Auth callback to avoid its session lock.
-      window.setTimeout(() => void loadDashboard(), 0);
+      // Supabase can emit SIGNED_IN again on tab focus. Keep the current dashboard visible.
+      window.setTimeout(() => void loadDashboard(session), 0);
     }
     if (event === 'SIGNED_OUT' || event === 'PASSWORD_RECOVERY') {
       ++dashboardRequest;
       document.getElementById('admin-actions')!.replaceChildren();
       dashboard.classList.add('hidden');
     }
+    if (event === 'SIGNED_OUT') showAuth('signin');
     if (event === 'PASSWORD_RECOVERY') {
       recoveryMode = true;
       showAuth('recovery');

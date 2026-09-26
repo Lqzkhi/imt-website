@@ -107,6 +107,7 @@ const { attemptId } = Astro.params;
     selected_choice: string | null;
     file_name: string | null;
     file_url: string | null;
+    files: { file_path: string; file_name: string; file_mime_type: string; file_url: string }[];
     is_correct: boolean | null;
     points_awarded: number | null;
     grading_status: string;
@@ -221,8 +222,8 @@ const { attemptId } = Astro.params;
               const correct = problem.answer_key?.choice_key === option.id;
               return `<div class="flex items-start gap-3 rounded border p-3 ${correct ? 'border-green-300 bg-green-50' : selected ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-white'}"><span class="font-bold text-brand-dark">${escapeHtml(option.id)}.</span><span class="portal-math">${escapeHtml(option.label)}</span>${selected ? '<span class="ml-auto text-[10px] font-bold uppercase text-slate-500">Selected</span>' : ''}</div>`;
             }).join('')}</div>`
-          : response?.file_url
-            ? `<a href="${escapeHtml(response.file_url)}" target="_blank" rel="noopener noreferrer" class="inline-flex bg-brand-dark text-brand-gold font-bold rounded-lg px-5 py-3 text-sm">Open ${escapeHtml(response.file_name || 'uploaded work')}</a>`
+          : response?.files?.length
+            ? response.files.map(file => `<div class="mt-2"><button type="button" data-proof-path="${escapeHtml(file.file_path)}" class="underline text-brand-green">View ${escapeHtml(file.file_name)}</button> · <a href="${escapeHtml(file.file_url)}" target="_blank" rel="noopener noreferrer" class="underline">Open in new tab</a></div>`).join('')
             : '<p class="text-sm text-slate-500">No file was submitted.</p>';
       const manualForm = response && data.attempt.status !== 'in_progress'
         ? `
@@ -291,6 +292,12 @@ const { attemptId } = Astro.params;
 
   function renderPage() {
     const scratch = document.getElementById('review-scratch')!;
+    document.querySelectorAll<HTMLButtonElement>('[data-proof-path]').forEach(button => {
+      button.onclick = () => {
+        const file = data.problems.flatMap(problem => problem.response?.files ?? []).find(file => file.file_path === button.dataset.proofPath);
+        if (file) void previewScratch({ id: file.file_path, file_name: file.file_name, mime_type: file.file_mime_type, file_url: file.file_url });
+      };
+    });
     scratch.replaceChildren();
     closeScratchPreview();
     for (const file of data.scratch_files ?? []) {

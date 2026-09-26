@@ -83,6 +83,7 @@ export interface AttemptRow {
 }
 
 export interface ResponseRow {
+  files?: ProofFile[];
   id: string;
   attempt_id: string;
   question_id: string;
@@ -97,6 +98,25 @@ export interface ResponseRow {
   feedback: string;
   answered_at: string;
   updated_at: string;
+}
+
+export interface ProofFile {
+  file_path: string;
+  file_name: string;
+  file_mime_type: string;
+}
+
+export function responseFiles(response: ResponseRow): ProofFile[] {
+  if (response.files?.length) return response.files;
+  return response.file_path ? [{ file_path: response.file_path, file_name: response.file_name ?? 'Proof', file_mime_type: response.file_mime_type ?? 'application/pdf' }] : [];
+}
+
+export async function signedResponseFiles(supabase: SupabaseClient, response: ResponseRow, expiresIn = 600) {
+  return Promise.all(responseFiles(response).map(async (file) => {
+    const { data, error } = await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).createSignedUrl(file.file_path, expiresIn);
+    if (error) throw error;
+    return { ...file, file_url: data.signedUrl };
+  }));
 }
 
 export function hashPortalSession(token: string) {

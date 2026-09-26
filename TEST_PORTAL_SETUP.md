@@ -2,6 +2,8 @@
 
 The portal requires a server deployment (Vercel), the Supabase migrations below, and configured Auth. A local build does not apply these changes to the production database.
 
+Apply `supabase/migrations/20260926000800_multiple_proof_files.sql` after 007 before deploying multiple proof attachments. It preserves existing files, allows up to ten attachments per problem, and keeps the organizer's duration settings. Verify batch uploads, individual removal, contestant previews, inline administrator previews, and switching attachments in proof grading.
+
 ## 1. Apply the migration
 
 Apply `supabase/migrations/20260926000700_post_test_scratch_window.sql` after 006 for the 30-minute post-solving scratch upload window. Deploy the matching frontend/API. Verify blocked scratch uploads during solving, uploads after submission, the unchanged 15-minute proof-answer deadline, and rejection after the scratch deadline. Administrators can preview PDF/image scratch files inline; non-admin accounts have no Admin workspace link.

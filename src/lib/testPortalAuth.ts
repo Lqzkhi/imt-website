@@ -37,6 +37,7 @@ export function portalErrorResponse(error: unknown) {
     if (message.includes('Scratch uploads open after solving ends')) error = new PortalHttpError(409,'SCRATCH_NOT_OPEN','Scratch uploads open after solving ends.');
     else if (message.includes('Scratch upload window closed')) error = new PortalHttpError(409,'SCRATCH_CLOSED','The 30-minute scratch upload window has ended.');
     else if (message.includes('Attempt closed')) error = new PortalHttpError(409,'ATTEMPT_CLOSED','The server deadline passed or this attempt has already ended.');
+    else if (message.includes('At most 10 proof files')) error = new PortalHttpError(409,'PROOF_FILE_LIMIT','You can upload up to 10 files per problem.');
     else if (message.includes('Wait until the contest closes')) error = new PortalHttpError(409,'RESULTS_NOT_READY','Wait until the contest closes before releasing results.');
     else if (message.includes('Finish submission processing')) error = new PortalHttpError(409,'GRADING_INCOMPLETE','Finish all submissions and grading before releasing results.');
     else if (message.includes('Test structure locked')) error = new PortalHttpError(409,'TEST_STRUCTURE_LOCKED','Problems and answer keys are locked after the first attempt.');

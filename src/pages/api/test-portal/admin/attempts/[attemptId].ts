@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { requireSameOrigin } from '../../../../../lib/requestGuards';
-import { calculateAttemptExpiry, finalizeAttempt, finalizeIfExpired, logAdminAudit, logSecurityEvent, normalizeQuestionOptions, TEST_SUBMISSIONS_BUCKET, type AttemptRow, type QuestionRow, type ResponseRow, type TestRow } from '../../../../../lib/testPortal';
+import { signedResponseFiles, calculateAttemptExpiry, finalizeAttempt, finalizeIfExpired, logAdminAudit, logSecurityEvent, normalizeQuestionOptions, TEST_SUBMISSIONS_BUCKET, type AttemptRow, type QuestionRow, type ResponseRow, type TestRow } from '../../../../../lib/testPortal';
 import { authenticatePortalRequest, PortalHttpError, portalErrorResponse, portalJson, readPortalJson, stringField, uuidField } from '../../../../../lib/testPortalAuth';
 
 async function getAdminAttempt(supabase: Awaited<ReturnType<typeof authenticatePortalRequest>>['supabase'], attemptId: string) {
@@ -36,13 +36,7 @@ export const GET: APIRoute = async ({ request, params }) => {
 
     const responseRows = (responses ?? []) as ResponseRow[];
     const responseMap = new Map(responseRows.map((response) => [response.question_id, response]));
-    const fileUrls = new Map<string, string>();
-    await Promise.all(responseRows.filter((response) => response.file_path).map(async (response) => {
-      const { data } = await supabase.storage
-        .from(TEST_SUBMISSIONS_BUCKET)
-        .createSignedUrl(response.file_path!, 3600);
-      if (data?.signedUrl) fileUrls.set(response.id, data.signedUrl);
-    }));
+    const fileLists = new Map(await Promise.all(responseRows.map(async (r) => [r.id, await signedResponseFiles(supabase, r)] as const)));
 
     const { data: scratchRows, error: scratchError } = await supabase.from('test_scratch_files').select('*').eq('attempt_id',attempt.id).order('created_at');
     if (scratchError) throw scratchError;
@@ -69,7 +63,7 @@ export const GET: APIRoute = async ({ request, params }) => {
           response: response ? {
             ...response,
             points_awarded: response.points_awarded === null ? null : Number(response.points_awarded),
-            file_url: fileUrls.get(response.id) ?? null,
+            files: fileLists.get(response.id) ?? [], file_url: fileLists.get(response.id)?.[0]?.file_url ?? null,
           } : null,
         };
       }),

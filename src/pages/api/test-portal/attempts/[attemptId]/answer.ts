@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import {
+  responseFiles,
   finalizeIfExpired,
   getOwnedAttempt,
   getStorageObject,
@@ -59,11 +60,19 @@ export const POST: APIRoute = async ({ request, params }) => {
     if (previousError) throw previousError;
     const previous = previousData as ResponseRow | null;
 
+    if (question.answer_type === 'file_upload' && typeof body.remove_file_path === 'string') {
+      const path = body.remove_file_path;
+      if (!previous || !responseFiles(previous).some(file => file.file_path === path)) throw new PortalHttpError(404, 'FILE_NOT_FOUND', 'That attachment was not found.');
+      const { data: saved, error } = await supabase.rpc('edit_proof_files', { p_attempt: attempt.id, p_question: question.id, p_remove: path });
+      if (error) throw error;
+      await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([path]);
+      return portalJson({ response: saved?.id ? { ...saved, files: responseFiles(saved) } : null, saved_at: new Date().toISOString() });
+    }
     if (body.clear === true) {
       if (previous) {
         const { error } = await supabase.from('test_responses').delete().eq('id', previous.id);
         if (error) throw error;
-        if (previous.file_path) await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([previous.file_path]);
+        await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove(responseFiles(previous).map(file => file.file_path));
       }
       return portalJson({ response: null, saved_at: new Date().toISOString() });
     }
@@ -130,6 +139,16 @@ export const POST: APIRoute = async ({ request, params }) => {
       payload.file_path = filePath;
       payload.file_name = fileName;
       payload.file_mime_type = mimeType;
+    }
+
+    if (question.answer_type === 'file_upload') {
+      const file = { file_path: payload.file_path, file_name: payload.file_name, file_mime_type: payload.file_mime_type };
+      const { data: saved, error } = await supabase.rpc('edit_proof_files', { p_attempt: attempt.id, p_question: question.id, p_file: file });
+      if (error) {
+        if (!previous || !responseFiles(previous).some(f => f.file_path === file.file_path)) await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([String(file.file_path)]);
+        throw error;
+      }
+      return portalJson({ response: { ...saved, files: responseFiles(saved) }, saved_at: new Date().toISOString() });
     }
 
     const { data: saved, error: saveError } = await supabase

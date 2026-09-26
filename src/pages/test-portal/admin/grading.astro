@@ -20,8 +20,10 @@ import Layout from '../../../layouts/Layout.astro';
         <h2 id="grading-title" class="font-serif font-bold text-2xl"></h2>
         <div id="grading-prompt" class="portal-math whitespace-pre-wrap my-6"></div>
         <a id="grading-file" target="_blank" rel="noopener noreferrer" class="inline-flex bg-brand-dark text-brand-gold px-5 py-3 rounded-lg font-bold">Open submitted proof</a>
-        <p class="text-xs text-slate-500 mt-3">Private link expires in one hour. Reload this submission if needed.</p>
+        <label class="block mt-4 text-sm font-semibold">Proof attachment <select id="grading-attachment" class="border rounded-lg p-2 ml-2"></select></label>
+        <p class="text-xs text-slate-500 mt-3">Private links expire in 10 minutes. Reload this submission if needed.</p>
         <img id="grading-image" class="hidden w-full border rounded-lg mt-6" alt="Submitted proof" />
+        <iframe id="grading-pdf" class="hidden w-full border rounded-lg mt-6" style="height: 700px" title="Submitted proof PDF" referrerpolicy="no-referrer"></iframe>
         <details class="mt-6"><summary class="font-bold cursor-pointer">Rubric and grading notes</summary><div id="grading-rubric" class="portal-math whitespace-pre-wrap text-sm mt-3"></div></details>
         <a id="grading-review" class="inline-block underline text-brand-green text-sm mt-6">Full attempt, scratch paper, and security review</a>
       </div>
@@ -42,8 +44,17 @@ import Layout from '../../../layouts/Layout.astro';
 <script>
   import { getPortalSession, portalFetch, renderPortalMath, formatPortalDate } from '../../../lib/testPortalClient';
   interface Entry { id: string; attempt_id: string; question_id: string; grading_status: string; graded_at: string | null; test_questions: { position: number } }
-  interface Review { attempt: { participant_name: string; participant_email: string }; problems: { question: { id: string; title: string; prompt_latex: string; points: number }; answer_key: { grading_notes: string } | null; response: { id: string; file_url: string; file_mime_type: string; file_name: string; points_awarded: number | null; feedback: string; graded_at: string | null; graded_by: string | null } | null }[] }
+  interface Review { attempt: { participant_name: string; participant_email: string }; problems: { question: { id: string; title: string; prompt_latex: string; points: number }; answer_key: { grading_notes: string } | null; response: { files: { file_path: string; file_name: string; file_mime_type: string; file_url: string }[]; id: string; file_url: string; file_mime_type: string; file_name: string; points_awarded: number | null; feedback: string; graded_at: string | null; graded_by: string | null } | null }[] }
   let queue: Entry[] = []; let current: Entry | undefined; let review: Review; let dirty = false; let loading = false;
+  let previewUrl = ''; let previewRequest: AbortController | undefined;
+  function clearPreview() {
+    previewRequest?.abort();
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = '';
+    document.getElementById('grading-image')!.removeAttribute('src');
+    document.getElementById('grading-pdf')!.removeAttribute('src');
+  }
+  window.addEventListener('pagehide', clearPreview);
   const status = document.getElementById('grading-status')!;
   const problem = document.getElementById('grade-problem') as HTMLSelectElement;
   const pending = document.getElementById('pending-only') as HTMLInputElement;
@@ -56,6 +67,7 @@ import Layout from '../../../layouts/Layout.astro';
     if (loading) return;
     if (dirty && !confirm('Discard the unsaved grade and feedback?')) return;
     dirty = false; current = entry; loading = true; save.disabled = true;
+    clearPreview();
     document.getElementById('grading-workspace')!.classList.add('hidden');
     const all = queue.filter((e) => e.test_questions.position === Number(problem.value));
     document.getElementById('grading-progress')!.textContent = `${all.filter((e) => e.grading_status === 'manually_graded').length} / ${all.length} submitted proofs graded`;
@@ -68,9 +80,32 @@ import Layout from '../../../layouts/Layout.astro';
       for (const [id,text] of [['grading-prompt',item.question.prompt_latex],['grading-rubric',item.answer_key?.grading_notes || 'No rubric has been added. Add grading notes in the problem editor before the contest begins.']]) {
         const el = document.getElementById(id)!; el.textContent = text; el.removeAttribute('data-math-rendered');
       }
-      const link = document.getElementById('grading-file') as HTMLAnchorElement; link.href = r.file_url; link.textContent = 'Open submitted proof';
-      const image = document.getElementById('grading-image') as HTMLImageElement;
-      image.classList.toggle('hidden',!r.file_mime_type.startsWith('image/')); if (r.file_mime_type.startsWith('image/')) image.src = r.file_url; else image.removeAttribute('src');
+      const attachments = document.getElementById('grading-attachment') as HTMLSelectElement;
+      attachments.replaceChildren(...r.files.map((file, i) => new Option(`${i + 1}. ${file.file_name}`, String(i))));
+      attachments.onchange = async () => {
+        clearPreview();
+        const controller = new AbortController(); previewRequest = controller;
+        const file = r.files[Number(attachments.value)];
+        const link = document.getElementById('grading-file') as HTMLAnchorElement;
+        link.href = file.file_url; link.textContent = `Open ${file.file_name}`;
+        const image = document.getElementById('grading-image') as HTMLImageElement;
+        const pdf = document.getElementById('grading-pdf') as HTMLIFrameElement;
+        image.classList.toggle('hidden', !file.file_mime_type.startsWith('image/'));
+        pdf.classList.toggle('hidden', file.file_mime_type !== 'application/pdf');
+        image.removeAttribute('src'); pdf.removeAttribute('src');
+        try {
+          const response = await fetch(file.file_url, { signal: controller.signal, credentials: 'omit' });
+          if (!response.ok) throw new Error('Preview unavailable. Reload this submission to refresh its private links.');
+          const bytes = await response.arrayBuffer();
+          if (controller.signal.aborted) return;
+          previewUrl = URL.createObjectURL(new Blob([bytes], { type: file.file_mime_type }));
+          if (file.file_mime_type.startsWith('image/')) image.src = previewUrl;
+          if (file.file_mime_type === 'application/pdf') pdf.src = previewUrl;
+        } catch (error) {
+          if (!controller.signal.aborted) status.textContent = error instanceof Error ? error.message : 'Preview unavailable. Use the attachment link.';
+        }
+      };
+      attachments.dispatchEvent(new Event('change'));
       (document.getElementById('grading-review') as HTMLAnchorElement).href = `/test-portal/admin/attempts/${entry.attempt_id}`;
       points.max = String(item.question.points); points.step = '0.01'; points.value = r.points_awarded === null ? '' : String(r.points_awarded); feedback.value = r.feedback;
       entry.graded_at = r.graded_at;

@@ -43,7 +43,7 @@ const { attemptId } = Astro.params;
             <h2 class="font-bold">Scratch paper</h2>
             <p class="text-sm text-slate-500 mt-2">Your answers are locked. You have 30 minutes from the end of solving to scan and upload work already completed. Up to 10 PDF or image files, 3 MB each.</p>
             <p data-scratch-deadline class="text-sm font-semibold mt-3"></p>
-            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="finished-scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
+            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="finished-scratch-picker" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
             <p id="finished-scratch-status" class="text-sm mt-2" role="status"></p>
             <ul id="finished-scratch-files" class="text-sm mt-3 space-y-2"></ul>
           </section>
@@ -99,7 +99,7 @@ const { attemptId } = Astro.params;
             <h2 id="scratch-heading" class="font-bold text-brand-dark">Scratch paper</h2>
             <p class="text-sm text-slate-500 mt-1">Optional supporting work. Uploads open only after solving ends and close 30 minutes later. Proof answers have a separate 15-minute deadline and belong under their problems. Up to 10 PDF or image files, 3 MB each.</p>
             <p data-scratch-deadline class="text-sm font-semibold mt-3"></p>
-            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
+            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="scratch-picker" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
             <p id="scratch-status" class="text-sm mt-2" role="status"></p><ul id="scratch-files" class="mt-3 space-y-2 text-sm"></ul>
           </section>
           <div id="question-card" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -169,6 +169,7 @@ const { attemptId } = Astro.params;
     question_id: string;
     response_text: string | null;
     selected_choice: string | null;
+    files?: { file_path: string; file_name: string; file_mime_type: string; file_url?: string }[];
     file_name: string | null;
     file_url?: string | null;
     is_correct?: boolean | null;
@@ -341,13 +342,14 @@ const { attemptId } = Astro.params;
       if (saved) {
         status.textContent = `${file.name} uploaded and saved.`;
         status.className = 'text-sm font-semibold text-brand-green mt-3';
-        await loadAttempt();
       }
+      return saved;
     } catch (error) {
       failedQuestions.add(question.id);
       saveFailed = true;
       status.textContent = error instanceof Error ? error.message : 'The upload failed.';
       status.className = 'text-sm font-semibold text-red-600 mt-3';
+      return false;
     } finally {
       setSaving(false);
     }
@@ -433,14 +435,14 @@ const { attemptId } = Astro.params;
       wrapper.innerHTML = `
         <div class="w-11 h-11 mx-auto rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center mb-3">↑</div>
         <h3 class="font-bold text-brand-dark">Upload your work</h3>
-        <p class="text-xs text-slate-500 mt-2">${escapeHtml(question.file_extensions.join(', ').toUpperCase())} • Maximum ${question.max_file_size_mb} MB</p>
+        <p class="text-xs text-slate-500 mt-2">${escapeHtml(question.file_extensions.join(', ').toUpperCase())} • Up to 10 files • Maximum ${question.max_file_size_mb} MB each</p>
       `;
-      if (response?.file_name) {
+      for (const file of response?.files ?? []) {
         const current = document.createElement('div');
         current.className = 'mt-4 flex flex-col sm:flex-row items-center justify-center gap-2';
         const chip = document.createElement('p');
         chip.className = 'inline-flex max-w-full rounded-full bg-green-50 border border-green-200 text-green-800 px-4 py-2 text-xs font-bold break-all';
-        chip.textContent = `Saved: ${response.file_name}`;
+        chip.textContent = `Saved: ${file.file_name}`;
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className = 'text-xs font-bold text-red-600 hover:text-red-800 px-3 py-2';
@@ -449,8 +451,8 @@ const { attemptId } = Astro.params;
           if (!confirm('Remove this uploaded answer? You can upload another file while the attempt remains open.')) return;
           remove.disabled = true;
           remove.textContent = 'Removing…';
-          void saveAnswer(question, { clear: true }).then((saved) => {
-            if (saved) renderQuestion();
+          void saveAnswer(question, { remove_file_path: file.file_path }).then((saved) => {
+            if (saved) void loadAttempt();
             else {
               remove.disabled = false;
               remove.textContent = 'Remove file';
@@ -458,9 +460,9 @@ const { attemptId } = Astro.params;
           });
         });
         current.append(chip, remove);
-        if (response.file_url) {
+        if (file.file_url) {
           const preview = document.createElement('a');
-          preview.href = response.file_url;
+          preview.href = file.file_url;
           preview.target = '_blank';
           preview.rel = 'noopener noreferrer';
           preview.className = 'text-xs font-bold underline text-brand-green';
@@ -471,16 +473,23 @@ const { attemptId } = Astro.params;
       }
       const pickerLabel = document.createElement('label');
       pickerLabel.className = 'block mt-5 cursor-pointer';
-      pickerLabel.innerHTML = `<span class="inline-flex bg-brand-dark text-brand-gold font-bold text-sm rounded-lg px-5 py-3">${response?.file_name ? 'Replace file' : 'Choose file'}</span>`;
+      pickerLabel.innerHTML = `<span class="inline-flex bg-brand-dark text-brand-gold font-bold text-sm rounded-lg px-5 py-3">Add proof files</span>`;
       const picker = document.createElement('input');
       picker.type = 'file';
+      picker.multiple = true;
       picker.accept = question.file_extensions.map((extension) => `.${extension}`).join(',');
       picker.className = 'sr-only';
       const uploadStatus = document.createElement('p');
       uploadStatus.className = 'text-sm font-semibold text-slate-500 mt-3';
-      picker.addEventListener('change', () => {
-        const file = picker.files?.[0];
-        if (file) void uploadFile(question, file, uploadStatus);
+      picker.addEventListener('change', async () => {
+        const files = Array.from(picker.files ?? []);
+        if ((response?.files?.length ?? 0) + files.length > 10) { uploadStatus.textContent = 'Up to 10 files per problem.'; return; }
+        picker.disabled = true;
+        for (const file of files) {
+          if (!await uploadFile(question, file, uploadStatus)) break;
+        }
+        picker.disabled = false;
+        await loadAttempt();
       });
       pickerLabel.appendChild(picker);
       wrapper.append(pickerLabel, uploadStatus);
@@ -677,7 +686,7 @@ const { attemptId } = Astro.params;
         ? response?.response_text ?? 'No answer submitted'
         : question.answer_type === 'multiple_choice'
           ? selectedOption ? `${selectedOption.id}. ${selectedOption.label}` : 'No answer selected'
-          : response?.file_name ?? 'No file submitted';
+          : response?.files?.map(file => file.file_name).join(', ') || 'No file submitted';
       const resultLabel = !response
         ? 'No response'
         : response.grading_status === 'pending_manual'
@@ -707,7 +716,7 @@ const { attemptId } = Astro.params;
         <div class="p-5 text-sm">
           <p class="text-slate-500">Your answer</p>
           <div class="portal-math text-brand-dark font-semibold mt-1 whitespace-pre-wrap break-words">${escapeHtml(submitted)}</div>
-          ${response?.file_url ? `<a class="inline-block underline text-brand-green mt-3" href="${escapeHtml(response.file_url)}" target="_blank" rel="noopener noreferrer">Download your submitted proof</a>` : ''}
+          ${(response?.files ?? []).map(file => `<a class="block underline text-brand-green mt-3" href="${escapeHtml(file.file_url)}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(file.file_name)}</a>`).join('')}
           ${response?.feedback ? `<div class="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-3"><p class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Administrator feedback</p><p class="text-sm text-blue-900 mt-1 whitespace-pre-wrap">${escapeHtml(response.feedback)}</p></div>` : ''}
         </div>
       `;
@@ -861,15 +870,17 @@ const { attemptId } = Astro.params;
     }
   }
   document.querySelectorAll<HTMLInputElement>('#scratch-picker, #finished-scratch-picker').forEach(input => input.addEventListener('change', async (event) => {
-    const picker = event.target as HTMLInputElement; const file = picker.files?.[0]; if (!file) return;
+    const picker = event.target as HTMLInputElement; const files = Array.from(picker.files ?? []); if (!files.length) return;
     const status = document.getElementById(picker.id === 'finished-scratch-picker' ? 'finished-scratch-status' : 'scratch-status')!;
     scratchBusy = true; updateScratchClock(); status.textContent = 'Uploading scratch work…';
     try {
-      const form = new FormData(); form.set('file',file);
-      await attemptFetch(`/api/test-portal/attempts/${attemptId}/scratch`, { method: 'POST', body: form });
+      for (const file of files) {
+        const form = new FormData(); form.set('file',file);
+        await attemptFetch('/api/test-portal/attempts/' + attemptId + '/scratch', { method: 'POST', body: form });
+      }
       await loadScratch(); picker.value = ''; status.textContent = 'Scratch work saved.';
     } catch (error) { status.textContent = error instanceof Error ? error.message : 'Upload failed.'; }
-    finally { scratchBusy = false; updateScratchClock(); }
+    finally { await loadScratch(); picker.value = ''; scratchBusy = false; updateScratchClock(); }
   }));
   // Duplicating a tab copies sessionStorage in some browsers. An exclusive browser
   // lock prevents two local tabs from using that copied token at the same time.

@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { finalizeIfExpired, getOwnedAttempt, publicQuestion, publicResponse, requireAttemptSession, type QuestionRow, type ResponseRow, TEST_SUBMISSIONS_BUCKET } from '../../../../../lib/testPortal';
+import { signedResponseFiles, finalizeIfExpired, getOwnedAttempt, publicQuestion, publicResponse, requireAttemptSession, type QuestionRow, type ResponseRow } from '../../../../../lib/testPortal';
 import { authenticatePortalRequest, portalErrorResponse, portalJson } from '../../../../../lib/testPortalAuth';
 
 export const GET: APIRoute = async ({ request, params }) => {
@@ -17,12 +17,8 @@ export const GET: APIRoute = async ({ request, params }) => {
     if (responseError) throw responseError;
 
     const responseRows = (responses ?? []) as ResponseRow[];
-    const fileUrls = new Map<string,string>();
-    await Promise.all(responseRows.filter((r) => r.file_path).map(async (r) => {
-      const { data, error } = await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).createSignedUrl(r.file_path!,600,{download:r.file_name ?? 'submission'});
-      if (error) throw error;
-      fileUrls.set(r.id,data.signedUrl);
-    }));
+    const fileLists = new Map(await Promise.all(responseRows.map(async (r) => [r.id, await signedResponseFiles(supabase, r)] as const)));
+
     const showGrade = attempt.status !== 'in_progress' && owned.test.show_results;
     return portalJson({
       server_now: new Date().toISOString(),
@@ -58,7 +54,7 @@ export const GET: APIRoute = async ({ request, params }) => {
           ? { ...question, prompt_latex: 'Solving has ended. Upload only work completed during the timed round.' }
           : question,
       )),
-      responses: responseRows.map((response) => ({ ...publicResponse(response,showGrade), file_url:fileUrls.get(response.id) ?? null })),
+      responses: responseRows.map((response) => ({ ...publicResponse(response,showGrade), files: fileLists.get(response.id) ?? [], file_url:fileLists.get(response.id)?.[0]?.file_url ?? null })),
     });
   } catch (error) {
     return portalErrorResponse(error);
