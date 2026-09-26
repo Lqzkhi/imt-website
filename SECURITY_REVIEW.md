@@ -1,6 +1,6 @@
 # Website security and release review — 2026-09-26
 
-Decision: HOLD production rollout. Code fixes are prepared locally on `codex/proof-upload-window`; this review does not certify that the application is bug-free.
+Decision: HOLD production rollout. Code fixes are committed to the preview branch `codex/proof-upload-window`; this review does not certify that the application is bug-free.
 
 ## Findings fixed in this review
 
@@ -43,3 +43,4 @@ Decision: HOLD production rollout. Code fixes are prepared locally on `codex/pro
 - Browser fullscreen, clipboard blocking, and focus logs cannot establish whether contestants used other devices or outside help. Review signals manually.
 
 References: [Supabase production checklist](https://supabase.com/docs/guides/deployment/going-into-prod), [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp), [signed upload URLs](https://supabase.com/docs/reference/javascript/file-buckets-createsigneduploadurl).
+
