@@ -37,6 +37,7 @@ export interface TestRow {
   show_results: boolean;
   created_at: string;
   updated_at: string;
+  contest_section?: 'computational' | 'proof' | null;
 }
 
 export interface QuestionOption {
@@ -101,12 +102,12 @@ export function hashPortalSession(token: string) {
 }
 
 export function calculateAttemptExpiry(test: TestRow, startedAt: Date, extensionMinutes = 0) {
-  let expiresAt = new Date(startedAt.getTime() + test.duration_minutes * 60_000);
+  let expiresAt = new Date(startedAt.getTime() + (test.duration_minutes + Math.max(0, extensionMinutes)) * 60_000);
   if (test.closes_at) {
     const closesAt = new Date(test.closes_at);
     if (closesAt < expiresAt) expiresAt = closesAt;
   }
-  return new Date(expiresAt.getTime() + Math.max(0, extensionMinutes) * 60_000);
+  return expiresAt;
 }
 
 export function getTestAvailability(test: TestRow, now = new Date()) {
@@ -249,106 +250,15 @@ export async function logAdminAudit(
 export async function finalizeAttempt(
   supabase: SupabaseClient,
   attempt: AttemptRow,
-  reason: 'submitted' | 'timed_out',
+  reason: 'submitted' | 'timed_out' | 'admin_force',
 ) {
-  if (attempt.status !== 'in_progress') return attempt;
-
-  const [{ data: questions, error: questionError }, { data: responses, error: responseError }] = await Promise.all([
-    supabase.from('test_questions').select('*').eq('test_id', attempt.test_id).order('position'),
-    supabase.from('test_responses').select('*').eq('attempt_id', attempt.id),
-  ]);
-  if (questionError) throw questionError;
-  if (responseError) throw responseError;
-
-  const questionRows = (questions ?? []) as QuestionRow[];
-  const questionIds = questionRows.map((question) => question.id);
-  const { data: keys, error: keyError } = questionIds.length
-    ? await supabase.from('test_question_keys').select('*').in('question_id', questionIds)
-    : { data: [], error: null };
-  if (keyError) throw keyError;
-
-  const keyByQuestion = new Map((keys ?? []).map((key) => [key.question_id, key]));
-  const responseByQuestion = new Map(((responses ?? []) as ResponseRow[]).map((response) => [response.question_id, response]));
-  let autoScore = 0;
-  let manualScore = 0;
-  let pendingManual = false;
-
-  for (const question of questionRows) {
-    const response = responseByQuestion.get(question.id);
-    if (!response) continue;
-
-    const points = Number(question.points);
-    if (question.answer_type === 'file_upload') {
-      if (response.grading_status === 'manually_graded') {
-        manualScore += Number(response.points_awarded ?? 0);
-      } else if (response.file_path) {
-        pendingManual = true;
-        const { error } = await supabase
-          .from('test_responses')
-          .update({ grading_status: 'pending_manual', is_correct: null, points_awarded: null })
-          .eq('id', response.id);
-        if (error) throw error;
-      }
-      continue;
-    }
-
-    const key = keyByQuestion.get(question.id);
-    let correct = false;
-    if (question.answer_type === 'numerical' && key?.numerical_answer !== null && key?.numerical_answer !== undefined) {
-      const submitted = Number(response.response_text);
-      const expected = Number(key.numerical_answer);
-      const tolerance = Number(key.numerical_tolerance ?? 0);
-      correct = Number.isFinite(submitted) && Math.abs(submitted - expected) <= tolerance;
-    } else if (question.answer_type === 'multiple_choice' && key?.choice_key) {
-      correct = response.selected_choice === key.choice_key;
-    }
-
-    const awarded = correct ? points : 0;
-    autoScore += awarded;
-    const { error } = await supabase
-      .from('test_responses')
-      .update({
-        is_correct: correct,
-        points_awarded: awarded,
-        grading_status: 'autograded',
-      })
-      .eq('id', response.id);
-    if (error) throw error;
-  }
-
-  const maxScore = questionRows.reduce((sum, question) => sum + Number(question.points), 0);
-  const status = reason === 'timed_out' ? 'timed_out' : 'submitted';
-  const now = new Date().toISOString();
-  const { data: updated, error: updateError } = await supabase
-    .from('test_attempts')
-    .update({
-      status,
-      submitted_at: now,
-      last_seen_at: now,
-      auto_submitted: reason === 'timed_out',
-      auto_score: autoScore,
-      score: autoScore + manualScore,
-      max_score: maxScore,
-      grading_status: pendingManual ? 'pending_manual' : 'complete',
-    })
-    .eq('id', attempt.id)
-    .eq('status', 'in_progress')
-    .select('*')
-    .maybeSingle();
-  if (updateError) throw updateError;
-
-  if (updated) {
-    await logSecurityEvent(supabase, attempt, reason);
-    return updated as AttemptRow;
-  }
-
-  const { data: current, error: currentError } = await supabase
-    .from('test_attempts')
-    .select('*')
-    .eq('id', attempt.id)
-    .single();
-  if (currentError) throw currentError;
-  return current as AttemptRow;
+  const { data, error } = await supabase.rpc('finalize_test_attempt', {
+    p_attempt_id: attempt.id, p_reason: reason,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.id) throw new Error('Submission did not return an attempt.');
+  return row as AttemptRow;
 }
 
 export async function finalizeIfExpired(supabase: SupabaseClient, attempt: AttemptRow) {

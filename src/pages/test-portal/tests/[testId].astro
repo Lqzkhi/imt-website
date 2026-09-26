@@ -54,7 +54,7 @@ const { testId } = Astro.params;
 
           <label id="acknowledgement-wrap" class="hidden items-start gap-3 rounded-lg border border-slate-200 p-4 cursor-pointer mb-5">
             <input id="acknowledgement" type="checkbox" class="mt-1 accent-brand-green" />
-            <span class="text-sm text-slate-600">I understand that the timer starts immediately and this one-sitting attempt will be bound to this browser tab.</span>
+            <span class="text-sm text-slate-600">I have read and agree to the contest rules above. This is my own work. I understand that the timer starts immediately, continues while I am away, and submits saved work at the deadline.</span>
           </label>
 
           <div id="start-error" class="hidden mb-5 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm font-semibold" role="alert"></div>
@@ -83,6 +83,8 @@ const { testId } = Astro.params;
     title: string;
     description: string;
     instructions_latex: string;
+    terms_version: string;
+    contest_section?: 'computational' | 'proof' | null;
     duration_minutes: number;
     security_mode: 'one_sitting' | 'take_home';
     require_fullscreen: boolean;
@@ -166,7 +168,7 @@ const { testId } = Astro.params;
     } else if (test.availability === 'open') {
       startButton.textContent = 'Begin test';
       helper.textContent = 'The timer begins as soon as you continue.';
-      if (test.security_mode === 'one_sitting') {
+      if (test.contest_section || test.security_mode === 'one_sitting') {
         acknowledgementWrap.classList.remove('hidden');
         acknowledgementWrap.classList.add('flex');
         startButton.disabled = true;
@@ -207,7 +209,7 @@ const { testId } = Astro.params;
     try {
       const result = await portalFetch<{ attempt: ExistingAttempt }>('/api/test-portal/attempts/start', {
         method: 'POST',
-        body: JSON.stringify({ test_id: test.id, session_token: sessionToken }),
+        body: JSON.stringify({ test_id: test.id, session_token: sessionToken, accept_terms: acknowledgement.checked, terms_version: test.terms_version }),
       }, sessionToken);
       if (sessionToken) sessionStorage.setItem(attemptSessionStorageKey(result.attempt.id), sessionToken);
       location.href = `/test-portal/attempts/${result.attempt.id}`;
@@ -215,7 +217,7 @@ const { testId } = Astro.params;
       error.textContent = caught instanceof Error ? caught.message : 'The attempt could not be opened.';
       error.classList.remove('hidden');
       startButton.textContent = oldText;
-      startButton.disabled = false;
+      startButton.disabled = !existingAttempt && (Boolean(test.contest_section) || test.security_mode === 'one_sitting') && !acknowledgement.checked;
     }
   });
 

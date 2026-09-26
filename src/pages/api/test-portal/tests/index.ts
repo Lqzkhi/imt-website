@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getTestAvailability, type AttemptRow, type TestRow } from '../../../../lib/testPortal';
+import { finalizeIfExpired, getTestAvailability, type AttemptRow, type TestRow } from '../../../../lib/testPortal';
 import { authenticatePortalRequest, portalErrorResponse, portalJson } from '../../../../lib/testPortalAuth';
 
 export const GET: APIRoute = async ({ request }) => {
@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ request }) => {
     if (attemptsError) throw attemptsError;
 
     const testRows = (tests ?? []) as TestRow[];
-    const attemptRows = (attempts ?? []) as AttemptRow[];
+    const attemptRows = await Promise.all(((attempts ?? []) as AttemptRow[]).map((a) => finalizeIfExpired(supabase, a)));
     const testIds = testRows.map((test) => test.id);
     const { data: questionRows, error: questionError } = testIds.length
       ? await supabase.from('test_questions').select('id, test_id').in('test_id', testIds)

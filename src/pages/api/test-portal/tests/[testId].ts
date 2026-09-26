@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getTestAvailability, type AttemptRow, type TestRow } from '../../../../lib/testPortal';
+import { getTestAvailability, hashPortalSession, type AttemptRow, type TestRow } from '../../../../lib/testPortal';
 import { authenticatePortalRequest, PortalHttpError, portalErrorResponse, portalJson } from '../../../../lib/testPortalAuth';
 
 export const GET: APIRoute = async ({ request, params }) => {
@@ -30,6 +30,8 @@ export const GET: APIRoute = async ({ request, params }) => {
         title: test.title,
         description: test.description,
         instructions_latex: test.instructions_latex,
+        terms_version: hashPortalSession(test.instructions_latex),
+        contest_section: test.contest_section,
         duration_minutes: test.duration_minutes,
         security_mode: test.security_mode,
         require_fullscreen: test.require_fullscreen,

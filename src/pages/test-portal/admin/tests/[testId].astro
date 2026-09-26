@@ -94,11 +94,11 @@ const { testId } = Astro.params;
               </div>
               <div class="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label for="test-opens" class="editor-label">Opens (optional)</label>
+                  <label for="test-opens" class="editor-label">Opens (your local time)</label>
                   <input id="test-opens" type="datetime-local" class="editor-input" />
                 </div>
                 <div>
-                  <label for="test-closes" class="editor-label">Closes (optional)</label>
+                  <label for="test-closes" class="editor-label">Auto-submit cutoff (your local time)</label>
                   <input id="test-closes" type="datetime-local" class="editor-input" />
                 </div>
               </div>
@@ -278,6 +278,7 @@ const { testId } = Astro.params;
     grading_notes: string;
   }
   interface EditorQuestion {
+    is_placeholder?: boolean;
     id: string;
     position: number;
     title: string;
@@ -349,6 +350,7 @@ const { testId } = Astro.params;
       return Boolean(question.answer_key?.choice_key && question.options.some((option) => option.id === question.answer_key.choice_key));
     });
     const checks = [
+      { label: 'Statements', detail: questions.some((q) => q.is_placeholder) ? 'Replace placeholders' : 'Ready', ready: !questions.some((q) => q.is_placeholder) },
       { label: 'Title', detail: title ? 'Set' : 'Required', ready: Boolean(title) },
       { label: 'Duration', detail: Number.isInteger(duration) && duration >= 1 && duration <= 43_200 ? `${duration} minutes` : '1–43,200 required', ready: Number.isInteger(duration) && duration >= 1 && duration <= 43_200 },
       { label: 'Problems', detail: questions.length ? `${questions.length} added` : 'Add at least one', ready: questions.length > 0 },

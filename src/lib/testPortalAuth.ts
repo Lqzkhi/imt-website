@@ -31,6 +31,13 @@ export function portalJson(data: unknown, init: ResponseInit = {}) {
 }
 
 export function portalErrorResponse(error: unknown) {
+  if (!(error instanceof PortalHttpError) && error && typeof error === 'object' && 'message' in error) {
+    const message = String(error.message);
+    if (message.includes('Attempt closed')) error = new PortalHttpError(409,'ATTEMPT_CLOSED','The server deadline passed or this attempt has already ended.');
+    else if (message.includes('Wait until the contest closes')) error = new PortalHttpError(409,'RESULTS_NOT_READY','Wait until the contest closes before releasing results.');
+    else if (message.includes('Finish submission processing')) error = new PortalHttpError(409,'GRADING_INCOMPLETE','Finish all submissions and grading before releasing results.');
+    else if (message.includes('Test structure locked')) error = new PortalHttpError(409,'TEST_STRUCTURE_LOCKED','Problems and answer keys are locked after the first attempt.');
+  }
   if (error instanceof PortalHttpError) {
     const headers = error.code === 'RATE_LIMITED' ? { 'Retry-After': '60' } : undefined;
     return portalJson(
@@ -53,8 +60,14 @@ export async function readPortalJson(request: Request) {
   }
 
   try {
-    return await request.json() as Record<string, unknown>;
-  } catch {
+    if (Number(request.headers.get('content-length')) > 120000) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
+    const text = await request.text();
+    if (text.length > 120000) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
+    const body = JSON.parse(text);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new PortalHttpError(400,'INVALID_JSON','Use a JSON object.');
+    return body as Record<string,unknown>;
+  } catch (error) {
+    if (error instanceof PortalHttpError) throw error;
     throw new PortalHttpError(400, 'INVALID_JSON', 'The request body is not valid JSON.');
   }
 }
@@ -80,6 +93,8 @@ export async function authenticatePortalRequest(
   if (error || !data.user) {
     throw new PortalHttpError(401, 'INVALID_SESSION', 'Your session has expired. Please sign in again.');
   }
+
+  if (!data.user.email_confirmed_at) throw new PortalHttpError(403,'EMAIL_UNCONFIRMED','Confirm your email before starting a contest.');
 
   const { data: adminRow, error: adminError } = await supabase
     .from('test_admins')

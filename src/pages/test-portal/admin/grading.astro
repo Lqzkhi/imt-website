@@ -1,0 +1,103 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+<Layout title="Proof grading" description="Grade Fall 2026 proof submissions problem by problem.">
+  <section class="bg-brand-dark text-white border-b-4 border-brand-gold"><div class="max-w-7xl mx-auto px-6 py-10">
+    <a href="/test-portal/admin" class="text-brand-gold text-sm">← Admin workspace</a><h1 class="font-serif text-4xl font-bold mt-3">Proof grading</h1>
+    <p class="text-slate-300 mt-3">Review one problem across competitors. Save partial credit and feedback, then move to the next proof.</p>
+  </div></section>
+  <section class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex flex-wrap gap-5 items-center mb-6">
+      <label class="font-bold text-sm">Problem <select id="grade-problem" class="border rounded-lg px-4 py-2 bg-white ml-2">{[1,2,3,4,5].map(n => <option value={n}>Problem {n}</option>)}</select></label>
+      <label class="text-sm"><input id="pending-only" type="checkbox" checked /> Ungraded only</label>
+      <label class="text-sm"><input id="hide-identity" type="checkbox" checked /> Hide participant identity</label>
+      <span id="grading-progress" class="text-sm text-brand-green font-bold"></span>
+    </div>
+    <p id="grading-status" role="status" class="text-sm mb-5">Loading submitted proofs…</p>
+    <div id="grading-workspace" class="hidden grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6">
+      <div class="bg-white border rounded-xl p-6 min-w-0">
+        <p id="grading-identity" class="text-xs text-slate-500 mb-4"></p>
+        <h2 id="grading-title" class="font-serif font-bold text-2xl"></h2>
+        <div id="grading-prompt" class="portal-math whitespace-pre-wrap my-6"></div>
+        <a id="grading-file" target="_blank" rel="noopener noreferrer" class="inline-flex bg-brand-dark text-brand-gold px-5 py-3 rounded-lg font-bold">Open submitted proof</a>
+        <p class="text-xs text-slate-500 mt-3">Private link expires in one hour. Reload this submission if needed.</p>
+        <img id="grading-image" class="hidden w-full border rounded-lg mt-6" alt="Submitted proof" />
+        <details class="mt-6"><summary class="font-bold cursor-pointer">Rubric and grading notes</summary><div id="grading-rubric" class="portal-math whitespace-pre-wrap text-sm mt-3"></div></details>
+        <a id="grading-review" class="inline-block underline text-brand-green text-sm mt-6">Full attempt, scratch paper, and security review</a>
+      </div>
+      <form id="grade-form" class="bg-white border rounded-xl p-6 lg:sticky lg:top-24 lg:self-start">
+        <h2 class="font-bold text-lg mb-5">Assign a grade</h2>
+        <label class="block font-bold text-sm mb-2" for="grade-points">Points (partial credit allowed)</label>
+        <input id="grade-points" type="number" min="0" max="7" step="0.5" required class="border rounded-lg p-3 w-full" />
+        <label class="block font-bold text-sm mt-5 mb-2" for="grade-feedback">Feedback for the competitor</label>
+        <textarea id="grade-feedback" rows="6" maxlength="10000" class="border rounded-lg p-3 w-full"></textarea>
+        <p class="text-xs text-slate-500 mt-2">Feedback stays hidden until results are released. Every grade records its grader and time.</p>
+        <p id="grade-provenance" class="text-xs text-slate-500 mt-4"></p>
+        <button id="save-next" type="submit" class="w-full bg-brand-green text-white font-bold rounded-lg p-3 mt-5 disabled:opacity-50">Save & next ungraded</button>
+        <div class="flex justify-between gap-3 mt-4"><button id="grade-prev" type="button" class="border rounded-lg px-4 py-2 text-sm">← Previous</button><button id="grade-next" type="button" class="border rounded-lg px-4 py-2 text-sm">Next →</button></div>
+      </form>
+    </div>
+  </section>
+</Layout>
+<script>
+  import { getPortalSession, portalFetch, renderPortalMath, formatPortalDate } from '../../../lib/testPortalClient';
+  interface Entry { id: string; attempt_id: string; question_id: string; grading_status: string; graded_at: string | null; test_questions: { position: number } }
+  interface Review { attempt: { participant_name: string; participant_email: string }; problems: { question: { id: string; title: string; prompt_latex: string; points: number }; answer_key: { grading_notes: string } | null; response: { id: string; file_url: string; file_mime_type: string; file_name: string; points_awarded: number | null; feedback: string; graded_at: string | null; graded_by: string | null } | null }[] }
+  let queue: Entry[] = []; let current: Entry | undefined; let review: Review; let dirty = false; let loading = false;
+  const status = document.getElementById('grading-status')!;
+  const problem = document.getElementById('grade-problem') as HTMLSelectElement;
+  const pending = document.getElementById('pending-only') as HTMLInputElement;
+  const points = document.getElementById('grade-points') as HTMLInputElement;
+  const feedback = document.getElementById('grade-feedback') as HTMLTextAreaElement;
+  const save = document.getElementById('save-next') as HTMLButtonElement;
+  const filtered = () => queue.filter((e) => e.test_questions.position === Number(problem.value) && (!pending.checked || e.grading_status !== 'manually_graded'));
+  function identity() { document.getElementById('grading-identity')!.textContent = (document.getElementById('hide-identity') as HTMLInputElement).checked ? `Submission ${current?.id.slice(0,8)}` : `${review?.attempt.participant_name ?? ''} · ${review?.attempt.participant_email ?? ''}`; }
+  async function load(entry?: Entry) {
+    if (loading) return;
+    if (dirty && !confirm('Discard the unsaved grade and feedback?')) return;
+    dirty = false; current = entry; loading = true; save.disabled = true;
+    document.getElementById('grading-workspace')!.classList.add('hidden');
+    const all = queue.filter((e) => e.test_questions.position === Number(problem.value));
+    document.getElementById('grading-progress')!.textContent = `${all.filter((e) => e.grading_status === 'manually_graded').length} / ${all.length} submitted proofs graded`;
+    if (!entry) { status.textContent = 'No proofs in this queue. Choose another problem or turn off “Ungraded only” to review completed grades. Missing proof uploads earn zero; active attempts are excluded.'; loading = false; return; }
+    status.textContent = 'Loading proof…';
+    try {
+      review = await portalFetch<Review>(`/api/test-portal/admin/attempts/${entry.attempt_id}`);
+      const item = review.problems.find((p) => p.question.id === entry.question_id)!; const r = item.response!;
+      document.getElementById('grading-title')!.textContent = item.question.title;
+      for (const [id,text] of [['grading-prompt',item.question.prompt_latex],['grading-rubric',item.answer_key?.grading_notes || 'No rubric has been added. Add grading notes in the problem editor before the contest begins.']]) {
+        const el = document.getElementById(id)!; el.textContent = text; el.removeAttribute('data-math-rendered');
+      }
+      const link = document.getElementById('grading-file') as HTMLAnchorElement; link.href = r.file_url; link.textContent = 'Open submitted proof';
+      const image = document.getElementById('grading-image') as HTMLImageElement;
+      image.classList.toggle('hidden',!r.file_mime_type.startsWith('image/')); if (r.file_mime_type.startsWith('image/')) image.src = r.file_url; else image.removeAttribute('src');
+      (document.getElementById('grading-review') as HTMLAnchorElement).href = `/test-portal/admin/attempts/${entry.attempt_id}`;
+      points.max = String(item.question.points); points.step = '0.01'; points.value = r.points_awarded === null ? '' : String(r.points_awarded); feedback.value = r.feedback;
+      entry.graded_at = r.graded_at;
+      document.getElementById('grade-provenance')!.textContent = r.graded_at ? `Last graded ${formatPortalDate(r.graded_at)} · Grader ${r.graded_by?.slice(0,8) ?? 'unknown'}` : 'Not graded yet';
+      identity(); renderPortalMath(); document.getElementById('grading-workspace')!.classList.remove('hidden'); status.textContent = 'Proof ready for review.';
+    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Could not load proof.'; }
+    finally { loading = false; save.disabled = false; }
+  }
+  document.getElementById('grade-form')!.addEventListener('input',() => { dirty = true; });
+  document.getElementById('grade-form')!.addEventListener('submit', async (event) => {
+    event.preventDefault(); if (!current || loading) return; save.disabled = true;
+    try {
+      await portalFetch(`/api/test-portal/admin/attempts/${current.attempt_id}`, { method:'PATCH',body:JSON.stringify({action:'manual_grade',response_id:current.id,points_awarded:Number(points.value),feedback:feedback.value,expected_graded_at:current.graded_at}) });
+      current.grading_status = 'manually_graded'; dirty = false;
+      await load(filtered().find((e) => e.grading_status !== 'manually_graded'));
+      if (!current) status.textContent = 'Grade saved. All submitted proofs for this problem are graded.';
+    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Could not save grade.'; }
+    finally { save.disabled = false; }
+  });
+  problem.addEventListener('change',() => void load(filtered()[0])); pending.addEventListener('change',() => void load(filtered()[0]));
+  document.getElementById('hide-identity')!.addEventListener('change',identity);
+  for (const [id,delta] of [['grade-prev',-1],['grade-next',1]] as const) document.getElementById(id)!.addEventListener('click',() => { const list = filtered(); const index = list.findIndex((e) => e.id === current?.id); void load(list[(index+delta+list.length)%list.length]); });
+  window.addEventListener('beforeunload',(event) => { if (dirty) event.preventDefault(); });
+  void (async () => {
+    try {
+      if (!await getPortalSession()) { location.href = '/test-portal?next='+encodeURIComponent(location.pathname); return; }
+      const result = await portalFetch<{queue:Entry[]}>('/api/test-portal/admin/grading'); queue = result.queue.sort((a,b) => a.id.localeCompare(b.id)); await load(filtered()[0]);
+    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Could not load grading queue.'; }
+  })();
+</script>

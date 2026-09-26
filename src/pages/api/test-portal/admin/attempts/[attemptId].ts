@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { requireSameOrigin } from '../../../../../lib/requestGuards';
-import { finalizeAttempt, finalizeIfExpired, logAdminAudit, logSecurityEvent, normalizeQuestionOptions, TEST_SUBMISSIONS_BUCKET, type AttemptRow, type QuestionRow, type ResponseRow } from '../../../../../lib/testPortal';
+import { calculateAttemptExpiry, finalizeAttempt, finalizeIfExpired, logAdminAudit, logSecurityEvent, normalizeQuestionOptions, TEST_SUBMISSIONS_BUCKET, type AttemptRow, type QuestionRow, type ResponseRow, type TestRow } from '../../../../../lib/testPortal';
 import { authenticatePortalRequest, PortalHttpError, portalErrorResponse, portalJson, readPortalJson, stringField, uuidField } from '../../../../../lib/testPortalAuth';
 
 async function getAdminAttempt(supabase: Awaited<ReturnType<typeof authenticatePortalRequest>>['supabase'], attemptId: string) {
@@ -44,7 +44,15 @@ export const GET: APIRoute = async ({ request, params }) => {
       if (data?.signedUrl) fileUrls.set(response.id, data.signedUrl);
     }));
 
+    const { data: scratchRows, error: scratchError } = await supabase.from('test_scratch_files').select('*').eq('attempt_id',attempt.id).order('created_at');
+    if (scratchError) throw scratchError;
+    const scratchFiles = await Promise.all((scratchRows ?? []).map(async (file) => {
+      const { data, error } = await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).createSignedUrl(file.file_path,600,{download:file.file_name});
+      if (error) throw error;
+      return { id:file.id, file_name:file.file_name, file_url:data.signedUrl, created_at:file.created_at };
+    }));
     return portalJson({
+      scratch_files: scratchFiles,
       test,
       attempt: {
         ...attempt,
@@ -103,7 +111,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
 
     if (action === 'force_submit') {
       if (attempt.status === 'in_progress') {
-        attempt = await finalizeAttempt(supabase, attempt, 'submitted');
+        attempt = await finalizeAttempt(supabase, attempt, 'admin_force');
         await logAdminAudit(supabase, user.id, 'attempt_force_submitted', {
           test_id: attempt.test_id,
           attempt_id: attempt.id,
@@ -125,7 +133,10 @@ export const PATCH: APIRoute = async ({ request, params }) => {
         throw new PortalHttpError(400, 'VALIDATION_ERROR', 'The total extension cannot exceed 30 days.');
       }
       const now = new Date().toISOString();
-      const expiresAt = new Date(new Date(attempt.expires_at).getTime() + additionalMinutes * 60_000).toISOString();
+      const { data: testData, error: testError } = await supabase.from('tests').select('*').eq('id',attempt.test_id).single();
+      if (testError) throw testError;
+      const expiresAt = calculateAttemptExpiry(testData as TestRow, new Date(attempt.started_at), currentExtension + additionalMinutes).toISOString();
+      if (expiresAt <= attempt.expires_at) throw new PortalHttpError(409,'CLOSING_TIME_LIMIT','Extend the contest closing time first; this attempt is already capped by it.');
       const { data: updatedAttempt, error } = await supabase
         .from('test_attempts')
         .update({
@@ -184,46 +195,14 @@ export const PATCH: APIRoute = async ({ request, params }) => {
       throw new PortalHttpError(400, 'VALIDATION_ERROR', `Points must be between 0 and ${maxPoints}.`);
     }
     const feedback = stringField(body.feedback, 'feedback', { max: 10_000 });
-    const { error: gradeError } = await supabase.from('test_responses').update({
-      points_awarded: awarded,
-      is_correct: awarded === maxPoints,
-      grading_status: 'manually_graded',
-      feedback,
-      graded_by: user.id,
-      graded_at: new Date().toISOString(),
-    }).eq('id', response.id);
-    if (gradeError) throw gradeError;
-
-    const { data: allResponses, error: allError } = await supabase
-      .from('test_responses')
-      .select('points_awarded, grading_status, file_path')
-      .eq('attempt_id', attempt.id);
-    if (allError) throw allError;
-    const score = (allResponses ?? []).reduce((sum, row) => sum + Number(row.points_awarded ?? 0), 0);
-    const pendingManual = (allResponses ?? []).some((row) => row.file_path && row.grading_status !== 'manually_graded');
-    const { data: updatedAttempt, error: updateError } = await supabase.from('test_attempts').update({
-      score,
-      grading_status: pendingManual ? 'pending_manual' : 'complete',
-    }).eq('id', attempt.id).select('*').single();
-    if (updateError) throw updateError;
-    const metadata = {
-      admin_user_id: user.id,
-      previous_points: response.points_awarded === null ? null : Number(response.points_awarded),
-      points_awarded: awarded,
-      max_points: maxPoints,
-      answer_type: question.answer_type,
-    };
-    await logSecurityEvent(supabase, attempt, 'grade_overridden_by_admin', {
-      ...metadata,
-      question_id: question.id,
-      response_id: response.id,
-    });
-    await logAdminAudit(supabase, user.id, 'response_grade_overridden', {
-      test_id: attempt.test_id,
-      attempt_id: attempt.id,
-      question_id: question.id,
-      response_id: response.id,
-    }, metadata);
+    const { data: updatedAttempt, error: gradeError } = await supabase.rpc('grade_test_response', {
+      p_response_id: response.id, p_admin_id: user.id, p_points: awarded, p_feedback: feedback,
+      p_expected_graded_at: body.expected_graded_at === undefined ? response.graded_at : body.expected_graded_at,
+    }).single();
+    if (gradeError) {
+      if (gradeError.message.includes('Grade changed')) throw new PortalHttpError(409,'GRADE_CONFLICT','Another grader updated this response. Reload before saving.');
+      throw gradeError;
+    }
     return portalJson({ attempt: updatedAttempt });
   } catch (error) {
     return portalErrorResponse(error);

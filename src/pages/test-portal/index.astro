@@ -2,39 +2,52 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
+
 <Layout title="Test Portal" description="Take secure Integrated Math assessments and submit mathematical work online.">
   <section class="bg-brand-dark border-b-4 border-brand-green text-white">
-    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-14 md:py-16">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10 py-8 md:py-10">
       <div class="max-w-3xl animate-on-load">
         <span class="inline-flex items-center gap-2 text-brand-gold font-bold tracking-[0.2em] uppercase text-xs mb-4">
           <span class="h-px w-8 bg-brand-gold"></span>
-          Assessments
+          Fall 2026 · Round 1
         </span>
-        <h1 class="font-serif font-bold text-4xl md:text-5xl tracking-tight">Test Portal</h1>
+        <h1 class="font-serif font-bold text-4xl md:text-5xl tracking-tight">Your tournament starts here</h1>
         <p class="text-slate-300 mt-4 leading-relaxed max-w-2xl">
-          Take timed mathematics tests, save your work securely, and return to eligible take-home assessments.
+          Complete the computational and proof sections separately, in either order. Each counts for 50% of your Round 1 score.
         </p>
+        <a id="portal-jump" href="#auth-panel" class="inline-flex mt-5 rounded-lg bg-brand-gold text-brand-dark px-5 py-3 text-sm font-bold">Sign in to compete ↓</a>
       </div>
     </div>
   </section>
 
+
   <section class="py-10 md:py-14 min-h-[520px]">
     <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="grid md:grid-cols-2 gap-5 mb-8" aria-label="Fall 2026 contest format">
+        <article class="bg-white border border-slate-200 rounded-xl p-6"><p class="text-xs font-bold text-brand-green uppercase tracking-wider">Computational · 50%</p><h2 class="font-serif text-2xl font-bold mt-2">20 problems. 2 hours.</h2><p class="text-sm text-slate-500 mt-2">Integer answers, saved as you work. Optional scratch-paper uploads.</p></article>
+        <article class="bg-white border border-slate-200 rounded-xl p-6"><p class="text-xs font-bold text-brand-green uppercase tracking-wider">Proof · 50%</p><h2 class="font-serif text-2xl font-bold mt-2">5 proofs. 4½ hours.</h2><p class="text-sm text-slate-500 mt-2">Upload a PDF or image for each proof. Each problem is worth 7 points; partial credit is available.</p></article>
+      </div>
+      <p class="text-sm text-slate-600 mb-8">Round 1: September 26–October 10. Each section has one continuous timer and one attempt. Contest cards below show the current deadline in your local time, including any extensions. <a class="text-brand-green underline" href="/competitions/fall-2026">Tournament details</a> · <a class="text-brand-green underline" href="/team">Portal support</a></p>
+      <noscript><p>Enable JavaScript to sign in and save contest work.</p></noscript>
       <div id="portal-loader" class="flex items-center justify-center gap-3 py-24 text-slate-500" aria-live="polite">
         <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
         <span class="font-semibold">Loading the Test Portal…</span>
       </div>
 
+
       <div id="portal-notice" class="hidden mb-6 rounded-lg border px-4 py-3 text-sm font-semibold" role="status"></div>
+
 
       <div id="auth-panel" class="hidden max-w-md mx-auto">
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div class="grid grid-cols-2 border-b border-gray-200" role="tablist" aria-label="Account access">
-            <button id="signin-tab" class="auth-tab px-5 py-4 text-sm font-bold text-brand-dark border-b-2 border-brand-green" type="button" role="tab" aria-selected="true">Sign in</button>
-            <button id="signup-tab" class="auth-tab px-5 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent" type="button" role="tab" aria-selected="false">Create account</button>
+            <button id="signin-tab" class="auth-tab px-5 py-4 text-sm font-bold text-brand-dark border-b-2 border-brand-green" type="button" role="tab" aria-selected="true" aria-controls="signin-form">Sign in</button>
+            <button id="signup-tab" class="auth-tab px-5 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent" type="button" role="tab" aria-selected="false" aria-controls="signup-form" tabindex="-1">Create account</button>
           </div>
 
-          <form id="signin-form" class="p-6 md:p-8 space-y-5">
+
+          <div id="google-auth" class="p-6 pb-0"><button id="google-signin" type="button" class="portal-secondary w-full">Continue with Google</button><p class="text-center text-xs text-slate-400 mt-4">or use your email</p></div>
+          <form id="signin-form" role="tabpanel" aria-labelledby="signin-tab" class="p-6 md:p-8 space-y-5">
             <div>
               <label for="signin-email" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Email</label>
               <input id="signin-email" type="email" autocomplete="email" required class="portal-input" placeholder="student@example.com" />
@@ -49,7 +62,8 @@ import Layout from '../../layouts/Layout.astro';
             <button type="submit" class="portal-primary w-full">Sign in to Test Portal</button>
           </form>
 
-          <form id="signup-form" class="hidden p-6 md:p-8 space-y-5">
+
+          <form id="signup-form" role="tabpanel" aria-labelledby="signup-tab" class="hidden p-6 md:p-8 space-y-5">
             <div>
               <label for="signup-name" class="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-2">Display name</label>
               <input id="signup-name" type="text" autocomplete="name" maxlength="160" required class="portal-input" placeholder="Your name" />
@@ -66,6 +80,7 @@ import Layout from '../../layouts/Layout.astro';
             <button type="submit" class="portal-primary w-full">Create account</button>
           </form>
 
+
           <form id="recovery-form" class="hidden p-6 md:p-8 space-y-5">
             <div>
               <p class="text-xs font-bold uppercase tracking-wider text-brand-green mb-2">Password recovery</p>
@@ -79,9 +94,10 @@ import Layout from '../../layouts/Layout.astro';
           </form>
         </div>
         <p class="text-center text-xs text-slate-400 mt-5">
-          Accounts are used to protect attempts and associate submissions with their test taker.
+          Use the same email as your tournament registration. Accounts protect your attempts and associate submissions with you.
         </p>
       </div>
+
 
       <div id="dashboard" class="hidden">
         <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-8">
@@ -96,6 +112,7 @@ import Layout from '../../layouts/Layout.astro';
           </div>
         </div>
 
+
         <div id="test-list" class="grid lg:grid-cols-2 gap-5"></div>
         <div id="empty-tests" class="hidden bg-white border border-dashed border-slate-300 rounded-xl p-10 text-center">
           <div class="w-12 h-12 rounded-full bg-brand-green/10 text-brand-green flex items-center justify-center mx-auto mb-4">
@@ -109,7 +126,9 @@ import Layout from '../../layouts/Layout.astro';
   </section>
 </Layout>
 
+
 <style is:global>
+  #auth-panel, #dashboard { scroll-margin-top: 6rem; }
   .portal-input { width: 100%; border: 1px solid rgb(203 213 225); border-radius: .5rem; padding: .75rem 1rem; background: white; color: #162236; outline: none; transition: border-color .15s, box-shadow .15s; }
   .portal-input:focus { border-color: #4A7C59; box-shadow: 0 0 0 3px rgba(74,124,89,.12); }
   .portal-primary { display: inline-flex; align-items: center; justify-content: center; border-radius: .5rem; background: #162236; color: #F5C518; padding: .8rem 1.1rem; font-size: .875rem; font-weight: 800; transition: background .15s, transform .15s; }
@@ -119,8 +138,10 @@ import Layout from '../../layouts/Layout.astro';
   .portal-secondary:hover { border-color: #4A7C59; color: #4A7C59; }
 </style>
 
+
 <script>
   import { escapeHtml, formatPortalDate, formatPortalDuration, getPortalSession, portalFetch, supabase } from '../../lib/testPortalClient';
+
 
   interface TestSummary {
     id: string;
@@ -143,6 +164,7 @@ import Layout from '../../layouts/Layout.astro';
     };
   }
 
+
   const loader = document.getElementById('portal-loader')!;
   const authPanel = document.getElementById('auth-panel')!;
   const dashboard = document.getElementById('dashboard')!;
@@ -150,30 +172,37 @@ import Layout from '../../layouts/Layout.astro';
   const signinForm = document.getElementById('signin-form') as HTMLFormElement;
   const signupForm = document.getElementById('signup-form') as HTMLFormElement;
   const recoveryForm = document.getElementById('recovery-form') as HTMLFormElement;
+  document.getElementById('google-auth')!.classList.toggle('hidden', import.meta.env.PUBLIC_GOOGLE_AUTH_ENABLED !== 'true');
   let recoveryMode = location.hash.includes('type=recovery');
+
 
   function showNotice(message: string, kind: 'error' | 'success' = 'error') {
     notice.textContent = message;
     notice.className = `mb-6 rounded-lg border px-4 py-3 text-sm font-semibold ${kind === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`;
   }
 
+
   function clearNotice() {
     notice.classList.add('hidden');
   }
+
 
   function setBusy(form: HTMLFormElement, busy: boolean) {
     const button = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
     if (button) button.disabled = busy;
   }
 
+
   async function continueAfterAuth() {
-    const next = new URLSearchParams(location.search).get('next');
-    if (next?.startsWith('/test-portal/') && !next.startsWith('//')) {
+    const next = new URLSearchParams(location.search).get('next') ?? sessionStorage.getItem('imt_auth_next');
+    sessionStorage.removeItem('imt_auth_next');
+    if (next?.startsWith('/test-portal/') && !next.includes('\\')) {
       location.href = next;
       return;
     }
     await loadDashboard();
   }
+
 
   function showAuth(mode: 'signin' | 'signup' | 'recovery' = 'signin') {
     loader.classList.add('hidden');
@@ -182,20 +211,25 @@ import Layout from '../../layouts/Layout.astro';
     signinForm.classList.toggle('hidden', mode !== 'signin');
     signupForm.classList.toggle('hidden', mode !== 'signup');
     recoveryForm.classList.toggle('hidden', mode !== 'recovery');
+    document.getElementById('google-auth')!.classList.toggle('hidden', mode === 'recovery' || import.meta.env.PUBLIC_GOOGLE_AUTH_ENABLED !== 'true');
     document.querySelectorAll('.auth-tab').forEach((tab) => tab.classList.toggle('hidden', mode === 'recovery'));
     const signinTab = document.getElementById('signin-tab')!;
     const signupTab = document.getElementById('signup-tab')!;
+    signinTab.setAttribute('tabindex', mode === 'signin' ? '0' : '-1');
+    signupTab.setAttribute('tabindex', mode === 'signup' ? '0' : '-1');
     signinTab.setAttribute('aria-selected', String(mode === 'signin'));
     signupTab.setAttribute('aria-selected', String(mode === 'signup'));
     signinTab.className = `auth-tab px-5 py-4 text-sm font-bold border-b-2 ${mode === 'signin' ? 'text-brand-dark border-brand-green' : 'text-slate-400 border-transparent'}`;
     signupTab.className = `auth-tab px-5 py-4 text-sm font-bold border-b-2 ${mode === 'signup' ? 'text-brand-dark border-brand-green' : 'text-slate-400 border-transparent'}`;
   }
 
+
   function renderTests(tests: TestSummary[]) {
     const list = document.getElementById('test-list')!;
     const empty = document.getElementById('empty-tests')!;
     list.innerHTML = '';
     empty.classList.toggle('hidden', tests.length > 0);
+
 
     for (const test of tests) {
       const attempt = test.attempt;
@@ -229,6 +263,7 @@ import Layout from '../../layouts/Layout.astro';
         ? `<p class="text-sm font-bold text-brand-dark mt-3">Score: ${attempt.score} / ${attempt.max_score ?? 0}</p>`
         : '';
 
+
       const card = document.createElement('article');
       card.className = 'bg-white border border-gray-200 rounded-xl p-6 md:p-7 flex flex-col shadow-sm';
       card.innerHTML = `
@@ -253,6 +288,7 @@ import Layout from '../../layouts/Layout.astro';
     }
   }
 
+
   async function loadDashboard() {
     clearNotice();
     const session = await getPortalSession();
@@ -264,6 +300,7 @@ import Layout from '../../layouts/Layout.astro';
       showAuth('recovery');
       return;
     }
+
 
     try {
       const [me, testData] = await Promise.all([
@@ -277,6 +314,8 @@ import Layout from '../../layouts/Layout.astro';
       loader.classList.add('hidden');
       authPanel.classList.add('hidden');
       dashboard.classList.remove('hidden');
+      const jump = document.getElementById('portal-jump') as HTMLAnchorElement;
+      jump.href = '#dashboard'; jump.textContent = 'View your contests ↓';
     } catch (error) {
       loader.classList.add('hidden');
       showNotice(error instanceof Error ? error.message : 'The portal could not be loaded.');
@@ -284,8 +323,29 @@ import Layout from '../../layouts/Layout.astro';
     }
   }
 
+
   document.getElementById('signin-tab')!.addEventListener('click', () => showAuth('signin'));
   document.getElementById('signup-tab')!.addEventListener('click', () => showAuth('signup'));
+
+
+  document.querySelectorAll<HTMLButtonElement>('.auth-tab').forEach((tab) => tab.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+    event.preventDefault();
+    const mode = event.key === 'Home' ? 'signin' : event.key === 'End' ? 'signup' : tab.id === 'signin-tab' ? 'signup' : 'signin';
+    showAuth(mode); document.getElementById(`${mode}-tab`)!.focus();
+  }));
+
+  document.getElementById('google-signin')!.addEventListener('click', async () => {
+    const button = document.getElementById('google-signin') as HTMLButtonElement;
+    button.disabled = true;
+    try {
+      const next = new URLSearchParams(location.search).get('next');
+      if (next?.startsWith('/test-portal/') && !next.includes('\\')) sessionStorage.setItem('imt_auth_next', next);
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}/test-portal` } });
+      if (error) throw error;
+    } catch (error) { showNotice(error instanceof Error ? error.message : 'Google sign-in failed.'); button.disabled = false; }
+  });
+
 
   signinForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -298,6 +358,7 @@ import Layout from '../../layouts/Layout.astro';
     if (error) return showNotice(error.message);
     await continueAfterAuth();
   });
+
 
   signupForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -321,6 +382,7 @@ import Layout from '../../layouts/Layout.astro';
     }
   });
 
+
   document.getElementById('forgot-password')!.addEventListener('click', async () => {
     const email = (document.getElementById('signin-email') as HTMLInputElement).value.trim();
     if (!email) return showNotice('Enter your email address first.');
@@ -328,6 +390,7 @@ import Layout from '../../layouts/Layout.astro';
     if (error) return showNotice(error.message);
     showNotice('Password reset email sent. Follow its link to choose a new password.', 'success');
   });
+
 
   recoveryForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -343,10 +406,12 @@ import Layout from '../../layouts/Layout.astro';
     await loadDashboard();
   });
 
+
   document.getElementById('signout-button')!.addEventListener('click', async () => {
     await supabase.auth.signOut();
     location.href = '/test-portal';
   });
+
 
   supabase.auth.onAuthStateChange((event) => {
     if (event === 'PASSWORD_RECOVERY') {
@@ -354,6 +419,7 @@ import Layout from '../../layouts/Layout.astro';
       showAuth('recovery');
     }
   });
+
 
   loadDashboard();
 </script>

@@ -15,6 +15,7 @@ const {
 const fallRegistrationUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdp3uVAAHhcEO5q9WzS2fkNh0fypudgwIUSuC_87fjJBcKVug/viewform?usp=publish-editor';
 const path = Astro.url.pathname;
 const navItems = [
+  { href: '/test-portal', label: 'Contest portal' },
   { href: '/competitions', label: 'Competitions' },
   { href: '/learn', label: 'Learn' },
   { href: '/sponsors', label: 'Sponsors' },
@@ -68,7 +69,7 @@ const navItems = [
               {item.label}
             </a>
           ))}
-          <a class="register-link" href="/register">Register</a>
+          <a class="register-link" href={fallRegistrationUrl} target="_blank" rel="noopener noreferrer">Register</a>
         </nav>
 
         <button id="mobile-menu-btn" class="menu-button" type="button" aria-label="Open menu" aria-controls="mobile-menu" aria-expanded="false">
@@ -79,7 +80,7 @@ const navItems = [
       <nav id="mobile-menu" class="mobile-nav" aria-label="Mobile navigation" hidden>
         <div class="site-container">
           {navItems.map(item => <a href={item.href}>{item.label}</a>)}
-          <a href="/register">Register</a>
+          <a href={fallRegistrationUrl} target="_blank" rel="noopener noreferrer">Register</a>
         </div>
       </nav>
     </header>

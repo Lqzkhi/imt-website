@@ -4,7 +4,7 @@ const productionDirectives = import.meta.env.PROD ? ['upgrade-insecure-requests'
 function contentSecurityPolicy(pathname: string) {
   // The legacy competition map loads a small inline ES module from jsDelivr.
   // Keep that exception scoped to its page; the Test Portal never permits inline scripts.
-  const scripts = pathname === '/competitions/spring-2026'
+  const scripts = pathname.replace(/\/+$/, '') === '/competitions/spring-2026'
     ? "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://va.vercel-scripts.com"
     : "script-src 'self' https://va.vercel-scripts.com";
   return [
@@ -27,6 +27,10 @@ function contentSecurityPolicy(pathname: string) {
 export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
   const headers = new Headers(response.headers);
+  if (context.url.pathname.startsWith('/test-portal') || context.url.pathname.startsWith('/api/test-portal')) {
+    headers.set('Cache-Control', 'no-store, private');
+    headers.set('X-Robots-Tag', 'noindex, nofollow');
+  }
   headers.set('Content-Security-Policy', contentSecurityPolicy(context.url.pathname));
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self)');

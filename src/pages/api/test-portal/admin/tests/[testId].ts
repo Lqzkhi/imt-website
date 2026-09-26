@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { requireSameOrigin } from '../../../../../lib/requestGuards';
-import { calculateAttemptExpiry, logAdminAudit, normalizeQuestionOptions, type QuestionRow, type TestRow } from '../../../../../lib/testPortal';
+import { logAdminAudit, normalizeQuestionOptions, type QuestionRow } from '../../../../../lib/testPortal';
 import { authenticatePortalRequest, PortalHttpError, portalErrorResponse, portalJson, readPortalJson, stringField } from '../../../../../lib/testPortalAuth';
 
 export const GET: APIRoute = async ({ request, params }) => {
@@ -81,10 +81,19 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     if (status === 'published') {
       const { data: questions, error: questionError } = await supabase
         .from('test_questions')
-        .select('id, answer_type, options')
+        .select('id, answer_type, options, is_placeholder, prompt_latex, points')
         .eq('test_id', testId);
       if (questionError) throw questionError;
       if (!questions?.length) throw new PortalHttpError(409, 'TEST_EMPTY', 'Add at least one problem before publishing.');
+      if (questions.some((q) => q.is_placeholder || q.prompt_latex === 'Problem not released. Replace this statement before publishing.')) {
+        throw new PortalHttpError(409, 'PROBLEMS_NOT_READY', 'Replace every placeholder problem before publishing.');
+      }
+      if (existingTest.contest_section) {
+        const proof = existingTest.contest_section === 'proof';
+        if (questions.length !== (proof ? 5 : 20) || questions.some((q) => q.answer_type !== (proof ? 'file_upload' : 'numerical') || (proof && Number(q.points) !== 7))) {
+          throw new PortalHttpError(409, 'CONTEST_FORMAT_INVALID', 'Fall contests require 20 numerical problems or 5 proof uploads.');
+        }
+      }
       const ids = questions.map((question) => question.id);
       const { data: keys, error: keyError } = await supabase
         .from('test_question_keys')
@@ -118,26 +127,6 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     if (error) throw error;
     if (!data) throw new PortalHttpError(404, 'TEST_NOT_FOUND', 'That test was not found.');
 
-    // Keep active server deadlines aligned when an administrator changes the
-    // duration or closing time. Completed attempts remain immutable.
-    const { data: activeAttempts, error: activeError } = await supabase
-      .from('test_attempts')
-      .select('id, started_at, extension_minutes')
-      .eq('test_id', testId)
-      .eq('status', 'in_progress');
-    if (activeError) throw activeError;
-    for (const activeAttempt of activeAttempts ?? []) {
-      const expiresAt = calculateAttemptExpiry(
-        data as TestRow,
-        new Date(activeAttempt.started_at),
-        Number(activeAttempt.extension_minutes ?? 0),
-      );
-      const { error: expiryError } = await supabase
-        .from('test_attempts')
-        .update({ expires_at: expiresAt.toISOString() })
-        .eq('id', activeAttempt.id);
-      if (expiryError) throw expiryError;
-    }
     await logAdminAudit(supabase, user.id, 'test_settings_updated', { test_id: testId }, {
       previous_status: existingTest.status,
       status: data.status,

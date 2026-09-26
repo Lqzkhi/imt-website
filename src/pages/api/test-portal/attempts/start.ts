@@ -42,8 +42,10 @@ export const POST: APIRoute = async ({ request }) => {
           .from('test_attempts')
           .update({ security_session_hash: hashPortalSession(sessionToken) })
           .eq('id', existing.id)
+          .is('security_session_hash', null)
           .select('*')
-          .single();
+          .maybeSingle();
+        if (!rebound && !reboundError) throw new PortalHttpError(409,'SESSION_LOCKED','Another tab has already resumed this attempt.');
         if (reboundError) throw reboundError;
         existing = rebound as AttemptRow;
       }
@@ -57,6 +59,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (getTestAvailability(test) !== 'open') {
       throw new PortalHttpError(409, 'TEST_NOT_OPEN', 'This test is not currently open for attempts.');
+    }
+    if (test.contest_section && (body.accept_terms !== true || body.terms_version !== hashPortalSession(test.instructions_latex))) {
+      throw new PortalHttpError(409, 'TERMS_REQUIRED', 'Read and accept the current contest rules before starting. Refresh if the instructions have changed.');
     }
     if (test.security_mode === 'one_sitting' && (sessionToken.length < 20 || sessionToken.length > 200)) {
       throw new PortalHttpError(400, 'SESSION_TOKEN_REQUIRED', 'A secure browser session could not be established.');
@@ -84,6 +89,7 @@ export const POST: APIRoute = async ({ request }) => {
       expires_at: expiresAt.toISOString(),
       security_session_hash: test.security_mode === 'one_sitting' ? hashPortalSession(sessionToken) : null,
       max_score: questions.reduce((sum, question) => sum + Number(question.points), 0),
+      ...(test.contest_section ? { terms_accepted_at: now.toISOString(), terms_snapshot: test.instructions_latex } : {}),
     };
 
     const { data: created, error: createError } = await supabase

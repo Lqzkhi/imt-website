@@ -21,6 +21,7 @@ import {
   uuidField,
 } from '../../../../../lib/testPortalAuth';
 import { requireSameOrigin } from '../../../../../lib/requestGuards';
+import { isPortalInteger, isPortalNumber } from '../../../../../lib/testPortalNumbers';
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {
@@ -57,12 +58,10 @@ export const POST: APIRoute = async ({ request, params }) => {
     const previous = previousData as ResponseRow | null;
 
     if (body.clear === true) {
-      if (previous?.file_path) {
-        await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([previous.file_path]);
-      }
       if (previous) {
         const { error } = await supabase.from('test_responses').delete().eq('id', previous.id);
         if (error) throw error;
+        if (previous.file_path) await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([previous.file_path]);
       }
       return portalJson({ response: null, saved_at: new Date().toISOString() });
     }
@@ -84,7 +83,10 @@ export const POST: APIRoute = async ({ request, params }) => {
 
     if (question.answer_type === 'numerical') {
       const responseText = stringField(body.response_text, 'response_text', { required: true, max: 120 });
-      if (!Number.isFinite(Number(responseText))) {
+      if (owned.test.contest_section === 'computational' && !isPortalInteger(responseText)) {
+        throw new PortalHttpError(400, 'INTEGER_REQUIRED', 'Enter the requested integer only, without decimals, fractions, commas, or scientific notation.');
+      }
+      if (!isPortalNumber(responseText)) {
         throw new PortalHttpError(400, 'INVALID_NUMBER', 'Enter a valid number, such as -3, 0.5, or 1e6.');
       }
       payload.response_text = responseText;
@@ -113,7 +115,7 @@ export const POST: APIRoute = async ({ request, params }) => {
         throw new PortalHttpError(400, 'UPLOAD_NOT_FOUND', 'The file upload did not finish. Please upload it again.');
       }
       const storedSize = Number((storageObject.metadata as Record<string, unknown> | null)?.size ?? 0);
-      if (storedSize > question.max_file_size_mb * 1024 * 1024) {
+      if (storedSize <= 0 || storedSize > question.max_file_size_mb * 1024 * 1024) {
         await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([filePath]);
         throw new PortalHttpError(413, 'FILE_TOO_LARGE', `This file exceeds the ${question.max_file_size_mb} MB limit.`);
       }
@@ -133,7 +135,10 @@ export const POST: APIRoute = async ({ request, params }) => {
       .upsert(payload, { onConflict: 'attempt_id,question_id' })
       .select('*')
       .single();
-    if (saveError) throw saveError;
+    if (saveError) {
+      if (typeof payload.file_path === 'string' && payload.file_path !== previous?.file_path) await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([payload.file_path]);
+      throw saveError;
+    }
 
     if (previous?.file_path && previous.file_path !== saved.file_path) {
       await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).remove([previous.file_path]);

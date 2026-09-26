@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { finalizeIfExpired, getOwnedAttempt, publicQuestion, publicResponse, requireAttemptSession, type QuestionRow, type ResponseRow } from '../../../../../lib/testPortal';
+import { finalizeIfExpired, getOwnedAttempt, publicQuestion, publicResponse, requireAttemptSession, type QuestionRow, type ResponseRow, TEST_SUBMISSIONS_BUCKET } from '../../../../../lib/testPortal';
 import { authenticatePortalRequest, portalErrorResponse, portalJson } from '../../../../../lib/testPortalAuth';
 
 export const GET: APIRoute = async ({ request, params }) => {
@@ -16,12 +16,20 @@ export const GET: APIRoute = async ({ request, params }) => {
     if (questionError) throw questionError;
     if (responseError) throw responseError;
 
+    const responseRows = (responses ?? []) as ResponseRow[];
+    const fileUrls = new Map<string,string>();
+    await Promise.all(responseRows.filter((r) => r.file_path).map(async (r) => {
+      const { data, error } = await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).createSignedUrl(r.file_path!,600,{download:r.file_name ?? 'submission'});
+      if (error) throw error;
+      fileUrls.set(r.id,data.signedUrl);
+    }));
     const showGrade = attempt.status !== 'in_progress' && owned.test.show_results;
     return portalJson({
       server_now: new Date().toISOString(),
       test: {
         id: owned.test.id,
         title: owned.test.title,
+        contest_section: owned.test.contest_section,
         description: owned.test.description,
         instructions_latex: owned.test.instructions_latex,
         duration_minutes: owned.test.duration_minutes,
@@ -45,7 +53,7 @@ export const GET: APIRoute = async ({ request, params }) => {
         } : {}),
       },
       questions: ((questions ?? []) as QuestionRow[]).map(publicQuestion),
-      responses: ((responses ?? []) as ResponseRow[]).map((response) => publicResponse(response, showGrade)),
+      responses: responseRows.map((response) => ({ ...publicResponse(response,showGrade), file_url:fileUrls.get(response.id) ?? null })),
     });
   } catch (error) {
     return portalErrorResponse(error);

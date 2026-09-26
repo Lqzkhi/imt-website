@@ -35,6 +35,7 @@ export function validateQuestionInput(body: Record<string, unknown>) {
 
   const gradingNotes = stringField(body.grading_notes, 'grading_notes', { max: 20_000 });
   const question: Record<string, unknown> = {
+    is_placeholder: false,
     title,
     prompt_latex: promptLatex,
     answer_type: answerType,

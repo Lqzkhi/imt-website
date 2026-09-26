@@ -31,6 +31,7 @@ const { attemptId } = Astro.params;
       <div id="review-alert" class="hidden mb-6 rounded-lg border px-4 py-3 text-sm font-semibold"></div>
 
       <div id="review-content" class="hidden space-y-9">
+        <details class="bg-white border border-slate-200 rounded-lg p-5"><summary class="font-bold cursor-pointer">Contest rules acknowledgement: <span id="review-terms-accepted"></span></summary><div id="review-terms" class="portal-math whitespace-pre-wrap text-sm mt-4"></div></details>
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div class="review-stat"><span>Status</span><strong id="review-status"></strong></div>
           <div class="review-stat"><span>Score</span><strong id="review-score"></strong></div>
@@ -48,6 +49,7 @@ const { attemptId } = Astro.params;
           <div id="review-problems" class="space-y-5"></div>
         </section>
 
+        <section class="bg-white border rounded-xl p-6"><h2 class="font-bold">Scratch paper</h2><div id="review-scratch" class="mt-3 text-sm"></div></section>
         <section class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
           <div class="px-6 py-5 border-b border-slate-100">
             <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-green">Security log</p>
@@ -91,6 +93,7 @@ const { attemptId } = Astro.params;
     points: number;
   }
   interface ReviewResponse {
+    graded_at: string | null;
     id: string;
     response_text: string | null;
     selected_choice: string | null;
@@ -116,6 +119,8 @@ const { attemptId } = Astro.params;
       started_at: string;
       expires_at: string;
       submitted_at: string | null;
+      terms_accepted_at?: string | null;
+      terms_snapshot?: string;
       extension_minutes: number;
       score: number | null;
       max_score: number;
@@ -233,6 +238,12 @@ const { attemptId } = Astro.params;
   }
 
   function renderPage() {
+    const scratch = document.getElementById('review-scratch')!;
+    scratch.replaceChildren();
+    for (const file of (data as unknown as { scratch_files: { file_name: string; file_url: string }[] }).scratch_files ?? []) {
+      const a = document.createElement('a'); a.href = file.file_url; a.textContent = file.file_name; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.className = 'block underline text-brand-green py-2'; scratch.append(a);
+    }
+    if (!scratch.children.length) scratch.textContent = 'No scratch work uploaded.';
     document.title = `Review ${data.attempt.participant_email} | Integrated Math`;
     (document.getElementById('back-submissions') as HTMLAnchorElement).href = `/test-portal/admin/tests/${data.test.id}/submissions`;
     document.getElementById('review-name')!.textContent = data.attempt.participant_name || 'Unnamed participant';
@@ -247,6 +258,11 @@ const { attemptId } = Astro.params;
     document.getElementById('force-submit')!.classList.toggle('hidden', data.attempt.status !== 'in_progress');
     document.getElementById('extend-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress');
     document.getElementById('unlock-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress' || data.test.security_mode !== 'one_sitting' || !data.attempt.session_locked);
+    document.getElementById('review-terms-accepted')!.textContent = data.attempt.terms_accepted_at ? formatPortalDate(data.attempt.terms_accepted_at) : 'Not recorded (legacy attempt)';
+    const terms = document.getElementById('review-terms')!;
+    terms.textContent = data.attempt.terms_snapshot || 'No rules snapshot was recorded for this attempt.';
+    terms.removeAttribute('data-math-rendered');
+    renderPortalMath(terms.parentElement!);
     renderProblems();
     renderEvents();
     document.getElementById('review-loader')!.classList.add('hidden');
@@ -265,6 +281,7 @@ const { attemptId } = Astro.params;
         body: JSON.stringify({
           action: 'override_grade',
           response_id: form.dataset.responseId,
+          expected_graded_at: data.problems.find((p) => p.response?.id === form.dataset.responseId)?.response?.graded_at ?? null,
           points_awarded: Number((form.elements.namedItem('points') as HTMLInputElement).value),
           feedback: (form.elements.namedItem('feedback') as HTMLInputElement).value,
         }),

@@ -1,0 +1,54 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+<Layout title="Fall tournament overview" description="Contest readiness, submission processing, and integrity review.">
+  <section class="bg-brand-dark text-white border-b-4 border-brand-gold"><div class="max-w-6xl mx-auto px-6 py-12">
+    <a href="/test-portal/admin" class="text-brand-gold text-sm">← Admin workspace</a>
+    <h1 class="font-serif text-4xl font-bold mt-4">Fall 2026 tournament overview</h1>
+    <p class="text-slate-300 mt-3">Both sections, deadline health, and integrity signals in one place.</p>
+  </div></section>
+  <section class="max-w-6xl mx-auto px-6 py-10">
+    <div class="flex flex-wrap gap-3 mb-6"><button id="refresh" class="bg-brand-dark text-brand-gold rounded-lg px-5 py-3 font-bold">Refresh report</button><button id="export" disabled class="border border-slate-300 bg-white rounded-lg px-5 py-3 font-bold disabled:opacity-50">Download CSV</button></div>
+    <p id="overview-status" role="status" class="rounded-xl border p-5 mb-6">Loading report…</p>
+    <div id="contest-settings" class="grid md:grid-cols-2 gap-4 mb-6"></div>
+    <p class="text-sm text-slate-600 mb-5">Tab changes, focus loss, fullscreen exits, and clipboard signals are context for human review. Browser reporting can be blocked or spoofed; a zero count does not establish compliance. Camera and microphone access are not requested. Combined scores appear only after both sections are submitted and fully graded.</p>
+    <div class="overflow-x-auto bg-white border rounded-xl"><table class="w-full text-sm text-left"><thead class="bg-slate-50"><tr><th class="p-4">Participant</th><th class="p-4">Computational</th><th class="p-4">Proof</th><th class="p-4">Combined</th><th class="p-4">Review signals</th></tr></thead><tbody id="participants"></tbody></table></div>
+  </section>
+</Layout>
+<script>
+  import { escapeHtml, formatPortalDate, getPortalSession, portalFetch } from '../../../lib/testPortalClient';
+  interface Section { id: string; status: string; score: number | null; max_score: number; grading_status: string; events: Record<string,number> }
+  interface Participant { name: string; email: string; combined_percent: number | null; review_events: number; sections: { computational?: Section; proof?: Section } }
+  interface Report { participants: Participant[]; scheduler_healthy: boolean; overdue_attempts: number; health: { last_run_at: string } | null; tests: { id: string; title: string; status: string; closes_at: string; require_fullscreen: boolean; block_clipboard: boolean }[] }
+  let report: Report;
+  const status = document.getElementById('overview-status')!;
+  function sectionCell(s?: Section) {
+    return s ? `<a class="underline text-brand-green" href="/test-portal/admin/attempts/${s.id}">${escapeHtml(s.status)} · ${s.grading_status === 'complete' ? `${s.score ?? 0}/${s.max_score}` : escapeHtml(s.grading_status)}</a>` : 'Not started';
+  }
+  function eventSummary(p: Participant) {
+    const counts: Record<string,number> = {};
+    for (const section of [p.sections.computational,p.sections.proof]) for (const [type,n] of Object.entries(section?.events ?? {})) counts[type] = (counts[type] ?? 0)+n;
+    return Object.entries(counts).filter(([type]) => ['visibility_hidden','window_blurred','fullscreen_exited','paste_blocked','copy_blocked'].includes(type)).map(([type,n]) => `${type}: ${n}`).join(', ');
+  }
+  async function refresh() {
+    const button = document.getElementById('refresh') as HTMLButtonElement; button.disabled = true;
+    try {
+      if (!await getPortalSession()) { location.href = '/test-portal?next='+encodeURIComponent(location.pathname); return; }
+      report = await portalFetch<Report>('/api/test-portal/admin/overview');
+      status.textContent = `${report.scheduler_healthy ? 'Automatic submission worker is healthy.' : 'Action needed: automatic submission worker has no recent heartbeat. Check Supabase Cron.'} Last run: ${formatPortalDate(report.health?.last_run_at)}. Overdue attempts: ${report.overdue_attempts}.`;
+      status.className = `rounded-xl border p-5 mb-6 ${report.scheduler_healthy && !report.overdue_attempts ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`;
+      document.getElementById('contest-settings')!.innerHTML = report.tests.map((t) => `<article class="bg-white border rounded-xl p-5"><h2 class="font-bold">${escapeHtml(t.title)}</h2><p class="text-sm mt-2">${escapeHtml(t.status)} · Auto-submit cutoff: ${escapeHtml(formatPortalDate(t.closes_at))}</p><p class="text-sm mt-2">Focus events recorded · Fullscreen ${t.require_fullscreen ? 'required' : 'optional'} · Clipboard ${t.block_clipboard ? 'blocked' : 'allowed'}</p><a href="/test-portal/admin/tests/${t.id}" class="inline-block underline text-brand-green mt-3">Edit problems or extend closing time</a></article>`).join('');
+      document.getElementById('participants')!.innerHTML = report.participants.length ? report.participants.map((p) => `<tr class="border-t"><td class="p-4"><strong>${escapeHtml(p.name || 'Participant')}</strong><br>${escapeHtml(p.email)}</td><td class="p-4">${sectionCell(p.sections.computational)}</td><td class="p-4">${sectionCell(p.sections.proof)}</td><td class="p-4">${p.combined_percent === null ? 'Pending' : p.combined_percent.toFixed(2)+'%'}</td><td class="p-4">${p.review_events} ${p.review_events ? '· Review linked attempts' : 'recorded'}<br><span class="text-xs text-slate-500">${escapeHtml(eventSummary(p))}</span></td></tr>`).join('') : '<tr><td colspan="5" class="p-8 text-slate-500">No participants have started yet.</td></tr>';
+      (document.getElementById('export') as HTMLButtonElement).disabled = false;
+    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Could not load report.'; }
+    finally { button.disabled = false; }
+  }
+  document.getElementById('refresh')!.addEventListener('click',refresh);
+  document.getElementById('export')!.addEventListener('click',() => {
+    const quote = (value: unknown) => '"'+String(value ?? '').replace(/^[\s]*[=+@-]/,"'$&").replaceAll('"','""')+'"';
+    const rows = [['Name','Email','Computational status','Computational score','Proof status','Proof score','Combined percent','Review signals'], ...report.participants.map((p) => [p.name,p.email,p.sections.computational?.status ?? 'not_started',p.sections.computational?.score,p.sections.proof?.status ?? 'not_started',p.sections.proof?.score,p.combined_percent,p.review_events])];
+    const url = URL.createObjectURL(new Blob(['\uFEFF'+rows.map((r) => r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}));
+    const a = document.createElement('a'); a.href = url; a.download = 'imt-fall-2026-report.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
+  });
+  refresh();
+</script>

@@ -1,5 +1,7 @@
 import { supabase } from './supabase.js';
 import renderMathInElement from 'katex/contrib/auto-render';
+import { splitPortalEnumerates } from './testPortalStatement';
+export { isPortalInteger, isPortalNumber } from './testPortalNumbers';
 
 export class PortalClientError extends Error {
   status: number;
@@ -34,7 +36,7 @@ export async function portalFetch<T = Record<string, unknown>>(
   const headers = new Headers(options.headers);
   headers.set('Authorization', `Bearer ${session.access_token}`);
   headers.set('Accept', 'application/json');
-  if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (sessionToken) headers.set('X-Test-Session', sessionToken);
 
   const response = await fetch(path, { ...options, headers });
@@ -95,6 +97,24 @@ export function formatPortalDuration(minutes: number) {
 export function renderPortalMath(root: ParentNode = document) {
   root.querySelectorAll<HTMLElement>('.portal-math:not([data-math-rendered])').forEach((element) => {
     element.dataset.mathRendered = 'true';
+    const parts = splitPortalEnumerates(element.textContent ?? '');
+    if (parts.some((part) => part.kind === 'list')) {
+      element.replaceChildren();
+      for (const part of parts) {
+        if (part.kind === 'text') element.appendChild(document.createTextNode(part.text));
+        else {
+          const list = document.createElement('ol');
+          list.style.listStyleType = 'decimal';
+          list.style.paddingInlineStart = '1.5rem';
+          for (const item of part.items) {
+            const li = document.createElement('li');
+            li.textContent = item;
+            list.appendChild(li);
+          }
+          element.appendChild(list);
+        }
+      }
+    }
     renderMathInElement(element, {
       delimiters: [
         { left: '$$', right: '$$', display: true },
