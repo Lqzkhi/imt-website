@@ -24,6 +24,10 @@ The migration creates:
 
 Do not make the bucket public and do not add browser-facing SELECT policies to `test_question_keys`.
 
+### Security audit follow-up
+
+After 004, apply `supabase/migrations/20260926000500_audit_deadline_safety.sql` once before deploying the audit fixes. It adds an idempotent finish-solving RPC and prevents expired deadline revival. See [SECURITY_REVIEW.md](./SECURITY_REVIEW.md) for the findings and remaining launch checks.
+
 ### Proof upload window update
 
 After the terms migration `20260926000300_fall_contest_terms.sql`, apply `supabase/migrations/20260926000400_proof_upload_window.sql` once. This adds the 15-minute proof upload phase, locks its deadline, and enables Fall fullscreen and clipboard settings. Keep both sections as drafts during preview acceptance. Do not rerun the earlier import or migrations already applied. This update preserves questions, answer keys, previous submissions, and the existing Cron job.
@@ -96,7 +100,7 @@ npm audit
 
 ## Fall 2026 authoring and deadlines
 
-The migration seeds **Fall 2026 IMT · Computational** (120 minutes, 20 numerical answers) and **Fall 2026 IMT · Proof** (270 minutes, 5 uploads, 7 points each). Both are drafts, with results hidden. Fullscreen and clipboard blocking are optional settings and default off to permit accessible devices and proof-upload workflows; focus and visibility events are still recorded. Confirm and expand the independent-work/resource rules in the instructions before publishing.
+The migration seeds **Fall 2026 IMT · Computational** (120 minutes, 20 numerical answers) and **Fall 2026 IMT · Proof** (270 minutes, 5 uploads, 7 points each). Both are drafts, with results hidden. After migration 004, Fall fullscreen and clipboard blocking default on during solving and lift during proof uploads. Review device support and arrange accommodations before contestants start; focus and visibility events are recorded. Confirm and expand the independent-work/resource rules in the instructions before publishing.
 
 1. Open each draft in Admin workspace; edit its placeholder problems. Saving a real statement clears its placeholder flag. Add computational answer keys and proof grading notes/rubrics.
 2. Preview each section and check mathematical rendering, ordering, points, and accepted file types. Both sections require their full expected problem count before publication.

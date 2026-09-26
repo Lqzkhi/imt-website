@@ -27,7 +27,7 @@ function contentSecurityPolicy(pathname: string) {
 export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
   const headers = new Headers(response.headers);
-  if (context.url.pathname.startsWith('/test-portal') || context.url.pathname.startsWith('/api/test-portal')) {
+  if (['/test-portal', '/api/', '/learn/diagnostic', '/account'].some((path) => context.url.pathname.startsWith(path))) {
     headers.set('Cache-Control', 'no-store, private');
     headers.set('X-Robots-Tag', 'noindex, nofollow');
   }

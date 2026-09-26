@@ -157,3 +157,44 @@ test('proof round has a locked 15-minute upload phase and closes without browser
   await assert.rejects(db.query("SELECT finalize_test_attempt($1,'submitted')",[window.id]),/permission denied/);
  } finally { await db.close(); }
 });
+
+test('audit fixes: repeated finish-work requests and expired deadline edits', async () => {
+ const db=new PGlite();
+ try {
+  await db.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role;CREATE SCHEMA auth;CREATE TABLE auth.users(id UUID PRIMARY KEY,email TEXT);CREATE SCHEMA storage;CREATE TABLE storage.buckets(id TEXT PRIMARY KEY,name TEXT,public BOOLEAN,file_size_limit BIGINT,allowed_mime_types TEXT[]);');
+  for(const name of ['20260731_test_portal.sql','20260731_test_portal_hardening.sql','20260926000100_fall_tournament.sql','20260926000300_fall_contest_terms.sql','20260926000400_proof_upload_window.sql','20260926000500_audit_deadline_safety.sql'])
+   await db.exec((await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8')).replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;',''));
+  const rows=async(sql,args=[]) => (await db.query(sql,args)).rows;
+  const [proof]=await rows("SELECT * FROM tests WHERE contest_section='proof'");
+  const [comp]=await rows("SELECT * FROM tests WHERE contest_section='computational'");
+  assert.ok(proof.require_fullscreen && proof.block_clipboard && comp.require_fullscreen && comp.block_clipboard);
+  await db.exec("UPDATE tests SET opens_at=NOW()-INTERVAL '2 days',closes_at=NOW()+INTERVAL '2 days';UPDATE test_questions SET is_placeholder=FALSE;INSERT INTO test_question_keys(question_id,numerical_answer) SELECT id,42 FROM test_questions WHERE answer_type='numerical';UPDATE tests SET status='published';");
+  const make=async(id=proof.id) => {
+   const [u]=await rows('INSERT INTO auth.users(id) VALUES(gen_random_uuid()) RETURNING id');
+   return (await rows("INSERT INTO test_attempts(test_id,user_id,started_at,expires_at,terms_accepted_at,terms_snapshot) SELECT $1,$2,NOW(),NOW()+INTERVAL '1 hour',NOW(),instructions_latex FROM tests WHERE id=$1 RETURNING *",[id,u.id]))[0];
+  };
+  const [q]=await rows('SELECT * FROM test_questions WHERE test_id=$1 ORDER BY position LIMIT 1',[proof.id]);
+  const upload=async(a) => (await rows("INSERT INTO test_responses(attempt_id,question_id,file_path,file_name,file_mime_type) VALUES($1,$2,'proof.pdf','proof.pdf','application/pdf') RETURNING *",[a.id,q.id]))[0];
+
+  const early=await make();
+  const [window]=await rows("SELECT * FROM finish_test_work($1)",[early.id]);
+  const [retry]=await rows("SELECT * FROM finish_test_work($1)",[early.id]);
+  assert.equal(retry.status,'in_progress');
+  assert.equal(retry.expires_at.toISOString(),window.expires_at.toISOString());
+  assert.equal((await rows("SELECT count(*)::integer n FROM test_security_events WHERE attempt_id=$1 AND event_type='proof_upload_window_started'",[early.id]))[0].n,1);
+  await upload(window);
+  const [submitted]=await rows("SELECT * FROM finalize_test_attempt($1,'submitted')",[early.id]);
+  assert.equal(submitted.status,'submitted');
+  const late=await make();
+  await db.query("UPDATE test_attempts SET started_at=NOW()-INTERVAL '1 day',expires_at=NOW()-INTERVAL '5 minutes' WHERE id=$1",[late.id]);
+  const [before]=await rows('SELECT expires_at FROM test_attempts WHERE id=$1',[late.id]);
+  await db.query("UPDATE tests SET closes_at=NOW()+INTERVAL '4 days',duration_minutes=43200 WHERE id=$1",[proof.id]);
+  assert.equal((await rows('SELECT expires_at FROM test_attempts WHERE id=$1',[late.id]))[0].expires_at.toISOString(),before.expires_at.toISOString());
+  await assert.rejects(db.query("UPDATE test_attempts SET expires_at=NOW()+INTERVAL '1 hour' WHERE id=$1",[late.id]),/expired deadlines cannot be extended/);
+  const [lateWindow]=await rows("SELECT * FROM finalize_test_attempt($1,'timed_out')",[late.id]);
+  assert.equal(lateWindow.status,'in_progress');
+  assert.equal(lateWindow.expires_at-before.expires_at,15*60*1000);
+  await db.exec('SET ROLE authenticated');
+  await assert.rejects(db.query('SELECT finish_test_work($1)',[early.id]),/permission denied/);
+ } finally { await db.close(); }
+});

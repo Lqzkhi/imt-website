@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createServerClient } from './supabaseServer';
+import { readBoundedText } from './requestBody';
 
 export class PortalHttpError extends Error {
   status: number;
@@ -60,14 +61,13 @@ export async function readPortalJson(request: Request) {
   }
 
   try {
-    if (Number(request.headers.get('content-length')) > 120000) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
-    const text = await request.text();
-    if (text.length > 120000) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
+    const text = await readBoundedText(request, 120000);
     const body = JSON.parse(text);
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw new PortalHttpError(400,'INVALID_JSON','Use a JSON object.');
     return body as Record<string,unknown>;
   } catch (error) {
     if (error instanceof PortalHttpError) throw error;
+    if (error instanceof RangeError) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
     throw new PortalHttpError(400, 'INVALID_JSON', 'The request body is not valid JSON.');
   }
 }

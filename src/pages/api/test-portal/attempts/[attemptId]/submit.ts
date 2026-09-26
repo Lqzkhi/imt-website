@@ -17,7 +17,14 @@ export const POST: APIRoute = async ({ request, params }) => {
     const endingWorkRetry = body.end_work === true && Boolean(attempt.working_ended_at);
     if (attempt.status === 'in_progress' && !justEnteredUpload && !endingWorkRetry) {
       requireAttemptSession(request, attempt, owned.test);
-      attempt = await finalizeAttempt(supabase, attempt, 'submitted');
+      if (body.end_work === true && owned.test.contest_section === 'proof') {
+        const { data, error } = await supabase.rpc('finish_test_work', { p_attempt_id: attempt.id });
+        if (error) throw error;
+        attempt = Array.isArray(data) ? data[0] : data;
+        if (!attempt?.id) throw new Error('Ending solving did not return an attempt.');
+      } else {
+        attempt = await finalizeAttempt(supabase, attempt, 'submitted');
+      }
     }
     if (attempt.status === 'in_progress' && !attempt.working_ended_at) {
       throw new PortalHttpError(409, 'SUBMISSION_FAILED', 'The attempt could not be submitted.');

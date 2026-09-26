@@ -212,11 +212,14 @@ const { testId } = Astro.params;
     const oldText = startButton.textContent;
     startButton.textContent = existingAttempt ? 'Opening attempt…' : 'Starting secure timer…';
 
+    // Persist before sending: a lost start response must not lose the tab's key.
+    const pendingSessionKey = `imt_test_start_${test.id}`;
     let sessionToken = '';
     if (test.security_mode === 'one_sitting') {
       sessionToken = existingAttempt
-        ? sessionStorage.getItem(attemptSessionStorageKey(existingAttempt.id)) || newTestSessionToken()
-        : newTestSessionToken();
+        ? sessionStorage.getItem(attemptSessionStorageKey(existingAttempt.id)) || sessionStorage.getItem(pendingSessionKey) || newTestSessionToken()
+        : sessionStorage.getItem(pendingSessionKey) || newTestSessionToken();
+      sessionStorage.setItem(pendingSessionKey, sessionToken);
     }
 
     try {

@@ -332,6 +332,8 @@ const { attemptId } = Astro.params;
         await loadAttempt();
       }
     } catch (error) {
+      failedQuestions.add(question.id);
+      saveFailed = true;
       status.textContent = error instanceof Error ? error.message : 'The upload failed.';
       status.className = 'text-sm font-semibold text-red-600 mt-3';
     } finally {
@@ -499,6 +501,9 @@ const { attemptId } = Astro.params;
       if (remaining <= 5 * 60_000) timerBox.classList.add('border-red-400', 'bg-red-500/20');
       if (remaining <= 0 && !timeoutHandled) {
         timeoutHandled = true;
+        // Hide expired work immediately, even while the network is unavailable.
+        document.getElementById('question-prompt')!.textContent = 'Time has ended. Reconnecting to confirm your submission or upload window…';
+        workspace.inert = true;
         void submitAttempt(true);
       }
     };
@@ -591,6 +596,8 @@ const { attemptId } = Astro.params;
 
   async function flushNumericalAnswer() {
     window.clearTimeout(numericSaveTimer);
+    // Compare against the latest saved value, not a stale value while a save is queued.
+    await answerQueue;
     const question = payload.questions[currentIndex];
     if (question?.answer_type !== 'numerical') return true;
     const input = document.querySelector<HTMLInputElement>('#answer-area .answer-input');
@@ -615,6 +622,10 @@ const { attemptId } = Astro.params;
       }
       const saved = await flushNumericalAnswer();
       if (!saved) return;
+      if (saveFailed) {
+        toast('Some changes failed to save. Retry those answers or uploads before submitting.');
+        return;
+      }
       const unanswered = payload.questions.filter((question) => !hasAnswer(question.id)).length;
       const warning = unanswered ? ` ${unanswered} problem${unanswered === 1 ? ' is' : 's are'} unanswered.` : '';
       if (!confirm(isProofSolving() ? 'End solving now? Stop all mathematical work. Your 15-minute upload window starts immediately and solving cannot be reopened.' : `Submit this test now?${warning} You cannot change answers afterward.`)) return;
@@ -740,6 +751,7 @@ const { attemptId } = Astro.params;
       document.getElementById('security-mode-badge')!.textContent = payload.test.security_mode === 'one_sitting' ? 'Secure one-sitting test' : 'Resumable take-home test';
       loader.classList.add('hidden');
       document.getElementById('finished-panel')!.classList.add('hidden');
+      workspace.inert = false;
       workspace.classList.remove('hidden');
       renderQuestion();
       document.getElementById('timer-label')!.textContent = isProofUploading() ? 'Upload time remaining' : 'Solving time remaining';
@@ -825,8 +837,9 @@ const { attemptId } = Astro.params;
     try {
       const form = new FormData(); form.set('file',file);
       await attemptFetch(`/api/test-portal/attempts/${attemptId}/scratch`, { method: 'POST', body: form });
+      failedQuestions.delete('scratch'); saveFailed = failedQuestions.size > 0;
       status.textContent = 'Scratch work saved.'; await loadScratch(); picker.value = '';
-    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Upload failed.'; }
+    } catch (error) { failedQuestions.add('scratch'); saveFailed = true; status.textContent = error instanceof Error ? error.message : 'Upload failed.'; }
     finally { picker.disabled = false; setSaving(false); }
   });
   // Duplicating a tab copies sessionStorage in some browsers. An exclusive browser

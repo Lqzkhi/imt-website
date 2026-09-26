@@ -18,9 +18,12 @@ export const GET: APIRoute = async ({ request }) => {
     for (let start = 0; start < attempts.length; start += 100) {
       const batch = attempts.slice(start,start+100).map((a) => a.id);
       for (let offset = 0; ; offset += 500) {
-        const { data, error } = await supabase.from('test_security_events').select('id,attempt_id,event_type').in('attempt_id',batch).order('id').range(offset,offset+499);
+        const { data, error } = await supabase.from('test_security_events').select('id,attempt_id,event_type,metadata').in('attempt_id',batch).order('id').range(offset,offset+499);
         if (error) throw error;
         for (const event of data ?? []) {
+          // Switching tabs to scan or upload completed proofs is permitted.
+          // Full events remain available in the individual attempt review.
+          if (event.metadata?.phase === 'upload') continue;
           const counts = events.get(event.attempt_id) ?? {};
           counts[event.event_type] = (counts[event.event_type] ?? 0)+1; events.set(event.attempt_id,counts);
         }
