@@ -103,6 +103,21 @@ export function hashPortalSession(token: string) {
   return createHash('sha256').update(token, 'utf8').digest('hex');
 }
 
+export function scratchUploadDeadline(attempt: AttemptRow): string | null {
+  const ended = attempt.working_ended_at
+    ? Date.parse(attempt.working_ended_at)
+    : attempt.status !== 'in_progress' && attempt.submitted_at
+      ? Math.min(Date.parse(attempt.submitted_at), Date.parse(attempt.expires_at))
+      : NaN;
+  return Number.isFinite(ended) ? new Date(ended + 30 * 60_000).toISOString() : null;
+}
+
+export function requireScratchUploadWindow(attempt: AttemptRow) {
+  const deadline = scratchUploadDeadline(attempt);
+  if (!deadline) throw new PortalHttpError(409, 'SCRATCH_NOT_OPEN', 'Scratch uploads open after solving ends.');
+  if (Date.parse(deadline) <= Date.now()) throw new PortalHttpError(409, 'SCRATCH_CLOSED', 'The 30-minute scratch upload window has ended.');
+}
+
 export function calculateAttemptExpiry(test: TestRow, startedAt: Date, extensionMinutes = 0) {
   let expiresAt = new Date(startedAt.getTime() + (test.duration_minutes + Math.max(0, extensionMinutes)) * 60_000);
   if (test.closes_at) {

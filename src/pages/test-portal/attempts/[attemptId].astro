@@ -39,7 +39,14 @@ const { attemptId } = Astro.params;
             <p class="text-xs text-slate-500 mt-2">This shows your submitted work and grading. Answer keys remain private.</p>
             <div id="result-items" class="space-y-4 mt-5"></div>
           </section>
-          <section class="mt-6 text-left border rounded-xl bg-white p-5"><h2 class="font-bold">Scratch-paper receipt</h2><ul id="finished-scratch-files" class="text-sm mt-3 space-y-2"></ul></section>
+          <section class="mt-6 text-left border rounded-xl bg-white p-5">
+            <h2 class="font-bold">Scratch paper</h2>
+            <p class="text-sm text-slate-500 mt-2">Your answers are locked. You have 30 minutes from the end of solving to scan and upload work already completed. Up to 10 PDF or image files, 3 MB each.</p>
+            <p data-scratch-deadline class="text-sm font-semibold mt-3"></p>
+            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="finished-scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
+            <p id="finished-scratch-status" class="text-sm mt-2" role="status"></p>
+            <ul id="finished-scratch-files" class="text-sm mt-3 space-y-2"></ul>
+          </section>
           <a href="/test-portal" class="inline-flex mt-8 bg-brand-dark text-brand-gold font-bold rounded-lg px-7 py-3">Back to Test Portal</a>
         </div>
       </div>
@@ -90,8 +97,9 @@ const { attemptId } = Astro.params;
         <main class="min-w-0">
           <section class="bg-white border border-gray-200 rounded-xl p-5 mb-5" aria-labelledby="scratch-heading">
             <h2 id="scratch-heading" class="font-bold text-brand-dark">Scratch paper</h2>
-            <p class="text-sm text-slate-500 mt-1">Optional supporting work. Proof answers must be uploaded under their problems. Up to 10 PDF or image files, 3 MB each. Upload before your timer ends.</p>
-            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" /></label>
+            <p class="text-sm text-slate-500 mt-1">Optional supporting work. Uploads open only after solving ends and close 30 minutes later. Proof answers have a separate 15-minute deadline and belong under their problems. Up to 10 PDF or image files, 3 MB each.</p>
+            <p data-scratch-deadline class="text-sm font-semibold mt-3"></p>
+            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
             <p id="scratch-status" class="text-sm mt-2" role="status"></p><ul id="scratch-files" class="mt-3 space-y-2 text-sm"></ul>
           </section>
           <div id="question-card" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -205,6 +213,9 @@ const { attemptId } = Astro.params;
   let clockOffset = 0;
   let timerHandle = 0;
   let heartbeatHandle = 0;
+  let scratchTimerHandle = 0;
+  let scratchDeadline: string | null = null;
+  let scratchBusy = false;
   let numericSaveTimer = 0;
   let timeoutHandled = false;
   let securityConfigured = false;
@@ -218,6 +229,7 @@ const { attemptId } = Astro.params;
 
   function isProofSolving() { return payload?.test.contest_section === 'proof' && !payload.attempt.working_ended_at && payload.attempt.status === 'in_progress'; }
   function isProofUploading() { return payload?.test.contest_section === 'proof' && Boolean(payload.attempt.working_ended_at) && payload.attempt.status === 'in_progress'; }
+  function isSolving() { return payload?.attempt.status === 'in_progress' && !payload.attempt.working_ended_at && Date.parse(payload.attempt.expires_at) > Date.now() + clockOffset; }
 
   function toast(message: string) {
     const element = document.getElementById('attempt-toast')!;
@@ -527,18 +539,19 @@ const { attemptId } = Astro.params;
     securityConfigured = true;
     if (payload.test.security_mode !== 'one_sitting') return;
     document.addEventListener('visibilitychange', () => {
-      void logEvent(document.hidden ? 'visibility_hidden' : 'visibility_visible', { phase: isProofUploading() ? 'upload' : 'solving' });
-      if (document.hidden && !isProofUploading()) toast('Leaving the test tab is recorded. Return to your test; the timer continues.');
+      if (!isSolving()) return;
+      void logEvent(document.hidden ? 'visibility_hidden' : 'visibility_visible');
+      if (document.hidden) toast('Leaving the test tab is recorded. Return to your test; the timer continues.');
     });
-    window.addEventListener('blur', () => void logEvent('window_blurred', { phase: isProofUploading() ? 'upload' : 'solving' }));
-    window.addEventListener('focus', () => void logEvent('window_focused', { phase: isProofUploading() ? 'upload' : 'solving' }));
+    window.addEventListener('blur', () => { if (isSolving()) void logEvent('window_blurred'); });
+    window.addEventListener('focus', () => { if (isSolving()) void logEvent('window_focused'); });
 
     const gate = document.getElementById('fullscreen-gate')!;
     if (payload.test.require_fullscreen) {
       gate.classList.remove('hidden');
       gate.classList.add('flex');
       document.addEventListener('fullscreenchange', () => {
-        if (isProofUploading() || payload.attempt.status !== 'in_progress') return;
+        if (!isSolving()) return;
         if (document.fullscreenElement) {
           gate.classList.add('hidden');
           gate.classList.remove('flex');
@@ -558,19 +571,19 @@ const { attemptId } = Astro.params;
 
     if (payload.test.block_clipboard) {
       root.addEventListener('copy', (event) => {
-        if (isProofUploading()) return;
+        if (!isSolving()) return;
         event.preventDefault();
         toast('Copying is disabled for this test.');
         void logEvent('copy_blocked');
       });
       root.addEventListener('cut', (event) => {
-        if (isProofUploading()) return;
+        if (!isSolving()) return;
         event.preventDefault();
         toast('Cutting is disabled for this test.');
         void logEvent('copy_blocked', { action: 'cut' });
       });
       root.addEventListener('paste', (event) => {
-        if (isProofUploading()) return;
+        if (!isSolving()) return;
         event.preventDefault();
         toast('Pasting is disabled for this test.');
         void logEvent('paste_blocked');
@@ -628,7 +641,7 @@ const { attemptId } = Astro.params;
       }
       const unanswered = payload.questions.filter((question) => !hasAnswer(question.id)).length;
       const warning = unanswered ? ` ${unanswered} problem${unanswered === 1 ? ' is' : 's are'} unanswered.` : '';
-      if (!confirm(isProofSolving() ? 'End solving now? Stop all mathematical work. Your 15-minute upload window starts immediately and solving cannot be reopened.' : `Submit this test now?${warning} You cannot change answers afterward.`)) return;
+      if (!confirm(isProofSolving() ? 'End solving now? Stop all mathematical work. Your 15-minute proof-answer window and 30-minute scratch-paper window start immediately. Solving cannot be reopened.' : `Submit this test now?${warning} You cannot change answers afterward. Scratch uploads remain available until their separate deadline.`)) return;
     }
     submitButton.disabled = true;
     submitButton.textContent = fromTimeout ? 'Time expired…' : 'Submitting…';
@@ -636,7 +649,6 @@ const { attemptId } = Astro.params;
       await attemptFetch(`/api/test-portal/attempts/${attemptId}/submit`, { method: 'POST', body: JSON.stringify({ end_work: isProofSolving() }) });
       window.clearInterval(timerHandle);
       window.clearInterval(heartbeatHandle);
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
       timeoutHandled = false;
       await loadAttempt();
     } catch (error) {
@@ -707,6 +719,7 @@ const { attemptId } = Astro.params;
   }
 
   function renderFinished() {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     document.getElementById('fullscreen-gate')!.classList.add('hidden');
     document.getElementById('fullscreen-gate')!.classList.remove('flex');
     loader.classList.add('hidden');
@@ -736,6 +749,7 @@ const { attemptId } = Astro.params;
     }
     window.clearInterval(timerHandle);
     window.clearInterval(heartbeatHandle);
+    window.clearInterval(scratchTimerHandle);
     try {
       payload = await attemptFetch<AttemptPayload>(`/api/test-portal/attempts/${attemptId}`);
       clockOffset = new Date(payload.server_now).getTime() - Date.now();
@@ -754,11 +768,10 @@ const { attemptId } = Astro.params;
       workspace.inert = false;
       workspace.classList.remove('hidden');
       renderQuestion();
-      document.getElementById('timer-label')!.textContent = isProofUploading() ? 'Upload time remaining' : 'Solving time remaining';
+      document.getElementById('timer-label')!.textContent = isProofUploading() ? 'Proof-answer upload time remaining' : 'Solving time remaining';
       (document.getElementById('submit-attempt') as HTMLButtonElement).disabled = false;
       document.getElementById('submit-attempt')!.textContent = isProofSolving() ? 'Finish solving · begin uploads' : isProofUploading() ? 'Submit proofs' : 'Submit test';
-      (document.getElementById('scratch-picker') as HTMLInputElement).disabled = isProofSolving();
-      document.getElementById('scratch-status')!.textContent = isProofSolving() ? 'Scratch uploads open after solving ends.' : isProofUploading() ? 'Upload only work already completed. The header timer shows your upload time remaining.' : '';
+      (document.getElementById('scratch-picker') as HTMLInputElement).disabled = true;
       if (isProofUploading()) {
         document.getElementById('security-mode-badge')!.textContent = 'Proof upload window · no further solving';
         document.getElementById('fullscreen-gate')!.classList.add('hidden');
@@ -806,20 +819,37 @@ const { attemptId } = Astro.params;
   document.getElementById('enter-fullscreen')!.addEventListener('click', () => void enterFullscreen());
   document.getElementById('reenter-fullscreen')!.addEventListener('click', () => void enterFullscreen());
   window.addEventListener('beforeunload', (event) => {
-    if (payload?.attempt.status === 'in_progress' || busyOperations > 0 || saveFailed || saveStatus.textContent?.includes('Waiting')) {
+    if (payload?.attempt.status === 'in_progress' || scratchBusy || busyOperations > 0 || saveFailed || saveStatus.textContent?.includes('Waiting')) {
       event.preventDefault();
     }
   });
 
+  function updateScratchClock() {
+    const remaining = scratchDeadline ? Date.parse(scratchDeadline) - (Date.now() + clockOffset) : 0;
+    const editable = Boolean(scratchDeadline && remaining > 0);
+    const text = !scratchDeadline ? 'Scratch uploads open after solving ends.' : editable
+      ? `Scratch upload time remaining: ${formatCountdown(remaining)}. You may use other tabs or a scanning app; no further solving.`
+      : 'The 30-minute scratch upload window has ended.';
+    document.querySelectorAll<HTMLElement>('[data-scratch-deadline]').forEach(el => el.textContent = text);
+    document.querySelectorAll<HTMLInputElement>('#scratch-picker, #finished-scratch-picker').forEach(el => el.disabled = !editable || scratchBusy);
+    document.querySelectorAll<HTMLButtonElement>('[data-scratch-remove]').forEach(el => el.disabled = !editable || scratchBusy);
+    if (!editable) window.clearInterval(scratchTimerHandle);
+  }
   async function loadScratch() {
-    const result = await attemptFetch<{ files: { id: string; file_name: string }[]; editable: boolean }>(`/api/test-portal/attempts/${attemptId}/scratch`);
+    const result = await attemptFetch<{ files: { id: string; file_name: string }[]; editable: boolean; deadline: string | null; server_now: string }>(`/api/test-portal/attempts/${attemptId}/scratch`);
+    scratchDeadline = result.deadline;
+    clockOffset = Date.parse(result.server_now) - Date.now();
+    window.clearInterval(scratchTimerHandle);
+    updateScratchClock();
+    if (scratchDeadline && Date.parse(scratchDeadline) > Date.now() + clockOffset) scratchTimerHandle = window.setInterval(updateScratchClock, 1000);
     const list = document.getElementById(payload.attempt.status === 'in_progress' ? 'scratch-files' : 'finished-scratch-files')!;
     list.replaceChildren();
     if (!result.files.length) list.textContent = 'No scratch work uploaded.';
     for (const file of result.files) {
       const li = document.createElement('li'); li.textContent = file.file_name + ' · Saved ';
       if (result.editable) {
-        const remove = document.createElement('button'); remove.textContent = 'Remove'; remove.className = 'underline text-red-700'; remove.type = 'button';
+        const remove = document.createElement('button'); remove.textContent = 'Remove'; remove.className = 'ml-2 underline text-red-700'; remove.type = 'button';
+        remove.dataset.scratchRemove = '';
         remove.onclick = async () => {
           remove.disabled = true;
           try { await attemptFetch(`/api/test-portal/attempts/${attemptId}/scratch?id=${file.id}`, { method: 'DELETE' }); await loadScratch(); }
@@ -830,18 +860,17 @@ const { attemptId } = Astro.params;
       list.append(li);
     }
   }
-  document.getElementById('scratch-picker')!.addEventListener('change', async (event) => {
+  document.querySelectorAll<HTMLInputElement>('#scratch-picker, #finished-scratch-picker').forEach(input => input.addEventListener('change', async (event) => {
     const picker = event.target as HTMLInputElement; const file = picker.files?.[0]; if (!file) return;
-    const status = document.getElementById('scratch-status')!;
-    picker.disabled = true; setSaving(true); status.textContent = 'Uploading scratch work…';
+    const status = document.getElementById(picker.id === 'finished-scratch-picker' ? 'finished-scratch-status' : 'scratch-status')!;
+    scratchBusy = true; updateScratchClock(); status.textContent = 'Uploading scratch work…';
     try {
       const form = new FormData(); form.set('file',file);
       await attemptFetch(`/api/test-portal/attempts/${attemptId}/scratch`, { method: 'POST', body: form });
-      failedQuestions.delete('scratch'); saveFailed = failedQuestions.size > 0;
-      status.textContent = 'Scratch work saved.'; await loadScratch(); picker.value = '';
-    } catch (error) { failedQuestions.add('scratch'); saveFailed = true; status.textContent = error instanceof Error ? error.message : 'Upload failed.'; }
-    finally { picker.disabled = false; setSaving(false); }
-  });
+      await loadScratch(); picker.value = ''; status.textContent = 'Scratch work saved.';
+    } catch (error) { status.textContent = error instanceof Error ? error.message : 'Upload failed.'; }
+    finally { scratchBusy = false; updateScratchClock(); }
+  }));
   // Duplicating a tab copies sessionStorage in some browsers. An exclusive browser
   // lock prevents two local tabs from using that copied token at the same time.
   async function openSingleTab() {

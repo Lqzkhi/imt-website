@@ -106,7 +106,7 @@ import Layout from '../../layouts/Layout.astro';
             <p id="account-email" class="text-sm text-slate-500 mt-1"></p>
           </div>
           <div class="flex flex-wrap items-center gap-3">
-            <a id="admin-link" href="/test-portal/admin" class="hidden portal-secondary">Admin workspace</a>
+            <span id="admin-actions"></span>
             <button id="signout-button" type="button" class="portal-secondary">Sign out</button>
           </div>
         </div>
@@ -285,7 +285,10 @@ import Layout from '../../layouts/Layout.astro';
   }
 
 
+  let dashboardRequest = 0;
   async function loadDashboard() {
+    const requestId = ++dashboardRequest;
+    document.getElementById('admin-actions')!.replaceChildren();
     clearNotice();
     const session = await getPortalSession();
     if (!session) {
@@ -303,9 +306,17 @@ import Layout from '../../layouts/Layout.astro';
         portalFetch<{ user: { email: string; display_name: string }; is_admin: boolean }>('/api/test-portal/me'),
         portalFetch<{ tests: TestSummary[] }>('/api/test-portal/tests'),
       ]);
+      if (requestId !== dashboardRequest) return;
       document.getElementById('welcome-heading')!.textContent = me.user.display_name ? `Welcome, ${me.user.display_name}` : 'Your tests';
       document.getElementById('account-email')!.textContent = me.user.email;
-      document.getElementById('admin-link')!.classList.toggle('hidden', !me.is_admin);
+      if (me.is_admin === true) {
+        const adminLink = document.createElement('a');
+        adminLink.id = 'admin-link';
+        adminLink.href = '/test-portal/admin';
+        adminLink.className = 'portal-secondary';
+        adminLink.textContent = 'Admin workspace';
+        document.getElementById('admin-actions')!.append(adminLink);
+      }
       renderTests(testData.tests);
       loader.classList.add('hidden');
       authPanel.classList.add('hidden');
@@ -313,6 +324,7 @@ import Layout from '../../layouts/Layout.astro';
       const jump = document.getElementById('portal-jump') as HTMLAnchorElement;
       jump.href = '#dashboard'; jump.textContent = 'View your contests ↓';
     } catch (error) {
+      if (requestId !== dashboardRequest) return;
       loader.classList.add('hidden');
       showNotice(error instanceof Error ? error.message : 'The portal could not be loaded.');
       authPanel.classList.remove('hidden');
@@ -392,12 +404,26 @@ import Layout from '../../layouts/Layout.astro';
 
 
   document.getElementById('signout-button')!.addEventListener('click', async () => {
+    ++dashboardRequest;
+    document.getElementById('admin-actions')!.replaceChildren();
     await supabase.auth.signOut();
     location.href = '/test-portal';
   });
 
 
   supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+      ++dashboardRequest;
+      document.getElementById('admin-actions')!.replaceChildren();
+      dashboard.classList.add('hidden');
+      // Refresh permissions outside the Auth callback to avoid its session lock.
+      window.setTimeout(() => void loadDashboard(), 0);
+    }
+    if (event === 'SIGNED_OUT' || event === 'PASSWORD_RECOVERY') {
+      ++dashboardRequest;
+      document.getElementById('admin-actions')!.replaceChildren();
+      dashboard.classList.add('hidden');
+    }
     if (event === 'PASSWORD_RECOVERY') {
       recoveryMode = true;
       showAuth('recovery');

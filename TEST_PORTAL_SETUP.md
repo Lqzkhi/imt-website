@@ -4,6 +4,8 @@ The portal requires a server deployment (Vercel), the Supabase migrations below,
 
 ## 1. Apply the migration
 
+Apply `supabase/migrations/20260926000700_post_test_scratch_window.sql` after 006 for the 30-minute post-solving scratch upload window. Deploy the matching frontend/API. Verify blocked scratch uploads during solving, uploads after submission, the unchanged 15-minute proof-answer deadline, and rejection after the scratch deadline. Administrators can preview PDF/image scratch files inline; non-admin accounts have no Admin workspace link.
+
 After the proof-upload migration 004 and audit migration 005, apply `supabase/migrations/20260926000600_contest_start_lock.sql`. This fixes contest starts under Supabase's restricted service role without granting access to `auth.users`. Existing installations must apply this follow-up as well; do not rerun migration 004.
 
 Use either option:

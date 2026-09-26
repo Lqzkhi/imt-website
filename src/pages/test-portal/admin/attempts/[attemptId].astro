@@ -49,7 +49,15 @@ const { attemptId } = Astro.params;
           <div id="review-problems" class="space-y-5"></div>
         </section>
 
-        <section class="bg-white border rounded-xl p-6"><h2 class="font-bold">Scratch paper</h2><div id="review-scratch" class="mt-3 text-sm"></div></section>
+        <section class="bg-white border rounded-xl p-6">
+          <h2 class="font-bold">Scratch paper</h2>
+          <div id="review-scratch" class="mt-3 text-sm"></div>
+          <div id="scratch-preview" class="mt-5" hidden>
+            <div class="flex items-center justify-between gap-4 mb-3"><h3 id="scratch-preview-title" class="font-semibold break-all"></h3><button id="scratch-preview-close" type="button" class="underline shrink-0">Close preview</button></div>
+            <p id="scratch-preview-status" role="status" class="text-sm text-slate-500"></p>
+            <div id="scratch-preview-content"></div>
+          </div>
+        </section>
         <section class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
           <div class="px-6 py-5 border-b border-slate-100">
             <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-green">Security log</p>
@@ -110,6 +118,7 @@ const { attemptId } = Astro.params;
     response: ReviewResponse | null;
   }
   interface ReviewPayload {
+    scratch_files: { id: string; file_name: string; mime_type: string; file_url: string }[];
     test: { id: string; title: string; security_mode: string };
     attempt: {
       id: string;
@@ -135,6 +144,48 @@ const { attemptId } = Astro.params;
   const root = document.getElementById('review-root')!;
   const attemptId = root.dataset.attemptId ?? '';
   let data: ReviewPayload;
+  let scratchPreviewUrl = '';
+  let scratchPreviewRequest: AbortController | null = null;
+  function closeScratchPreview() {
+    scratchPreviewRequest?.abort();
+    scratchPreviewRequest = null;
+    document.getElementById('scratch-preview-content')!.replaceChildren();
+    if (scratchPreviewUrl) URL.revokeObjectURL(scratchPreviewUrl);
+    scratchPreviewUrl = '';
+    document.getElementById('scratch-preview')!.hidden = true;
+  }
+  async function previewScratch(file: ReviewPayload['scratch_files'][number]) {
+    closeScratchPreview();
+    const controller = new AbortController();
+    scratchPreviewRequest = controller;
+    document.getElementById('scratch-preview')!.hidden = false;
+    document.getElementById('scratch-preview-title')!.textContent = file.file_name;
+    const status = document.getElementById('scratch-preview-status')!;
+    status.textContent = 'Loading scratch paper…';
+    try {
+      if (!['application/pdf', 'image/png', 'image/jpeg', 'image/webp'].includes(file.mime_type)) throw new Error('This file type cannot be previewed.');
+      const response = await fetch(file.file_url, { signal: controller.signal, credentials: 'omit' });
+      if (!response.ok) throw new Error('The preview link expired or the file is unavailable. Refresh this page and try again.');
+      const bytes = await response.arrayBuffer();
+      if (controller.signal.aborted) return;
+      scratchPreviewUrl = URL.createObjectURL(new Blob([bytes], { type: file.mime_type }));
+      const viewer = file.mime_type === 'application/pdf' ? document.createElement('iframe') : document.createElement('img');
+      viewer.src = scratchPreviewUrl;
+      if (viewer instanceof HTMLIFrameElement) {
+        viewer.title = `Scratch paper: ${file.file_name}`;
+        viewer.className = 'w-full h-[75vh] border rounded-lg';
+      } else {
+        viewer.alt = `Scratch paper: ${file.file_name}`;
+        viewer.className = 'max-w-full h-auto border rounded-lg';
+      }
+      document.getElementById('scratch-preview-content')!.replaceChildren(viewer);
+      status.textContent = file.mime_type === 'application/pdf' ? 'PDF preview. If your browser cannot display it, use Open in new tab.' : '';
+    } catch (error) {
+      if (!controller.signal.aborted) status.textContent = error instanceof Error ? error.message : 'Could not preview the file.';
+    }
+  }
+  document.getElementById('scratch-preview-close')!.addEventListener('click', closeScratchPreview);
+  window.addEventListener('pagehide', closeScratchPreview);
 
   function showAlert(message: string, kind: 'success' | 'error' = 'success') {
     const alert = document.getElementById('review-alert')!;
@@ -219,7 +270,7 @@ const { attemptId } = Astro.params;
 
   function renderEvents() {
     const counts = new Map<string, number>();
-    data.events.forEach((event) => counts.set(event.event_type, (counts.get(event.event_type) ?? 0) + 1));
+    data.events.filter(event => event.metadata?.phase !== 'upload').forEach((event) => counts.set(event.event_type, (counts.get(event.event_type) ?? 0) + 1));
     const summaryItems = [
       ['Tab hidden', counts.get('visibility_hidden') ?? 0],
       ['Window blur', counts.get('window_blurred') ?? 0],
@@ -241,8 +292,13 @@ const { attemptId } = Astro.params;
   function renderPage() {
     const scratch = document.getElementById('review-scratch')!;
     scratch.replaceChildren();
-    for (const file of (data as unknown as { scratch_files: { file_name: string; file_url: string }[] }).scratch_files ?? []) {
-      const a = document.createElement('a'); a.href = file.file_url; a.textContent = file.file_name; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.className = 'block underline text-brand-green py-2'; scratch.append(a);
+    closeScratchPreview();
+    for (const file of data.scratch_files ?? []) {
+      const row = document.createElement('div'); row.className = 'flex flex-wrap items-center gap-3 py-2';
+      const name = document.createElement('span'); name.textContent = file.file_name;
+      const view = document.createElement('button'); view.type = 'button'; view.textContent = 'View scratch paper'; view.className = 'underline text-brand-green'; view.onclick = () => void previewScratch(file);
+      const a = document.createElement('a'); a.href = file.file_url; a.textContent = 'Open in new tab'; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.className = 'underline text-slate-500';
+      row.append(name, view, a); scratch.append(row);
     }
     if (!scratch.children.length) scratch.textContent = 'No scratch work uploaded.';
     document.title = `Review ${data.attempt.participant_email} | Integrated Math`;
