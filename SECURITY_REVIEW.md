@@ -6,6 +6,7 @@ Decision: HOLD production rollout. Code fixes are committed to the preview branc
 
 | Finding | Fix |
 | --- | --- |
+| Starting a contest failed under Supabase's service role because the simultaneous-section guard locked `auth.users`, which that role cannot update. | Migration 006 replaces the auth-table lock with a per-participant transaction advisory lock, preserving section exclusion without granting auth-table privileges. |
 | A lost start response discarded the browser's one-sitting session token. | Persist the token before starting and reuse it on retries and reloads. |
 | Navigating while a numerical save was pending could compare against stale server state and lose the latest edit. | Wait for the queued save before comparing and flushing the current input. |
 | Failed proof/scratch uploads could leave an “All changes saved” indicator and allow submission. | Retain failure state and require a successful retry before manual submission. Server timeout still submits whatever actually saved. |
@@ -22,14 +23,15 @@ Decision: HOLD production rollout. Code fixes are committed to the preview branc
 - Automated database tests apply repository migrations to PGlite, with fixture Auth/Storage schemas. These cover timers, submission, proof phases, grading, permissions, scratch limits, expired edits, and repeated finish-work calls. They do not verify every extra trigger in the hosted database.
 - Request tests cover exact-origin CSRF rejection and bounded chunked/multibyte JSON bodies.
 - Headless Chromium exercised the actual attempt-page script with mocked authentication/API/storage: pending numerical saves, proof/scratch gating, transition to uploads, statement hiding, and failed-upload submission blocking. This is client behavior verification, not hosted Storage or signed-in acceptance.
-- Final verification: all eight automated tests passed; Astro checked 77 files with zero errors, warnings, or hints; the Vercel-adapter production build passed.
+- Initial audit verification: all eight automated tests passed; Astro checked 77 files with zero errors, warnings, or hints; the Vercel-adapter production build passed.
+- Local rehearsal follow-up: all nine automated tests pass, including reproducing the start failure under `service_role` without auth-table access and verifying the migration fixes it while keeping overlap blocked during solving and proof uploads. Real local Supabase HTTP requests pass computational start/load/submit, overlapping-section rejection, and proof start/upload-phase/submit. Production application of migration 006 and hosted acceptance remain outstanding.
 - npm's live bulk-advisory endpoint returned no advisories for the installed lockfile package versions. This does not prove absence of unknown vulnerabilities.
 - Live read-only checks: homepage, Fall page, portal, diagnostic landing return 200; unauthenticated `/api/test-portal/me` returns 401; foreign-origin start returns 403; `.env` and private contest bundle URLs return 404. The new grading and tournament overview routes still return 404 on production, confirming that the old release is live.
 - Portal APIs were reviewed for verified bearer authentication, owner/admin checks, same-origin mutation checks, private file links, deadline enforcement, hidden results, and answer-key separation. No credentials or unreleased contest content were added to tracked files.
 
 ## Required before deployment and contest launch
 
-1. Apply `supabase/migrations/20260926000500_audit_deadline_safety.sql` once after 004. The owner confirmed 004 is already applied; do not rerun it. The new code depends on the new RPC. Validate this migration with the actual hosted triggers.
+1. Apply `supabase/migrations/20260926000500_audit_deadline_safety.sql` once after 004, then `supabase/migrations/20260926000600_contest_start_lock.sql`. The owner confirmed 004 is already applied; do not rerun it. The new code depends on the new RPC. Migration 006 is applied to the local rehearsal database only. Validate these migrations with the actual hosted triggers.
 2. Configure custom SMTP and verify real confirmation and password-recovery delivery, then enable confirmation. The owner confirmed email configuration is unfinished. An auto-confirmed account's `email_confirmed_at` is not evidence that the mailbox was verified.
 3. Run authenticated staging acceptance with separate organizer/contestant accounts: owner/admin isolation, real proof/scratch upload/download, late file rejection, proof grading and hidden results, lost-response recovery, browser-closed timeout, and the 15-minute upload period. Check the Cron heartbeat.
 4. Deploy the matching website release to the correct Vercel production project and inspect the actual domain. The domain currently runs older code. Keep the real contests as drafts through acceptance and publish only after the checks pass.

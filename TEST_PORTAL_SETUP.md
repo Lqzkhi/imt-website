@@ -4,6 +4,8 @@ The portal requires a server deployment (Vercel), the Supabase migrations below,
 
 ## 1. Apply the migration
 
+After the proof-upload migration 004 and audit migration 005, apply `supabase/migrations/20260926000600_contest_start_lock.sql`. This fixes contest starts under Supabase's restricted service role without granting access to `auth.users`. Existing installations must apply this follow-up as well; do not rerun migration 004.
+
 Use either option:
 
 - In the Supabase dashboard, open **SQL Editor**, run `supabase/migrations/20260731_test_portal.sql`, then `supabase/migrations/20260731_test_portal_hardening.sql`, then `supabase/migrations/20260926000100_fall_tournament.sql`. Skip migrations already recorded as applied.
