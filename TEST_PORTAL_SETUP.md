@@ -24,6 +24,12 @@ The migration creates:
 
 Do not make the bucket public and do not add browser-facing SELECT policies to `test_question_keys`.
 
+### Proof upload window update
+
+After the terms migration `20260926000300_fall_contest_terms.sql`, apply `supabase/migrations/20260926000400_proof_upload_window.sql` once. This adds the 15-minute proof upload phase, locks its deadline, and enables Fall fullscreen and clipboard settings. Keep both sections as drafts during preview acceptance. Do not rerun the earlier import or migrations already applied. This update preserves questions, answer keys, previous submissions, and the existing Cron job.
+
+Deploy the matching frontend to Preview. Review the real drafts with administrator preview without consuming attempts. Exercise the full proof workflow using a separate staging database with a disposable contestant account; the shared live database should keep the real Fall contests in draft until launch. Check preface scrolling, timer start, blocked proof/scratch uploads during solving, early finish, automatic transition, saved proof preview, final submission, late upload rejection, and hidden scores. Confirm an upload window is marked separately in administrator attempt review. Local database tests do not establish compatibility with additional legacy production triggers; if Supabase reports an error, preserve that error and resolve it before opening either contest.
+
 ## 2. Configure deployment environment variables
 
 Set these in the local `.env` file and in the Vercel project settings:

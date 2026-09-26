@@ -60,7 +60,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (getTestAvailability(test) !== 'open') {
       throw new PortalHttpError(409, 'TEST_NOT_OPEN', 'This test is not currently open for attempts.');
     }
-    if (test.contest_section && (body.accept_terms !== true || body.terms_version !== hashPortalSession(test.instructions_latex))) {
+    if (test.contest_section && (body.accept_terms !== true || body.preface_read !== true || body.terms_version !== hashPortalSession(test.instructions_latex))) {
       throw new PortalHttpError(409, 'TERMS_REQUIRED', 'Read and accept the current contest rules before starting. Refresh if the instructions have changed.');
     }
     if (test.security_mode === 'one_sitting' && (sessionToken.length < 20 || sessionToken.length > 200)) {
@@ -98,6 +98,9 @@ export const POST: APIRoute = async ({ request }) => {
       .select('*')
       .single();
     if (createError) {
+      if (createError.message.includes('Finish your other contest section')) {
+        throw new PortalHttpError(409, 'OTHER_SECTION_ACTIVE', 'Finish your other contest section, including proof uploads, before starting this one.');
+      }
       if (createError.code === '23505') {
         throw new PortalHttpError(409, 'ATTEMPT_EXISTS', 'An attempt already exists. Refresh the Test Portal to continue it.');
       }

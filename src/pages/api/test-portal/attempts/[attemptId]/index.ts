@@ -43,6 +43,7 @@ export const GET: APIRoute = async ({ request, params }) => {
         status: attempt.status,
         started_at: attempt.started_at,
         expires_at: attempt.expires_at,
+        working_ended_at: attempt.working_ended_at ?? null,
         submitted_at: attempt.submitted_at,
         auto_submitted: attempt.auto_submitted,
         grading_status: attempt.grading_status,
@@ -52,7 +53,11 @@ export const GET: APIRoute = async ({ request, params }) => {
           max_score: Number(attempt.max_score ?? 0),
         } : {}),
       },
-      questions: ((questions ?? []) as QuestionRow[]).map(publicQuestion),
+      questions: ((questions ?? []) as QuestionRow[]).map((question) => publicQuestion(
+        owned.test.contest_section === 'proof' && attempt.working_ended_at && !showGrade
+          ? { ...question, prompt_latex: 'Solving has ended. Upload only work completed during the timed round.' }
+          : question,
+      )),
       responses: responseRows.map((response) => ({ ...publicResponse(response,showGrade), file_url:fileUrls.get(response.id) ?? null })),
     });
   } catch (error) {

@@ -118,6 +118,7 @@ const { attemptId } = Astro.params;
       status: 'in_progress' | 'submitted' | 'timed_out';
       started_at: string;
       expires_at: string;
+      working_ended_at?: string | null;
       submitted_at: string | null;
       terms_accepted_at?: string | null;
       terms_snapshot?: string;
@@ -213,7 +214,7 @@ const { attemptId } = Astro.params;
     window_blurred: 'Window lost focus', window_focused: 'Window focused', fullscreen_entered: 'Entered fullscreen', fullscreen_exited: 'Exited fullscreen',
     fullscreen_unsupported: 'Fullscreen unsupported', copy_blocked: 'Clipboard copy blocked', paste_blocked: 'Clipboard paste blocked',
     session_unlocked_by_admin: 'Session unlocked by admin', deadline_extended_by_admin: 'Deadline extended by admin',
-    grade_overridden_by_admin: 'Grade overridden by admin', submitted: 'Submitted', timed_out: 'Timed out',
+    proof_upload_window_started: 'Proof solving ended · upload window opened', grade_overridden_by_admin: 'Grade overridden by admin', submitted: 'Submitted', timed_out: 'Timed out',
   };
 
   function renderEvents() {
@@ -249,14 +250,14 @@ const { attemptId } = Astro.params;
     document.getElementById('review-name')!.textContent = data.attempt.participant_name || 'Unnamed participant';
     document.getElementById('review-email')!.textContent = data.attempt.participant_email;
     document.getElementById('review-test-title')!.textContent = data.test.title;
-    document.getElementById('review-status')!.textContent = data.attempt.status.replace('_', ' ');
+    document.getElementById('review-status')!.textContent = data.attempt.status === 'in_progress' && data.attempt.working_ended_at ? 'Proof uploads open' : data.attempt.status.replace('_', ' ');
     document.getElementById('review-score')!.textContent = data.attempt.score === null ? 'Not graded' : `${data.attempt.score} / ${data.attempt.max_score}`;
     document.getElementById('review-started')!.textContent = formatPortalDate(data.attempt.started_at);
     document.getElementById('review-expires')!.textContent = `${formatPortalDate(data.attempt.expires_at)}${data.attempt.extension_minutes ? ` (+${data.attempt.extension_minutes}m)` : ''}`;
     document.getElementById('review-submitted')!.textContent = data.attempt.submitted_at ? formatPortalDate(data.attempt.submitted_at) : '—';
     document.getElementById('review-grading')!.textContent = data.attempt.grading_status.replace('_', ' ');
     document.getElementById('force-submit')!.classList.toggle('hidden', data.attempt.status !== 'in_progress');
-    document.getElementById('extend-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress');
+    document.getElementById('extend-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress' || Boolean(data.attempt.working_ended_at));
     document.getElementById('unlock-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress' || data.test.security_mode !== 'one_sitting' || !data.attempt.session_locked);
     document.getElementById('review-terms-accepted')!.textContent = data.attempt.terms_accepted_at ? formatPortalDate(data.attempt.terms_accepted_at) : 'Not recorded (legacy attempt)';
     const terms = document.getElementById('review-terms')!;

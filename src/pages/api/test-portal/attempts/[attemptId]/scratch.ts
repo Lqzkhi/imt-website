@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { randomUUID } from 'node:crypto';
 import { authenticatePortalRequest, PortalHttpError, portalErrorResponse, portalJson, uuidField } from '../../../../../lib/testPortalAuth';
-import { finalizeIfExpired, getOwnedAttempt, requireAttemptSession, MIME_EXTENSION_MAP, storageObjectMatchesMimeType, TEST_SUBMISSIONS_BUCKET } from '../../../../../lib/testPortal';
+import { finalizeIfExpired, getOwnedAttempt, requireAttemptSession, requireProofUploadPhase, MIME_EXTENSION_MAP, storageObjectMatchesMimeType, TEST_SUBMISSIONS_BUCKET } from '../../../../../lib/testPortal';
 import { requireSameOrigin } from '../../../../../lib/requestGuards';
 
 export const GET: APIRoute = async ({ request, params }) => {
@@ -12,7 +12,7 @@ export const GET: APIRoute = async ({ request, params }) => {
     requireAttemptSession(request, attempt, owned.test);
     const { data, error } = await supabase.from('test_scratch_files').select('id,file_name,created_at,size_bytes').eq('attempt_id', attempt.id).order('created_at');
     if (error) throw error;
-    return portalJson({ files: data ?? [], editable: attempt.status === 'in_progress' });
+    return portalJson({ files: data ?? [], editable: attempt.status === 'in_progress' && (owned.test.contest_section !== 'proof' || Boolean(attempt.working_ended_at)) });
   } catch (error) { return portalErrorResponse(error); }
 };
 
@@ -27,6 +27,7 @@ export const POST: APIRoute = async ({ request, params }) => {
     const attempt = await finalizeIfExpired(supabase, owned.attempt);
     if (attempt.status !== 'in_progress') throw new PortalHttpError(409, 'ATTEMPT_CLOSED', 'This attempt has ended.');
     requireAttemptSession(request, attempt, owned.test);
+    requireProofUploadPhase(attempt, owned.test);
     // Keep the multipart request below Vercel's function payload limit.
     if (Number(request.headers.get('content-length')) > 4 * 1024 * 1024) throw new PortalHttpError(413, 'FILE_TOO_LARGE', 'Each scratch file must be at most 3 MB.');
     const form = await request.formData();
@@ -58,6 +59,7 @@ export const DELETE: APIRoute = async ({ request, params }) => {
     const attempt = await finalizeIfExpired(supabase, owned.attempt);
     if (attempt.status !== 'in_progress') throw new PortalHttpError(409, 'ATTEMPT_CLOSED', 'This attempt has ended.');
     requireAttemptSession(request, attempt, owned.test);
+    requireProofUploadPhase(attempt, owned.test);
     const id = uuidField(new URL(request.url).searchParams.get('id'), 'id');
     const { data, error } = await supabase.from('test_scratch_files').delete().eq('id',id).eq('attempt_id',attempt.id).select('file_path').maybeSingle();
     if (error) throw error;

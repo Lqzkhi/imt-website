@@ -121,6 +121,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     }
 
     if (action === 'extend_deadline') {
+      if (attempt.working_ended_at) throw new PortalHttpError(409, 'SOLVING_FINISHED', 'Solving has ended. The proof upload window cannot be extended or reopened.');
       if (attempt.status !== 'in_progress') {
         throw new PortalHttpError(409, 'ATTEMPT_CLOSED', 'Only an active attempt can receive more time.');
       }

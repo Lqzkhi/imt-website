@@ -67,6 +67,8 @@ export interface AttemptRow {
   status: 'in_progress' | 'submitted' | 'timed_out';
   started_at: string;
   expires_at: string;
+  working_ended_at?: string | null;
+  working_end_reason?: 'submitted' | 'timed_out' | null;
   submitted_at: string | null;
   last_seen_at: string;
   security_session_hash: string | null;
@@ -175,6 +177,12 @@ export function requireAttemptSession(request: Request, attempt: AttemptRow, tes
       'SESSION_LOCKED',
       'This one-sitting attempt is locked to the browser tab where it was started. Ask an administrator to unlock it if the tab was lost.',
     );
+  }
+}
+
+export function requireProofUploadPhase(attempt: AttemptRow, test: TestRow) {
+  if (test.contest_section === 'proof' && !attempt.working_ended_at) {
+    throw new PortalHttpError(409, 'PROOF_ROUND_ACTIVE', 'Finish the proof round before uploading. You will then have 15 minutes to upload completed work.');
   }
 }
 

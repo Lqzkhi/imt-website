@@ -98,3 +98,62 @@ test('live-schema compatibility: reuse existing Fall drafts and replace a compos
   assert.equal((await db.query("SELECT proretset FROM pg_proc WHERE oid='public.finalize_test_attempt(uuid,text)'::regprocedure")).rows[0].proretset,false);
  }finally{await db.close();}
 });
+
+
+test('proof round has a locked 15-minute upload phase and closes without browser activity', async () => {
+ const db=new PGlite();
+ try {
+  await db.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role;CREATE SCHEMA auth;CREATE TABLE auth.users(id UUID PRIMARY KEY,email TEXT);CREATE SCHEMA storage;CREATE TABLE storage.buckets(id TEXT PRIMARY KEY,name TEXT,public BOOLEAN,file_size_limit BIGINT,allowed_mime_types TEXT[]);');
+  for(const name of ['20260731_test_portal.sql','20260731_test_portal_hardening.sql','20260926000100_fall_tournament.sql','20260926000300_fall_contest_terms.sql','20260926000400_proof_upload_window.sql'])
+   await db.exec((await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8')).replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;',''));
+  const rows=async(sql,args=[]) => (await db.query(sql,args)).rows;
+  const [proof]=await rows("SELECT * FROM tests WHERE contest_section='proof'");
+  const [comp]=await rows("SELECT * FROM tests WHERE contest_section='computational'");
+  assert.ok(proof.require_fullscreen && proof.block_clipboard && comp.require_fullscreen && comp.block_clipboard);
+  await db.exec("UPDATE tests SET opens_at=NOW()-INTERVAL '2 days',closes_at=NOW()+INTERVAL '2 days';UPDATE test_questions SET is_placeholder=FALSE;INSERT INTO test_question_keys(question_id,numerical_answer) SELECT id,42 FROM test_questions WHERE answer_type='numerical';UPDATE tests SET status='published';");
+  const make=async(id=proof.id) => {
+   const [u]=await rows('INSERT INTO auth.users(id) VALUES(gen_random_uuid()) RETURNING id');
+   return (await rows("INSERT INTO test_attempts(test_id,user_id,started_at,expires_at,terms_accepted_at,terms_snapshot) SELECT $1,$2,NOW()-INTERVAL '1 day',NOW()+INTERVAL '1 hour',NOW(),instructions_latex FROM tests WHERE id=$1 RETURNING *",[id,u.id]))[0];
+  };
+  const [q]=await rows('SELECT * FROM test_questions WHERE test_id=$1 ORDER BY position LIMIT 1',[proof.id]);
+  const upload=async(a) => (await rows("INSERT INTO test_responses(attempt_id,question_id,file_path,file_name,file_mime_type) VALUES($1,$2,'proof.pdf','proof.pdf','application/pdf') RETURNING *",[a.id,q.id]))[0];
+  // Set a future solving deadline for the early-finish case.
+  const early=await make();await db.query("UPDATE test_attempts SET expires_at=NOW()+INTERVAL '1 hour' WHERE id=$1",[early.id]);
+  await assert.rejects(upload(early),/Finish the proof round/);
+  await assert.rejects(db.query("INSERT INTO test_scratch_files(attempt_id,file_path,file_name,mime_type,size_bytes) VALUES($1,$2,'scratch.pdf','application/pdf',10)",[early.id,early.user_id+'/'+early.id+'/scratch/a.pdf']),/Finish the proof round/);
+  const [window]=await rows("SELECT * FROM finalize_test_attempt($1,'submitted')",[early.id]);
+  assert.equal(window.status,'in_progress');assert.equal(window.working_end_reason,'submitted');assert.equal(window.submitted_at,null);
+  assert.equal(window.expires_at-window.working_ended_at,15*60*1000);
+  await assert.rejects(db.query("INSERT INTO test_attempts(test_id,user_id,expires_at,terms_accepted_at,terms_snapshot) SELECT $1,$2,NOW()+INTERVAL '1 hour',NOW(),instructions_latex FROM tests WHERE id=$1",[comp.id,window.user_id]),/Finish your other contest section/);
+  const response=await upload(window);
+  await assert.rejects(db.query("UPDATE test_attempts SET expires_at=expires_at+INTERVAL '1 minute' WHERE id=$1",[window.id]),/deadline is locked/);
+  await db.query("UPDATE tests SET closes_at=NOW()+INTERVAL '3 days' WHERE id=$1",[proof.id]);
+  assert.equal((await rows('SELECT expires_at FROM test_attempts WHERE id=$1',[window.id]))[0].expires_at.toISOString(),window.expires_at.toISOString());
+  const [submitted]=await rows("SELECT * FROM finalize_test_attempt($1,'submitted')",[window.id]);
+  assert.equal(submitted.status,'submitted');assert.equal(submitted.grading_status,'pending_manual');
+  await db.query('INSERT INTO test_admins(user_id) VALUES($1)',[early.user_id]);
+  const [graded]=await rows('SELECT * FROM grade_test_response($1,$2,4,$3,NULL)',[response.id,early.user_id,'Verified partial credit after upload closure']);
+  assert.equal(Number(graded.score),4);assert.equal(graded.grading_status,'complete');
+  await assert.rejects(db.query("UPDATE test_responses SET file_name='changed.pdf' WHERE id=$1",[response.id]),/Attempt closed/);
+  // An absent contestant gets the window anchored to the original solving cutoff.
+  const late=await make();await db.query("UPDATE test_attempts SET expires_at=NOW()-INTERVAL '5 minutes' WHERE id=$1",[late.id]);
+  const [lateWindow]=await rows("SELECT * FROM finalize_test_attempt($1,'timed_out')",[late.id]);
+  assert.equal(lateWindow.status,'in_progress');assert.equal(lateWindow.working_end_reason,'timed_out');
+  assert.equal((await rows("SELECT abs(extract(epoch FROM (expires_at-(NOW()+INTERVAL '10 minutes'))))<2 ok FROM test_attempts WHERE id=$1",[late.id]))[0].ok,true);
+  const [retry]=await rows("SELECT * FROM finalize_test_attempt($1,'timed_out')",[late.id]);
+  assert.equal(retry.expires_at.toISOString(),lateWindow.expires_at.toISOString());assert.equal(retry.status,'in_progress');
+  // The scheduler closes a missed upload window in the same call, even after a long outage.
+  const absent=await make();await db.query("UPDATE test_attempts SET expires_at=NOW()-INTERVAL '16 minutes' WHERE id=$1",[absent.id]);
+  await rows('SELECT submit_expired_test_attempts()');
+  const [closed]=await rows('SELECT * FROM test_attempts WHERE id=$1',[absent.id]);
+  assert.equal(closed.status,'timed_out');assert.equal(closed.auto_submitted,true);
+  assert.equal(closed.submitted_at.toISOString(),closed.expires_at.toISOString());
+  assert.equal(closed.expires_at-closed.working_ended_at,15*60*1000);
+  await assert.rejects(upload(closed),/Attempt closed/);
+  const computational=await make(comp.id);const [finished]=await rows("SELECT * FROM finalize_test_attempt($1,'timed_out')",[computational.id]);
+  assert.equal(finished.status,'timed_out');assert.equal(finished.working_ended_at,null);
+  await db.exec('SET ROLE authenticated');
+  await assert.rejects(db.query("SELECT finalize_test_attempt_closed($1,'submitted')",[window.id]),/permission denied/);
+  await assert.rejects(db.query("SELECT finalize_test_attempt($1,'submitted')",[window.id]),/permission denied/);
+ } finally { await db.close(); }
+});
