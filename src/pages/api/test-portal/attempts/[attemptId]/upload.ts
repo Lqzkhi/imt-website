@@ -5,6 +5,7 @@ import {
   getOwnedAttempt,
   MIME_EXTENSION_MAP,
   requireAttemptSession,
+  requireProofUploadPhase,
   TEST_SUBMISSIONS_BUCKET,
   type QuestionRow,
 } from '../../../../../lib/testPortal';
@@ -33,6 +34,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       throw new PortalHttpError(409, 'ATTEMPT_CLOSED', 'This attempt has already ended.');
     }
     requireAttemptSession(request, attempt, owned.test);
+    requireProofUploadPhase(attempt, owned.test);
 
     const body = await readPortalJson(request);
     const questionId = uuidField(body.question_id, 'question_id');

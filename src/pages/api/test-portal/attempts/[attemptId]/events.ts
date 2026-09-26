@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request, params }) => {
     const metadata = body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
       ? body.metadata as Record<string, unknown>
       : {};
-    await logSecurityEvent(supabase, attempt, eventType, metadata);
+    await logSecurityEvent(supabase, attempt, eventType, { ...metadata, phase: attempt.working_ended_at ? 'upload' : 'solving' });
     await supabase.from('test_attempts').update({ last_seen_at: new Date().toISOString() }).eq('id', attempt.id);
     return portalJson({ recorded: true });
   } catch (error) {

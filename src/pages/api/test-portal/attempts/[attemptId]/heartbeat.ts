@@ -18,6 +18,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       server_now: new Date().toISOString(),
       status: attempt.status,
       expires_at: attempt.expires_at,
+      working_ended_at: attempt.working_ended_at ?? null,
     });
   } catch (error) {
     return portalErrorResponse(error);

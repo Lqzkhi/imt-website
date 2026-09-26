@@ -39,7 +39,14 @@ const { attemptId } = Astro.params;
             <p class="text-xs text-slate-500 mt-2">This shows your submitted work and grading. Answer keys remain private.</p>
             <div id="result-items" class="space-y-4 mt-5"></div>
           </section>
-          <section class="mt-6 text-left border rounded-xl bg-white p-5"><h2 class="font-bold">Scratch-paper receipt</h2><ul id="finished-scratch-files" class="text-sm mt-3 space-y-2"></ul></section>
+          <section class="mt-6 text-left border rounded-xl bg-white p-5">
+            <h2 class="font-bold">Scratch paper</h2>
+            <p class="text-sm text-slate-500 mt-2">Your answers are locked. You have 30 minutes from the end of solving to scan and upload work already completed. Up to 10 PDF or image files, 3 MB each.</p>
+            <p data-scratch-deadline class="text-sm font-semibold mt-3"></p>
+            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="finished-scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
+            <p id="finished-scratch-status" class="text-sm mt-2" role="status"></p>
+            <ul id="finished-scratch-files" class="text-sm mt-3 space-y-2"></ul>
+          </section>
           <a href="/test-portal" class="inline-flex mt-8 bg-brand-dark text-brand-gold font-bold rounded-lg px-7 py-3">Back to Test Portal</a>
         </div>
       </div>
@@ -58,7 +65,7 @@ const { attemptId } = Astro.params;
           </div>
           <div class="flex items-center gap-3">
             <div id="timer-box" class="rounded-lg border border-white/10 bg-white/5 px-4 py-2 min-w-[132px] text-center">
-              <span class="block text-[9px] font-bold uppercase tracking-[0.17em] text-slate-400">Time remaining</span>
+              <span id="timer-label" class="block text-[9px] font-bold uppercase tracking-[0.17em] text-slate-400">Time remaining</span>
               <strong id="timer-text" class="font-mono text-lg text-white tabular-nums">--:--:--</strong>
             </div>
             <button id="submit-attempt" type="button" class="bg-brand-green text-white font-extrabold text-sm rounded-lg px-5 py-3 hover:bg-[#3d694a] transition disabled:opacity-50">Submit test</button>
@@ -90,8 +97,9 @@ const { attemptId } = Astro.params;
         <main class="min-w-0">
           <section class="bg-white border border-gray-200 rounded-xl p-5 mb-5" aria-labelledby="scratch-heading">
             <h2 id="scratch-heading" class="font-bold text-brand-dark">Scratch paper</h2>
-            <p class="text-sm text-slate-500 mt-1">Optional supporting work. Proof answers must be uploaded under their problems. Up to 10 PDF or image files, 3 MB each. Upload before your timer ends.</p>
-            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" /></label>
+            <p class="text-sm text-slate-500 mt-1">Optional supporting work. Uploads open only after solving ends and close 30 minutes later. Proof answers have a separate 15-minute deadline and belong under their problems. Up to 10 PDF or image files, 3 MB each.</p>
+            <p data-scratch-deadline class="text-sm font-semibold mt-3"></p>
+            <label class="block mt-3 text-sm font-semibold">Add scratch work <input id="scratch-picker" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" class="block mt-2 w-full text-sm" disabled /></label>
             <p id="scratch-status" class="text-sm mt-2" role="status"></p><ul id="scratch-files" class="mt-3 space-y-2 text-sm"></ul>
           </section>
           <div id="question-card" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -183,6 +191,7 @@ const { attemptId } = Astro.params;
       id: string;
       status: 'in_progress' | 'submitted' | 'timed_out';
       expires_at: string;
+      working_ended_at: string | null;
       auto_submitted: boolean;
       grading_status: string;
       score?: number;
@@ -204,6 +213,9 @@ const { attemptId } = Astro.params;
   let clockOffset = 0;
   let timerHandle = 0;
   let heartbeatHandle = 0;
+  let scratchTimerHandle = 0;
+  let scratchDeadline: string | null = null;
+  let scratchBusy = false;
   let numericSaveTimer = 0;
   let timeoutHandled = false;
   let securityConfigured = false;
@@ -214,6 +226,10 @@ const { attemptId } = Astro.params;
   const responses = new Map<string, PortalResponse>();
 
   const attemptFetch = <T,>(path: string, options: RequestInit = {}) => portalFetch<T>(path, options, sessionToken);
+
+  function isProofSolving() { return payload?.test.contest_section === 'proof' && !payload.attempt.working_ended_at && payload.attempt.status === 'in_progress'; }
+  function isProofUploading() { return payload?.test.contest_section === 'proof' && Boolean(payload.attempt.working_ended_at) && payload.attempt.status === 'in_progress'; }
+  function isSolving() { return payload?.attempt.status === 'in_progress' && !payload.attempt.working_ended_at && Date.parse(payload.attempt.expires_at) > Date.now() + clockOffset; }
 
   function toast(message: string) {
     const element = document.getElementById('attempt-toast')!;
@@ -325,9 +341,11 @@ const { attemptId } = Astro.params;
       if (saved) {
         status.textContent = `${file.name} uploaded and saved.`;
         status.className = 'text-sm font-semibold text-brand-green mt-3';
-        renderQuestion();
+        await loadAttempt();
       }
     } catch (error) {
+      failedQuestions.add(question.id);
+      saveFailed = true;
       status.textContent = error instanceof Error ? error.message : 'The upload failed.';
       status.className = 'text-sm font-semibold text-red-600 mt-3';
     } finally {
@@ -351,7 +369,9 @@ const { attemptId } = Astro.params;
     const answerArea = document.getElementById('answer-area')!;
     answerArea.innerHTML = '';
 
-    if (question.answer_type === 'numerical') {
+    if (isProofSolving()) {
+      answerArea.textContent = 'Write your proof on paper. Uploads open for 15 minutes after you finish this round. Do not switch tabs while solving.';
+    } else if (question.answer_type === 'numerical') {
       const label = document.createElement('label');
       label.className = 'block';
       label.innerHTML = '<span class="block text-sm font-bold text-brand-dark mb-2">' + (payload.test.contest_section === 'computational' ? 'Integer answer' : 'Numerical answer') + '</span>';
@@ -438,6 +458,15 @@ const { attemptId } = Astro.params;
           });
         });
         current.append(chip, remove);
+        if (response.file_url) {
+          const preview = document.createElement('a');
+          preview.href = response.file_url;
+          preview.target = '_blank';
+          preview.rel = 'noopener noreferrer';
+          preview.className = 'text-xs font-bold underline text-brand-green';
+          preview.textContent = 'Open saved proof';
+          current.appendChild(preview);
+        }
         wrapper.appendChild(current);
       }
       const pickerLabel = document.createElement('label');
@@ -484,6 +513,9 @@ const { attemptId } = Astro.params;
       if (remaining <= 5 * 60_000) timerBox.classList.add('border-red-400', 'bg-red-500/20');
       if (remaining <= 0 && !timeoutHandled) {
         timeoutHandled = true;
+        // Hide expired work immediately, even while the network is unavailable.
+        document.getElementById('question-prompt')!.textContent = 'Time has ended. Reconnecting to confirm your submission or upload window…';
+        workspace.inert = true;
         void submitAttempt(true);
       }
     };
@@ -507,22 +539,27 @@ const { attemptId } = Astro.params;
     securityConfigured = true;
     if (payload.test.security_mode !== 'one_sitting') return;
     document.addEventListener('visibilitychange', () => {
+      if (!isSolving()) return;
       void logEvent(document.hidden ? 'visibility_hidden' : 'visibility_visible');
+      if (document.hidden) toast('Leaving the test tab is recorded. Return to your test; the timer continues.');
     });
-    window.addEventListener('blur', () => void logEvent('window_blurred'));
-    window.addEventListener('focus', () => void logEvent('window_focused'));
+    window.addEventListener('blur', () => { if (isSolving()) void logEvent('window_blurred'); });
+    window.addEventListener('focus', () => { if (isSolving()) void logEvent('window_focused'); });
 
     const gate = document.getElementById('fullscreen-gate')!;
     if (payload.test.require_fullscreen) {
       gate.classList.remove('hidden');
       gate.classList.add('flex');
       document.addEventListener('fullscreenchange', () => {
+        if (!isSolving()) return;
         if (document.fullscreenElement) {
           gate.classList.add('hidden');
           gate.classList.remove('flex');
           document.getElementById('security-warning')!.classList.add('hidden');
           void logEvent('fullscreen_entered');
         } else {
+          gate.classList.remove('hidden');
+          gate.classList.add('flex');
           const warning = document.getElementById('security-warning')!;
           document.getElementById('security-warning-text')!.textContent = 'Fullscreen was exited. This event has been recorded.';
           document.getElementById('reenter-fullscreen')!.classList.remove('hidden');
@@ -534,16 +571,19 @@ const { attemptId } = Astro.params;
 
     if (payload.test.block_clipboard) {
       root.addEventListener('copy', (event) => {
+        if (!isSolving()) return;
         event.preventDefault();
         toast('Copying is disabled for this test.');
         void logEvent('copy_blocked');
       });
       root.addEventListener('cut', (event) => {
+        if (!isSolving()) return;
         event.preventDefault();
         toast('Cutting is disabled for this test.');
         void logEvent('copy_blocked', { action: 'cut' });
       });
       root.addEventListener('paste', (event) => {
+        if (!isSolving()) return;
         event.preventDefault();
         toast('Pasting is disabled for this test.');
         void logEvent('paste_blocked');
@@ -555,9 +595,8 @@ const { attemptId } = Astro.params;
     const message = document.getElementById('fullscreen-error')!;
     try {
       if (!document.documentElement.requestFullscreen) {
-        message.textContent = 'Fullscreen is not supported by this browser. You may continue, and the limitation has been recorded.';
+        message.textContent = 'Fullscreen is required. Use a supported desktop browser, or contact an organizer if you need an accommodation. Your server timer continues.';
         message.classList.remove('hidden');
-        document.getElementById('fullscreen-gate')!.classList.add('hidden');
         void logEvent('fullscreen_unsupported');
         return;
       }
@@ -570,6 +609,8 @@ const { attemptId } = Astro.params;
 
   async function flushNumericalAnswer() {
     window.clearTimeout(numericSaveTimer);
+    // Compare against the latest saved value, not a stale value while a save is queued.
+    await answerQueue;
     const question = payload.questions[currentIndex];
     if (question?.answer_type !== 'numerical') return true;
     const input = document.querySelector<HTMLInputElement>('#answer-area .answer-input');
@@ -594,17 +635,21 @@ const { attemptId } = Astro.params;
       }
       const saved = await flushNumericalAnswer();
       if (!saved) return;
+      if (saveFailed) {
+        toast('Some changes failed to save. Retry those answers or uploads before submitting.');
+        return;
+      }
       const unanswered = payload.questions.filter((question) => !hasAnswer(question.id)).length;
       const warning = unanswered ? ` ${unanswered} problem${unanswered === 1 ? ' is' : 's are'} unanswered.` : '';
-      if (!confirm(`Submit this test now?${warning} You cannot change answers afterward.`)) return;
+      if (!confirm(isProofSolving() ? 'End solving now? Stop all mathematical work. Your 15-minute proof-answer window and 30-minute scratch-paper window start immediately. Solving cannot be reopened.' : `Submit this test now?${warning} You cannot change answers afterward. Scratch uploads remain available until their separate deadline.`)) return;
     }
     submitButton.disabled = true;
     submitButton.textContent = fromTimeout ? 'Time expired…' : 'Submitting…';
     try {
-      await attemptFetch(`/api/test-portal/attempts/${attemptId}/submit`, { method: 'POST' });
+      await attemptFetch(`/api/test-portal/attempts/${attemptId}/submit`, { method: 'POST', body: JSON.stringify({ end_work: isProofSolving() }) });
       window.clearInterval(timerHandle);
       window.clearInterval(heartbeatHandle);
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      timeoutHandled = false;
       await loadAttempt();
     } catch (error) {
       if (error instanceof PortalClientError && error.code === 'ATTEMPT_CLOSED') {
@@ -613,7 +658,8 @@ const { attemptId } = Astro.params;
       }
       toast(error instanceof Error ? error.message : 'The test could not be submitted.');
       submitButton.disabled = false;
-      submitButton.textContent = 'Submit test';
+      submitButton.textContent = isProofSolving() ? 'Finish solving · begin uploads' : isProofUploading() ? 'Submit proofs' : 'Submit test';
+      timeoutHandled = false;
     }
   }
 
@@ -673,6 +719,9 @@ const { attemptId } = Astro.params;
   }
 
   function renderFinished() {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    document.getElementById('fullscreen-gate')!.classList.add('hidden');
+    document.getElementById('fullscreen-gate')!.classList.remove('flex');
     loader.classList.add('hidden');
     workspace.classList.add('hidden');
     const panel = document.getElementById('finished-panel')!;
@@ -700,6 +749,7 @@ const { attemptId } = Astro.params;
     }
     window.clearInterval(timerHandle);
     window.clearInterval(heartbeatHandle);
+    window.clearInterval(scratchTimerHandle);
     try {
       payload = await attemptFetch<AttemptPayload>(`/api/test-portal/attempts/${attemptId}`);
       clockOffset = new Date(payload.server_now).getTime() - Date.now();
@@ -715,17 +765,30 @@ const { attemptId } = Astro.params;
       document.getElementById('security-mode-badge')!.textContent = payload.test.security_mode === 'one_sitting' ? 'Secure one-sitting test' : 'Resumable take-home test';
       loader.classList.add('hidden');
       document.getElementById('finished-panel')!.classList.add('hidden');
+      workspace.inert = false;
       workspace.classList.remove('hidden');
       renderQuestion();
+      document.getElementById('timer-label')!.textContent = isProofUploading() ? 'Proof-answer upload time remaining' : 'Solving time remaining';
+      (document.getElementById('submit-attempt') as HTMLButtonElement).disabled = false;
+      document.getElementById('submit-attempt')!.textContent = isProofSolving() ? 'Finish solving · begin uploads' : isProofUploading() ? 'Submit proofs' : 'Submit test';
+      (document.getElementById('scratch-picker') as HTMLInputElement).disabled = true;
+      if (isProofUploading()) {
+        document.getElementById('security-mode-badge')!.textContent = 'Proof upload window · no further solving';
+        document.getElementById('fullscreen-gate')!.classList.add('hidden');
+        document.getElementById('fullscreen-gate')!.classList.remove('flex');
+        document.getElementById('security-warning')!.classList.add('hidden');
+        if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      }
+      timeoutHandled = false;
       startTimer();
-      configureSecurity();
+      if (!isProofUploading()) configureSecurity();
       await loadScratch();
       heartbeatHandle = window.setInterval(async () => {
         try {
-          const heartbeat = await attemptFetch<{ server_now: string; status: string; expires_at: string }>(`/api/test-portal/attempts/${attemptId}/heartbeat`, { method: 'POST' });
+          const heartbeat = await attemptFetch<{ server_now: string; status: string; expires_at: string; working_ended_at: string | null }>(`/api/test-portal/attempts/${attemptId}/heartbeat`, { method: 'POST' });
           clockOffset = new Date(heartbeat.server_now).getTime() - Date.now();
           payload.attempt.expires_at = heartbeat.expires_at;
-          if (heartbeat.status !== 'in_progress') await loadAttempt();
+          if (heartbeat.status !== 'in_progress' || heartbeat.working_ended_at !== payload.attempt.working_ended_at) await loadAttempt();
         } catch {
           saveIndicator.textContent = 'Connection interrupted';
           saveIndicator.className = 'text-[11px] font-semibold text-red-300';
@@ -756,20 +819,37 @@ const { attemptId } = Astro.params;
   document.getElementById('enter-fullscreen')!.addEventListener('click', () => void enterFullscreen());
   document.getElementById('reenter-fullscreen')!.addEventListener('click', () => void enterFullscreen());
   window.addEventListener('beforeunload', (event) => {
-    if (payload?.attempt.status === 'in_progress' || busyOperations > 0 || saveFailed || saveStatus.textContent?.includes('Waiting')) {
+    if (payload?.attempt.status === 'in_progress' || scratchBusy || busyOperations > 0 || saveFailed || saveStatus.textContent?.includes('Waiting')) {
       event.preventDefault();
     }
   });
 
+  function updateScratchClock() {
+    const remaining = scratchDeadline ? Date.parse(scratchDeadline) - (Date.now() + clockOffset) : 0;
+    const editable = Boolean(scratchDeadline && remaining > 0);
+    const text = !scratchDeadline ? 'Scratch uploads open after solving ends.' : editable
+      ? `Scratch upload time remaining: ${formatCountdown(remaining)}. You may use other tabs or a scanning app; no further solving.`
+      : 'The 30-minute scratch upload window has ended.';
+    document.querySelectorAll<HTMLElement>('[data-scratch-deadline]').forEach(el => el.textContent = text);
+    document.querySelectorAll<HTMLInputElement>('#scratch-picker, #finished-scratch-picker').forEach(el => el.disabled = !editable || scratchBusy);
+    document.querySelectorAll<HTMLButtonElement>('[data-scratch-remove]').forEach(el => el.disabled = !editable || scratchBusy);
+    if (!editable) window.clearInterval(scratchTimerHandle);
+  }
   async function loadScratch() {
-    const result = await attemptFetch<{ files: { id: string; file_name: string }[]; editable: boolean }>(`/api/test-portal/attempts/${attemptId}/scratch`);
+    const result = await attemptFetch<{ files: { id: string; file_name: string }[]; editable: boolean; deadline: string | null; server_now: string }>(`/api/test-portal/attempts/${attemptId}/scratch`);
+    scratchDeadline = result.deadline;
+    clockOffset = Date.parse(result.server_now) - Date.now();
+    window.clearInterval(scratchTimerHandle);
+    updateScratchClock();
+    if (scratchDeadline && Date.parse(scratchDeadline) > Date.now() + clockOffset) scratchTimerHandle = window.setInterval(updateScratchClock, 1000);
     const list = document.getElementById(payload.attempt.status === 'in_progress' ? 'scratch-files' : 'finished-scratch-files')!;
     list.replaceChildren();
     if (!result.files.length) list.textContent = 'No scratch work uploaded.';
     for (const file of result.files) {
       const li = document.createElement('li'); li.textContent = file.file_name + ' · Saved ';
       if (result.editable) {
-        const remove = document.createElement('button'); remove.textContent = 'Remove'; remove.className = 'underline text-red-700'; remove.type = 'button';
+        const remove = document.createElement('button'); remove.textContent = 'Remove'; remove.className = 'ml-2 underline text-red-700'; remove.type = 'button';
+        remove.dataset.scratchRemove = '';
         remove.onclick = async () => {
           remove.disabled = true;
           try { await attemptFetch(`/api/test-portal/attempts/${attemptId}/scratch?id=${file.id}`, { method: 'DELETE' }); await loadScratch(); }
@@ -780,16 +860,31 @@ const { attemptId } = Astro.params;
       list.append(li);
     }
   }
-  document.getElementById('scratch-picker')!.addEventListener('change', async (event) => {
+  document.querySelectorAll<HTMLInputElement>('#scratch-picker, #finished-scratch-picker').forEach(input => input.addEventListener('change', async (event) => {
     const picker = event.target as HTMLInputElement; const file = picker.files?.[0]; if (!file) return;
-    const status = document.getElementById('scratch-status')!;
-    picker.disabled = true; setSaving(true); status.textContent = 'Uploading scratch work…';
+    const status = document.getElementById(picker.id === 'finished-scratch-picker' ? 'finished-scratch-status' : 'scratch-status')!;
+    scratchBusy = true; updateScratchClock(); status.textContent = 'Uploading scratch work…';
     try {
       const form = new FormData(); form.set('file',file);
       await attemptFetch(`/api/test-portal/attempts/${attemptId}/scratch`, { method: 'POST', body: form });
-      status.textContent = 'Scratch work saved.'; await loadScratch(); picker.value = '';
+      await loadScratch(); picker.value = ''; status.textContent = 'Scratch work saved.';
     } catch (error) { status.textContent = error instanceof Error ? error.message : 'Upload failed.'; }
-    finally { picker.disabled = false; setSaving(false); }
-  });
-  loadAttempt();
+    finally { scratchBusy = false; updateScratchClock(); }
+  }));
+  // Duplicating a tab copies sessionStorage in some browsers. An exclusive browser
+  // lock prevents two local tabs from using that copied token at the same time.
+  async function openSingleTab() {
+    if (!navigator.locks) { await loadAttempt(); return; }
+    await navigator.locks.request('imt-attempt-' + attemptId, { ifAvailable: true }, async (lock) => {
+      if (!lock) {
+        showFatalError('This attempt is already open in another tab. Return to that tab or close it before reopening. Your server timer continues.');
+        return;
+      }
+      const released = new Promise<void>((resolve) => window.addEventListener('pagehide', () => resolve(), { once: true }));
+      await loadAttempt();
+      if (payload?.attempt.status !== 'in_progress') return;
+      await released;
+    });
+  }
+  void openSingleTab().catch(() => showFatalError('The browser could not establish an exclusive test tab. Close duplicate tabs and refresh.'));
 </script>

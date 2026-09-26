@@ -1,7 +1,7 @@
 name: Verify website
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/**']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -21,3 +21,4 @@ jobs:
       - run: npm test
       - run: npm run verify
       - run: npm audit --audit-level=moderate
+

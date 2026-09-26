@@ -14,7 +14,4 @@ export default defineConfig({
     // also permits navigation and other controls in the production build.
     build: { assetsInlineLimit: 0 },
   },
-  server: {
-    allowedHosts: true, 
-  }
 });

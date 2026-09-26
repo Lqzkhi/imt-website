@@ -47,9 +47,9 @@ export const GET: APIRoute = async ({ request, params }) => {
     const { data: scratchRows, error: scratchError } = await supabase.from('test_scratch_files').select('*').eq('attempt_id',attempt.id).order('created_at');
     if (scratchError) throw scratchError;
     const scratchFiles = await Promise.all((scratchRows ?? []).map(async (file) => {
-      const { data, error } = await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).createSignedUrl(file.file_path,600,{download:file.file_name});
+      const { data, error } = await supabase.storage.from(TEST_SUBMISSIONS_BUCKET).createSignedUrl(file.file_path,600);
       if (error) throw error;
-      return { id:file.id, file_name:file.file_name, file_url:data.signedUrl, created_at:file.created_at };
+      return { id:file.id, file_name:file.file_name, mime_type:file.mime_type, file_url:data.signedUrl, created_at:file.created_at };
     }));
     return portalJson({
       scratch_files: scratchFiles,
@@ -121,6 +121,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     }
 
     if (action === 'extend_deadline') {
+      if (attempt.working_ended_at) throw new PortalHttpError(409, 'SOLVING_FINISHED', 'Solving has ended. The proof upload window cannot be extended or reopened.');
       if (attempt.status !== 'in_progress') {
         throw new PortalHttpError(409, 'ATTEMPT_CLOSED', 'Only an active attempt can receive more time.');
       }

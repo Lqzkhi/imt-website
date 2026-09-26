@@ -67,6 +67,8 @@ export interface AttemptRow {
   status: 'in_progress' | 'submitted' | 'timed_out';
   started_at: string;
   expires_at: string;
+  working_ended_at?: string | null;
+  working_end_reason?: 'submitted' | 'timed_out' | null;
   submitted_at: string | null;
   last_seen_at: string;
   security_session_hash: string | null;
@@ -99,6 +101,21 @@ export interface ResponseRow {
 
 export function hashPortalSession(token: string) {
   return createHash('sha256').update(token, 'utf8').digest('hex');
+}
+
+export function scratchUploadDeadline(attempt: AttemptRow): string | null {
+  const ended = attempt.working_ended_at
+    ? Date.parse(attempt.working_ended_at)
+    : attempt.status !== 'in_progress' && attempt.submitted_at
+      ? Math.min(Date.parse(attempt.submitted_at), Date.parse(attempt.expires_at))
+      : NaN;
+  return Number.isFinite(ended) ? new Date(ended + 30 * 60_000).toISOString() : null;
+}
+
+export function requireScratchUploadWindow(attempt: AttemptRow) {
+  const deadline = scratchUploadDeadline(attempt);
+  if (!deadline) throw new PortalHttpError(409, 'SCRATCH_NOT_OPEN', 'Scratch uploads open after solving ends.');
+  if (Date.parse(deadline) <= Date.now()) throw new PortalHttpError(409, 'SCRATCH_CLOSED', 'The 30-minute scratch upload window has ended.');
 }
 
 export function calculateAttemptExpiry(test: TestRow, startedAt: Date, extensionMinutes = 0) {
@@ -175,6 +192,12 @@ export function requireAttemptSession(request: Request, attempt: AttemptRow, tes
       'SESSION_LOCKED',
       'This one-sitting attempt is locked to the browser tab where it was started. Ask an administrator to unlock it if the tab was lost.',
     );
+  }
+}
+
+export function requireProofUploadPhase(attempt: AttemptRow, test: TestRow) {
+  if (test.contest_section === 'proof' && !attempt.working_ended_at) {
+    throw new PortalHttpError(409, 'PROOF_ROUND_ACTIVE', 'Finish the proof round before uploading. You will then have 15 minutes to upload completed work.');
   }
 }
 

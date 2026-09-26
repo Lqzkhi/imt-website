@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createServerClient } from './supabaseServer';
+import { readBoundedText } from './requestBody';
 
 export class PortalHttpError extends Error {
   status: number;
@@ -33,7 +34,9 @@ export function portalJson(data: unknown, init: ResponseInit = {}) {
 export function portalErrorResponse(error: unknown) {
   if (!(error instanceof PortalHttpError) && error && typeof error === 'object' && 'message' in error) {
     const message = String(error.message);
-    if (message.includes('Attempt closed')) error = new PortalHttpError(409,'ATTEMPT_CLOSED','The server deadline passed or this attempt has already ended.');
+    if (message.includes('Scratch uploads open after solving ends')) error = new PortalHttpError(409,'SCRATCH_NOT_OPEN','Scratch uploads open after solving ends.');
+    else if (message.includes('Scratch upload window closed')) error = new PortalHttpError(409,'SCRATCH_CLOSED','The 30-minute scratch upload window has ended.');
+    else if (message.includes('Attempt closed')) error = new PortalHttpError(409,'ATTEMPT_CLOSED','The server deadline passed or this attempt has already ended.');
     else if (message.includes('Wait until the contest closes')) error = new PortalHttpError(409,'RESULTS_NOT_READY','Wait until the contest closes before releasing results.');
     else if (message.includes('Finish submission processing')) error = new PortalHttpError(409,'GRADING_INCOMPLETE','Finish all submissions and grading before releasing results.');
     else if (message.includes('Test structure locked')) error = new PortalHttpError(409,'TEST_STRUCTURE_LOCKED','Problems and answer keys are locked after the first attempt.');
@@ -60,14 +63,13 @@ export async function readPortalJson(request: Request) {
   }
 
   try {
-    if (Number(request.headers.get('content-length')) > 120000) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
-    const text = await request.text();
-    if (text.length > 120000) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
+    const text = await readBoundedText(request, 120000);
     const body = JSON.parse(text);
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw new PortalHttpError(400,'INVALID_JSON','Use a JSON object.');
     return body as Record<string,unknown>;
   } catch (error) {
     if (error instanceof PortalHttpError) throw error;
+    if (error instanceof RangeError) throw new PortalHttpError(413,'BODY_TOO_LARGE','Request body is too large.');
     throw new PortalHttpError(400, 'INVALID_JSON', 'The request body is not valid JSON.');
   }
 }
