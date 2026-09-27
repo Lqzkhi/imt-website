@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { finalizeIfExpired, getOwnedAttempt, logSecurityEvent, PORTAL_EVENT_TYPES, requireAttemptSession } from '../../../../../lib/testPortal';
-import { authenticatePortalRequest, PortalHttpError, portalErrorResponse, portalJson, readPortalJson, stringField } from '../../../../../lib/testPortalAuth';
+import { authenticatePortalRequest, PortalHttpError, portalErrorResponse, portalJson, readPortalJson, stringField, uuidField } from '../../../../../lib/testPortalAuth';
 import { requireSameOrigin } from '../../../../../lib/requestGuards';
 
 export const POST: APIRoute = async ({ request, params }) => {
@@ -24,6 +24,14 @@ export const POST: APIRoute = async ({ request, params }) => {
     const metadata = body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
       ? body.metadata as Record<string, unknown>
       : {};
+    if (eventType === 'fullscreen_exited') {
+      const eventId = metadata.event_id ? uuidField(metadata.event_id, 'event_id') : crypto.randomUUID();
+      const { data, error } = await supabase.rpc('record_fullscreen_exit', { p_attempt_id: attempt.id, p_event_id: eventId });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row?.id) throw new Error('Fullscreen event did not return an attempt.');
+      return portalJson({ recorded: true, fullscreen_warnings: row.fullscreen_warnings, locked: Boolean(row.security_locked_at) });
+    }
     await logSecurityEvent(supabase, attempt, eventType, { ...metadata, phase: attempt.working_ended_at ? 'upload' : 'solving' });
     await supabase.from('test_attempts').update({ last_seen_at: new Date().toISOString() }).eq('id', attempt.id);
     return portalJson({ recorded: true });

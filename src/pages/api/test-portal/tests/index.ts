@@ -56,7 +56,8 @@ export const GET: APIRoute = async ({ request }) => {
             expires_at: attempt.expires_at,
             submitted_at: attempt.submitted_at,
             grading_status: attempt.grading_status,
-            ...(test.show_results && attempt.status !== 'in_progress' ? {
+            disqualified: Boolean(attempt.disqualified_at),
+            ...(test.show_results && !attempt.disqualified_at && attempt.status !== 'in_progress' ? {
               score: Number(attempt.score ?? 0),
               max_score: Number(attempt.max_score ?? 0),
             } : {}),

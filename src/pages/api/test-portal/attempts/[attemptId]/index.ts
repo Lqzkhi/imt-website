@@ -42,6 +42,7 @@ export const GET: APIRoute = async ({ request, params }) => {
         working_ended_at: attempt.working_ended_at ?? null,
         submitted_at: attempt.submitted_at,
         auto_submitted: attempt.auto_submitted,
+        fullscreen_warnings: attempt.fullscreen_warnings ?? 0,
         grading_status: attempt.grading_status,
         ...(showGrade ? {
           score: Number(attempt.score ?? 0),
@@ -60,4 +61,3 @@ export const GET: APIRoute = async ({ request, params }) => {
     return portalErrorResponse(error);
   }
 };
-

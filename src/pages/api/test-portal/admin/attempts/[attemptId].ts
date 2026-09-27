@@ -90,7 +90,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
       }
       const { data, error } = await supabase
         .from('test_attempts')
-        .update({ security_session_hash: null })
+          .update({ security_session_hash: null, security_locked_at: null, fullscreen_warnings: 0 })
         .eq('id', attempt.id)
         .select('*')
         .single();
@@ -101,6 +101,18 @@ export const PATCH: APIRoute = async ({ request, params }) => {
         attempt_id: attempt.id,
       });
       return portalJson({ attempt: data });
+    }
+
+    if (action === 'disqualify' || action === 'reinstate') {
+      const reason = stringField(body.reason, 'reason', { required: true, max: 2000 });
+      if (reason.trim().length < 5) throw new PortalHttpError(400, 'VALIDATION_ERROR', 'Enter a reason of at least 5 characters.');
+      const { data, error } = await supabase.rpc('set_attempt_disqualification', {
+        p_attempt_id: attempt.id, p_admin_id: user.id, p_disqualified: action === 'disqualify', p_reason: reason,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row?.id) throw new Error('Disqualification did not return an attempt.');
+      return portalJson({ attempt: row });
     }
 
     if (action === 'force_submit') {

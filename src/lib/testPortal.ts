@@ -72,6 +72,11 @@ export interface AttemptRow {
   submitted_at: string | null;
   last_seen_at: string;
   security_session_hash: string | null;
+  fullscreen_warnings?: number;
+  security_locked_at?: string | null;
+  disqualified_at?: string | null;
+  disqualified_by?: string | null;
+  disqualification_reason?: string;
   auto_submitted: boolean;
   extension_minutes: number;
   deadline_extended_at: string | null;
@@ -204,7 +209,11 @@ export function publicResponse(response: ResponseRow, showGrade = false) {
 }
 
 export function requireAttemptSession(request: Request, attempt: AttemptRow, test: TestRow) {
+  if (attempt.disqualified_at) throw new PortalHttpError(409, 'ATTEMPT_DISQUALIFIED', 'This test attempt has been disqualified. Contact an organizer if you wish to appeal.');
   if (test.security_mode !== 'one_sitting' || attempt.status !== 'in_progress') return;
+  if (attempt.security_locked_at) {
+    throw new PortalHttpError(409, 'FULLSCREEN_LOCKED', 'Your test is locked after 3 fullscreen warnings. Contact an organizer to unlock it. Your timer continues running.');
+  }
   const token = request.headers.get('x-test-session')?.trim() ?? '';
   if (!token || !attempt.security_session_hash || hashPortalSession(token) !== attempt.security_session_hash) {
     throw new PortalHttpError(

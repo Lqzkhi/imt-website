@@ -56,6 +56,8 @@ export const GET: APIRoute = async ({ request, params }) => {
         auto_score: attempt.auto_score === null ? null : Number(attempt.auto_score),
         max_score: Number(attempt.max_score),
         grading_status: attempt.grading_status,
+        disqualified_at: attempt.disqualified_at ?? null,
+        disqualification_reason: attempt.disqualification_reason ?? '',
         response_count: responseCounts.get(attempt.id) ?? 0,
         security_events: eventCounts.get(attempt.id) ?? {},
       })),

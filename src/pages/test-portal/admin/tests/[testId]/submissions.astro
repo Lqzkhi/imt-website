@@ -77,6 +77,8 @@ const { testId } = Astro.params;
     participant_email: string;
     participant_name: string;
     status: 'in_progress' | 'submitted' | 'timed_out';
+    disqualified_at?: string | null;
+    disqualification_reason?: string;
     started_at: string;
     submitted_at: string | null;
     response_count: number;
@@ -101,6 +103,7 @@ const { testId } = Astro.params;
   }
 
   function statusBadge(attempt: AttemptSummary) {
+    if (attempt.disqualified_at) return ['DQ', 'bg-red-100 text-red-900 border-red-300'];
     if (attempt.grading_status === 'pending_manual' && attempt.status !== 'in_progress') return ['Needs review', 'bg-amber-50 text-amber-700 border-amber-200'];
     if (attempt.status === 'submitted') return ['Submitted', 'bg-green-50 text-green-700 border-green-200'];
     if (attempt.status === 'timed_out') return ['Timed out', 'bg-red-50 text-red-700 border-red-200'];
@@ -143,11 +146,11 @@ const { testId } = Astro.params;
   }
 
   function downloadCsv() {
-    const headers = ['Name', 'Email', 'Status', 'Started At', 'Submitted At', 'Responses', 'Score', 'Maximum Score', 'Grading Status', 'Flagged Security Events'];
+    const headers = ['Name', 'Email', 'Status', 'Started At', 'Submitted At', 'Responses', 'Score', 'Maximum Score', 'Grading Status', 'Flagged Security Events', 'Disqualification Reason'];
     const rows = data.attempts.map((attempt) => [
       attempt.participant_name,
       attempt.participant_email,
-      attempt.status,
+      attempt.disqualified_at ? 'disqualified' : attempt.status,
       attempt.started_at,
       attempt.submitted_at ?? '',
       attempt.response_count,
@@ -155,6 +158,7 @@ const { testId } = Astro.params;
       attempt.max_score,
       attempt.grading_status,
       securityCount(attempt),
+      attempt.disqualification_reason ?? '',
     ]);
     const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));

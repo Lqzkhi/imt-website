@@ -17,13 +17,13 @@ import Layout from '../../../layouts/Layout.astro';
 </Layout>
 <script>
   import { escapeHtml, formatPortalDate, getPortalSession, portalFetch } from '../../../lib/testPortalClient';
-  interface Section { id: string; status: string; score: number | null; max_score: number; grading_status: string; events: Record<string,number> }
+  interface Section { id: string; status: string; score: number | null; max_score: number; grading_status: string; disqualified_at?: string | null; events: Record<string,number> }
   interface Participant { name: string; email: string; combined_percent: number | null; review_events: number; sections: { computational?: Section; proof?: Section } }
   interface Report { participants: Participant[]; scheduler_healthy: boolean; overdue_attempts: number; health: { last_run_at: string } | null; tests: { id: string; title: string; status: string; closes_at: string; require_fullscreen: boolean; block_clipboard: boolean }[] }
   let report: Report;
   const status = document.getElementById('overview-status')!;
   function sectionCell(s?: Section) {
-    return s ? `<a class="underline text-brand-green" href="/test-portal/admin/attempts/${s.id}">${escapeHtml(s.status)} · ${s.grading_status === 'complete' ? `${s.score ?? 0}/${s.max_score}` : escapeHtml(s.grading_status)}</a>` : 'Not started';
+    return s ? `<a class="underline text-brand-green" href="/test-portal/admin/attempts/${s.id}">${s.disqualified_at ? 'DQ' : escapeHtml(s.status)} · ${s.grading_status === 'complete' ? `${s.score ?? 0}/${s.max_score}` : escapeHtml(s.grading_status)}</a>` : 'Not started';
   }
   function eventSummary(p: Participant) {
     const counts: Record<string,number> = {};
@@ -38,7 +38,7 @@ import Layout from '../../../layouts/Layout.astro';
       status.textContent = `${report.scheduler_healthy ? 'Automatic submission worker is healthy.' : 'Action needed: automatic submission worker has no recent heartbeat. Check Supabase Cron.'} Last run: ${formatPortalDate(report.health?.last_run_at)}. Overdue attempts: ${report.overdue_attempts}.`;
       status.className = `rounded-xl border p-5 mb-6 ${report.scheduler_healthy && !report.overdue_attempts ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`;
       document.getElementById('contest-settings')!.innerHTML = report.tests.map((t) => `<article class="bg-white border rounded-xl p-5"><h2 class="font-bold">${escapeHtml(t.title)}</h2><p class="text-sm mt-2">${escapeHtml(t.status)} · Auto-submit cutoff: ${escapeHtml(formatPortalDate(t.closes_at))}</p><p class="text-sm mt-2">Focus events recorded · Fullscreen ${t.require_fullscreen ? 'required' : 'optional'} · Clipboard ${t.block_clipboard ? 'blocked' : 'allowed'}</p><a href="/test-portal/admin/tests/${t.id}" class="inline-block underline text-brand-green mt-3">Edit problems or extend closing time</a></article>`).join('');
-      document.getElementById('participants')!.innerHTML = report.participants.length ? report.participants.map((p) => `<tr class="border-t"><td class="p-4"><strong>${escapeHtml(p.name || 'Participant')}</strong><br>${escapeHtml(p.email)}</td><td class="p-4">${sectionCell(p.sections.computational)}</td><td class="p-4">${sectionCell(p.sections.proof)}</td><td class="p-4">${p.combined_percent === null ? 'Pending' : p.combined_percent.toFixed(2)+'%'}</td><td class="p-4">${p.review_events} ${p.review_events ? '· Review linked attempts' : 'recorded'}<br><span class="text-xs text-slate-500">${escapeHtml(eventSummary(p))}</span></td></tr>`).join('') : '<tr><td colspan="5" class="p-8 text-slate-500">No participants have started yet.</td></tr>';
+      document.getElementById('participants')!.innerHTML = report.participants.length ? report.participants.map((p) => `<tr class="border-t"><td class="p-4"><strong>${escapeHtml(p.name || 'Participant')}</strong><br>${escapeHtml(p.email)}</td><td class="p-4">${sectionCell(p.sections.computational)}</td><td class="p-4">${sectionCell(p.sections.proof)}</td><td class="p-4">${p.sections.computational?.disqualified_at || p.sections.proof?.disqualified_at ? 'DQ' : p.combined_percent === null ? 'Pending' : p.combined_percent.toFixed(2)+'%'}</td><td class="p-4">${p.review_events} ${p.review_events ? '· Review linked attempts' : 'recorded'}<br><span class="text-xs text-slate-500">${escapeHtml(eventSummary(p))}</span></td></tr>`).join('') : '<tr><td colspan="5" class="p-8 text-slate-500">No participants have started yet.</td></tr>';
       (document.getElementById('export') as HTMLButtonElement).disabled = false;
     } catch (error) { status.textContent = error instanceof Error ? error.message : 'Could not load report.'; }
     finally { button.disabled = false; }
@@ -46,7 +46,7 @@ import Layout from '../../../layouts/Layout.astro';
   document.getElementById('refresh')!.addEventListener('click',refresh);
   document.getElementById('export')!.addEventListener('click',() => {
     const quote = (value: unknown) => '"'+String(value ?? '').replace(/^[\s]*[=+@-]/,"'$&").replaceAll('"','""')+'"';
-    const rows = [['Name','Email','Computational status','Computational score','Proof status','Proof score','Combined percent','Review signals'], ...report.participants.map((p) => [p.name,p.email,p.sections.computational?.status ?? 'not_started',p.sections.computational?.score,p.sections.proof?.status ?? 'not_started',p.sections.proof?.score,p.combined_percent,p.review_events])];
+    const rows = [['Name','Email','Computational status','Computational score','Proof status','Proof score','Combined percent','Review signals'], ...report.participants.map((p) => [p.name,p.email,p.sections.computational?.disqualified_at ? 'disqualified' : p.sections.computational?.status ?? 'not_started',p.sections.computational?.score,p.sections.proof?.disqualified_at ? 'disqualified' : p.sections.proof?.status ?? 'not_started',p.sections.proof?.score,p.combined_percent,p.review_events])];
     const url = URL.createObjectURL(new Blob(['\uFEFF'+rows.map((r) => r.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}));
     const a = document.createElement('a'); a.href = url; a.download = 'imt-fall-2026-report.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
   });

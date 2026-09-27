@@ -9,7 +9,7 @@ export const GET: APIRoute = async ({ request }) => {
     const ids = (tests ?? []).map((t) => t.id);
     const attempts: Record<string, any>[] = [];
     if (ids.length) for (let offset = 0; ; offset += 500) {
-      const { data, error } = await supabase.from('test_attempts').select('id,test_id,user_id,participant_name,participant_email,status,expires_at,last_seen_at,score,max_score,grading_status').in('test_id',ids).order('id').range(offset,offset+499);
+      const { data, error } = await supabase.from('test_attempts').select('id,test_id,user_id,participant_name,participant_email,status,expires_at,last_seen_at,score,max_score,grading_status,disqualified_at').in('test_id',ids).order('id').range(offset,offset+499);
       if (error) throw error;
       attempts.push(...(data ?? [])); if ((data?.length ?? 0) < 500) break;
     }
@@ -44,7 +44,7 @@ export const GET: APIRoute = async ({ request }) => {
     }
     const participants = [...users.values()].map((row) => {
       const c = row.sections.computational; const p = row.sections.proof;
-      const complete = c && p && c.status !== 'in_progress' && p.status !== 'in_progress' && c.grading_status === 'complete' && p.grading_status === 'complete' && Number(c.max_score) > 0 && Number(p.max_score) > 0;
+      const complete = c && p && !c.disqualified_at && !p.disqualified_at && c.status !== 'in_progress' && p.status !== 'in_progress' && c.grading_status === 'complete' && p.grading_status === 'complete' && Number(c.max_score) > 0 && Number(p.max_score) > 0;
       return { ...row, combined_percent: complete ? 50*Number(c.score)/Number(c.max_score)+50*Number(p.score)/Number(p.max_score) : null };
     }).sort((a,b) => b.review_events-a.review_events || a.email.localeCompare(b.email));
     return portalJson({ tests, participants, health, scheduler_healthy: Boolean(health?.last_run_at && Date.now()-new Date(health.last_run_at).getTime() < 180000),

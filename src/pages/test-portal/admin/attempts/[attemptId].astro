@@ -31,6 +31,14 @@ const { attemptId } = Astro.params;
       <div id="review-alert" class="hidden mb-6 rounded-lg border px-4 py-3 text-sm font-semibold"></div>
 
       <div id="review-content" class="hidden space-y-9">
+        <section class="rounded-xl border-2 border-red-200 bg-red-50 p-5">
+          <h2 class="font-bold text-red-900">Disqualification — this attempt only</h2>
+          <p id="dq-status" class="text-sm text-red-900 mt-2"></p>
+          <p class="text-sm text-red-900 mt-2">Review the evidence before deciding. Fullscreen warnings alone do not automatically disqualify a competitor. Disqualifying an active attempt ends it and preserves its saved work. Reinstating restores eligibility, but does not restart the timer.</p>
+          <label class="block mt-4 text-sm font-bold" for="dq-reason">Reason for this decision (required; recorded in the admin audit trail)</label>
+          <textarea id="dq-reason" minlength="5" maxlength="2000" rows="3" class="mt-2 w-full rounded border border-red-200 p-3 text-sm"></textarea>
+          <button id="dq-action" type="button" class="mt-3 rounded bg-red-700 px-4 py-2 font-bold text-white">Disqualify this attempt</button>
+        </section>
         <details class="bg-white border border-slate-200 rounded-lg p-5"><summary class="font-bold cursor-pointer">Contest rules acknowledgement: <span id="review-terms-accepted"></span></summary><div id="review-terms" class="portal-math whitespace-pre-wrap text-sm mt-4"></div></details>
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div class="review-stat"><span>Status</span><strong id="review-status"></strong></div>
@@ -137,6 +145,8 @@ const { attemptId } = Astro.params;
       max_score: number;
       grading_status: string;
       session_locked: boolean;
+      disqualified_at?: string | null;
+      disqualification_reason?: string;
     };
     problems: ProblemReview[];
     events: { id: number; event_type: string; metadata: Record<string, unknown>; created_at: string }[];
@@ -321,6 +331,11 @@ const { attemptId } = Astro.params;
     document.getElementById('review-grading')!.textContent = data.attempt.grading_status.replace('_', ' ');
     document.getElementById('force-submit')!.classList.toggle('hidden', data.attempt.status !== 'in_progress');
     document.getElementById('extend-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress' || Boolean(data.attempt.working_ended_at));
+    document.getElementById('dq-status')!.textContent = data.attempt.disqualified_at ? 'DISQUALIFIED: ' + data.attempt.disqualification_reason : 'This attempt is currently eligible.';
+    const dqButton = document.getElementById('dq-action') as HTMLButtonElement;
+    dqButton.textContent = data.attempt.disqualified_at ? 'Reinstate this attempt' : 'Disqualify this attempt';
+    dqButton.dataset.action = data.attempt.disqualified_at ? 'reinstate' : 'disqualify';
+    dqButton.disabled = false;
     document.getElementById('unlock-attempt')!.classList.toggle('hidden', data.attempt.status !== 'in_progress' || data.test.security_mode !== 'one_sitting' || !data.attempt.session_locked);
     document.getElementById('review-terms-accepted')!.textContent = data.attempt.terms_accepted_at ? formatPortalDate(data.attempt.terms_accepted_at) : 'Not recorded (legacy attempt)';
     const terms = document.getElementById('review-terms')!;
@@ -358,6 +373,21 @@ const { attemptId } = Astro.params;
       button.textContent = 'Save grade';
     }
   }
+
+  document.getElementById('dq-action')!.addEventListener('click', async () => {
+    const button = document.getElementById('dq-action') as HTMLButtonElement;
+    const reason = (document.getElementById('dq-reason') as HTMLTextAreaElement).value.trim();
+    if (reason.length < 5) { showAlert('Enter a reason of at least 5 characters.', 'error'); return; }
+    const action = button.dataset.action;
+    if (!confirm(action === 'disqualify' ? 'Disqualify only this test attempt? An active attempt will end. Saved work and grades will be preserved.' : 'Reinstate this attempt? Its original work and grades will remain; solving will not reopen.')) return;
+    button.disabled = true;
+    try {
+      await portalFetch(`/api/test-portal/admin/attempts/${attemptId}`, { method: 'PATCH', body: JSON.stringify({ action, reason }) });
+      (document.getElementById('dq-reason') as HTMLTextAreaElement).value = '';
+      showAlert(action === 'disqualify' ? 'Attempt disqualified. Decision recorded.' : 'Attempt reinstated. Decision recorded.');
+      await loadAttempt();
+    } catch (error) { showAlert(error instanceof Error ? error.message : 'Decision could not be saved.', 'error'); button.disabled = false; }
+  });
 
   async function performAction(action: 'unlock_session' | 'force_submit') {
     if (action === 'force_submit' && !confirm('Force-submit this active attempt using its currently saved responses?')) return;

@@ -130,8 +130,8 @@ const { attemptId } = Astro.params;
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
         </div>
         <p class="text-xs uppercase tracking-[0.2em] font-bold text-brand-gold mb-3">Secure session</p>
-        <h2 class="font-serif font-bold text-3xl">Enter fullscreen to continue</h2>
-        <p class="text-slate-300 text-sm leading-relaxed mt-4">The test timer is already running. Leaving fullscreen will be recorded for the administrator.</p>
+        <h2 id="fullscreen-gate-title" class="font-serif font-bold text-3xl">Stay in fullscreen</h2>
+        <p id="fullscreen-policy-message" role="alert" class="text-red-200 font-bold leading-relaxed mt-4">DO NOT EXIT FULLSCREEN. Even one exit is a warning. The third warning locks your test. The timer continues running. Take this test on a computer.</p>
         <button id="enter-fullscreen" type="button" class="mt-7 w-full bg-brand-gold text-brand-dark font-extrabold py-3.5 rounded-lg">Enter fullscreen</button>
         <p id="fullscreen-error" class="hidden text-sm text-amber-200 mt-4"></p>
       </div>
@@ -194,6 +194,7 @@ const { attemptId } = Astro.params;
       expires_at: string;
       working_ended_at: string | null;
       auto_submitted: boolean;
+      fullscreen_warnings: number;
       grading_status: string;
       score?: number;
       max_score?: number;
@@ -220,6 +221,8 @@ const { attemptId } = Astro.params;
   let numericSaveTimer = 0;
   let timeoutHandled = false;
   let securityConfigured = false;
+  let fullscreenLocked = false;
+  let fullscreenEventQueue: Promise<void> = Promise.resolve();
   let busyOperations = 0;
   let saveFailed = false;
   const failedQuestions = new Set<string>();
@@ -230,7 +233,7 @@ const { attemptId } = Astro.params;
 
   function isProofSolving() { return payload?.test.contest_section === 'proof' && !payload.attempt.working_ended_at && payload.attempt.status === 'in_progress'; }
   function isProofUploading() { return payload?.test.contest_section === 'proof' && Boolean(payload.attempt.working_ended_at) && payload.attempt.status === 'in_progress'; }
-  function isSolving() { return payload?.attempt.status === 'in_progress' && !payload.attempt.working_ended_at && Date.parse(payload.attempt.expires_at) > Date.now() + clockOffset; }
+  function isSolving() { return !fullscreenLocked && payload?.attempt.status === 'in_progress' && !payload.attempt.working_ended_at && Date.parse(payload.attempt.expires_at) > Date.now() + clockOffset; }
 
   function toast(message: string) {
     const element = document.getElementById('attempt-toast')!;
@@ -532,6 +535,42 @@ const { attemptId } = Astro.params;
     timerHandle = window.setInterval(tick, 1000);
   }
 
+  function showFullscreenWarning(count: number, locked = false) {
+    fullscreenLocked = locked;
+    const gate = document.getElementById('fullscreen-gate')!;
+    gate.classList.remove('hidden'); gate.classList.add('flex');
+    document.getElementById('fullscreen-gate-title')!.textContent = locked ? 'TEST LOCKED — 3 WARNINGS' : count === 2 ? 'FINAL WARNING — RETURN TO FULLSCREEN' : 'WARNING — RETURN TO FULLSCREEN';
+    document.getElementById('fullscreen-policy-message')!.textContent = locked
+      ? 'Your test is locked after 3 fullscreen exits. Contact an organizer to unlock it. Your timer continues running.'
+      : 'Fullscreen warning ' + count + ' of 3. Even an accidental exit counts. ' + (count === 2 ? 'ONE MORE EXIT WILL LOCK YOUR TEST. ' : '') + 'Return to fullscreen now. Your timer is running.';
+    (document.getElementById('enter-fullscreen') as HTMLButtonElement).disabled = locked;
+    document.getElementById('enter-fullscreen')!.textContent = locked ? 'Contact an organizer to unlock' : 'Return to fullscreen — keep taking the test';
+    if (locked) {
+      workspace.inert = true;
+      window.clearTimeout(numericSaveTimer);
+    }
+  }
+
+  function reportFullscreenExit() {
+    const eventId = crypto.randomUUID();
+    showFullscreenWarning(Math.min((payload.attempt.fullscreen_warnings ?? 0) + 1, 3));
+    fullscreenEventQueue = fullscreenEventQueue.then(async () => {
+      for (let retry = 0; retry < 3; retry++) {
+        try {
+          const result = await attemptFetch<{ fullscreen_warnings: number; locked: boolean }>(`/api/test-portal/attempts/${attemptId}/events`, {
+            method: 'POST', keepalive: true, body: JSON.stringify({ event_type: 'fullscreen_exited', metadata: { event_id: eventId } }),
+          });
+          payload.attempt.fullscreen_warnings = result.fullscreen_warnings;
+          if (result.locked || !document.fullscreenElement) showFullscreenWarning(result.fullscreen_warnings, result.locked);
+          return;
+        } catch (error) {
+          if (error instanceof PortalClientError && error.code === 'FULLSCREEN_LOCKED') { showFullscreenWarning(3, true); return; }
+          if (retry === 2) document.getElementById('fullscreen-policy-message')!.textContent = 'Connection interrupted. Stay on this page and return to fullscreen. Your exit is awaiting recording; the timer continues.';
+        }
+      }
+    });
+  }
+
   async function logEvent(eventType: string, metadata: Record<string, unknown> = {}) {
     try {
       await attemptFetch(`/api/test-portal/attempts/${attemptId}/events`, {
@@ -557,6 +596,7 @@ const { attemptId } = Astro.params;
 
     const gate = document.getElementById('fullscreen-gate')!;
     if (payload.test.require_fullscreen) {
+      if (payload.attempt.fullscreen_warnings > 0) showFullscreenWarning(payload.attempt.fullscreen_warnings);
       gate.classList.remove('hidden');
       gate.classList.add('flex');
       document.addEventListener('fullscreenchange', () => {
@@ -570,10 +610,10 @@ const { attemptId } = Astro.params;
           gate.classList.remove('hidden');
           gate.classList.add('flex');
           const warning = document.getElementById('security-warning')!;
-          document.getElementById('security-warning-text')!.textContent = 'Fullscreen was exited. This event has been recorded.';
+          document.getElementById('security-warning-text')!.textContent = 'Fullscreen exit warning: the third exit locks your test.';
           document.getElementById('reenter-fullscreen')!.classList.remove('hidden');
           warning.classList.remove('hidden');
-          void logEvent('fullscreen_exited');
+          reportFullscreenExit();
         }
       });
     }
@@ -601,6 +641,7 @@ const { attemptId } = Astro.params;
   }
 
   async function enterFullscreen() {
+    if (fullscreenLocked) return;
     const message = document.getElementById('fullscreen-error')!;
     try {
       if (!document.documentElement.requestFullscreen) {

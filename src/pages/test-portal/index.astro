@@ -28,6 +28,11 @@ import Layout from '../../layouts/Layout.astro';
         <article class="bg-white border border-slate-200 rounded-xl p-6"><p class="text-xs font-bold text-brand-green uppercase tracking-wider">Proof · 50%</p><h2 class="font-serif text-2xl font-bold mt-2">5 proofs. 4½ hours.</h2><p class="text-sm text-slate-500 mt-2">Upload up to 10 PDFs or images for each proof. Each problem is worth 7 points; partial credit is available.</p></article>
       </div>
       <p class="text-sm text-slate-600 mb-8">Round 1: September 26–October 10. Each section has one continuous timer and one attempt. Contest cards below show the current deadline in your local time, including any extensions. <a class="text-brand-green underline" href="/competitions/fall-2026">Tournament details</a> · <a class="text-brand-green underline" href="/team">Portal support</a></p>
+      <aside class="mb-8 rounded-xl border-2 border-red-600 bg-red-50 p-6 text-red-950" aria-label="Required device and fullscreen rules">
+        <h2 class="text-xl font-extrabold">TAKE THE TEST ON A COMPUTER</h2>
+        <p class="mt-2 font-bold">Use a laptop or desktop with a fullscreen-capable browser. Do not take the test on a phone or tablet.</p>
+        <p class="mt-3"><strong>DO NOT EXIT FULLSCREEN — even once counts as a warning.</strong> Your third fullscreen exit locks your test until an organizer unlocks it. The timer keeps running. Avoid Escape, switching tabs, or opening other apps while solving.</p>
+      </aside>
       <noscript><p>Enable JavaScript to sign in and save contest work.</p></noscript>
       <div id="portal-loader" class="flex items-center justify-center gap-3 py-24 text-slate-500" aria-live="polite">
         <span class="w-6 h-6 rounded-full border-2 border-slate-300 border-t-brand-green animate-spin"></span>
@@ -158,6 +163,7 @@ import Layout from '../../layouts/Layout.astro';
       expires_at: string;
       submitted_at: string | null;
       grading_status: string;
+      disqualified?: boolean;
       score?: number;
       max_score?: number;
     };
@@ -229,7 +235,7 @@ import Layout from '../../layouts/Layout.astro';
 
     for (const test of tests) {
       const attempt = test.attempt;
-      const status = attempt?.status === 'in_progress'
+      const status = attempt?.disqualified ? 'Disqualified' : attempt?.status === 'in_progress'
         ? 'In progress'
         : attempt?.status === 'submitted'
           ? 'Submitted'
