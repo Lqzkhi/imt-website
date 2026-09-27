@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 
-test('fullscreen exits lock on three, retries are idempotent, upload exits are ignored, and DQ is reversible and audited', async () => {
+test('fullscreen exits lock on six, retries are idempotent, upload exits are ignored, and DQ is reversible and audited', async () => {
  const db = new PGlite();
  try {
   await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
@@ -22,17 +22,26 @@ test('fullscreen exits lock on three, retries are idempotent, upload exits are i
    return (await rows(`INSERT INTO test_attempts(test_id,user_id,started_at,expires_at,terms_accepted_at,terms_snapshot)
     SELECT id,$1,NOW(),NOW()+INTERVAL '2 minutes',NOW(),instructions_latex FROM tests WHERE contest_section=$2 RETURNING *`,[u.id,section]))[0];
   };
+  const legacy = await make('computational');
+  for(let i=0;i<3;i++) await rows('SELECT * FROM record_fullscreen_exit($1,$2)',[legacy.id,crypto.randomUUID()]);
+  assert.ok((await rows('SELECT security_locked_at FROM test_attempts WHERE id=$1',[legacy.id]))[0].security_locked_at);
+  await db.exec(await readFile(new URL('../supabase/migrations/20260927001100_six_fullscreen_warnings.sql',import.meta.url),'utf8'));
+  const upgraded = (await rows('SELECT * FROM test_attempts WHERE id=$1',[legacy.id]))[0];
+  assert.equal(upgraded.security_locked_at,null); assert.equal(upgraded.fullscreen_warnings,3);
   const a = await make('computational');
   const eventId=crypto.randomUUID();
   const exit = async (attempt,id=crypto.randomUUID()) => (await rows('SELECT * FROM record_fullscreen_exit($1,$2)',[attempt.id,id]))[0];
   assert.equal((await exit(a,eventId)).fullscreen_warnings,1);
   assert.equal((await exit(a,eventId)).fullscreen_warnings,1);
   assert.equal((await exit(a)).security_locked_at,null);
+  for(let expected=3;expected<=5;expected++) {
+   const warning=await exit(a); assert.equal(warning.fullscreen_warnings,expected); assert.equal(warning.security_locked_at,null);
+  }
   const locked = await exit(a);
-  assert.equal(locked.fullscreen_warnings,3); assert.ok(locked.security_locked_at);
-  assert.equal((await exit(a)).fullscreen_warnings,3);
+  assert.equal(locked.fullscreen_warnings,6); assert.ok(locked.security_locked_at);
+  assert.equal((await exit(a)).fullscreen_warnings,6);
   await assert.rejects(rows(`INSERT INTO test_responses(attempt_id,question_id,response_text)
-   SELECT $1,id,'42' FROM test_questions WHERE test_id=$2 ORDER BY position LIMIT 1`,[a.id,a.test_id]),/locked after 3 fullscreen warnings/);
+   SELECT $1,id,'42' FROM test_questions WHERE test_id=$2 ORDER BY position LIMIT 1`,[a.id,a.test_id]),/locked after 6 fullscreen warnings/);
   await rows('UPDATE test_attempts SET fullscreen_warnings=0,security_locked_at=NULL WHERE id=$1',[a.id]);
   await rows(`INSERT INTO test_responses(attempt_id,question_id,response_text)
    SELECT $1,id,'42' FROM test_questions WHERE test_id=$2 ORDER BY position LIMIT 1`,[a.id,a.test_id]);
@@ -62,9 +71,9 @@ test('fullscreen event endpoint returns the authoritative lock state for both RP
  const source = (await readFile(new URL('../src/pages/api/test-portal/attempts/[attemptId]/events.ts',import.meta.url),'utf8')).replace(/^import .*;\r?$/gm,'').replace('export const POST','const POST');
  const compiled = ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
  for (const wrapped of [false,true]) {
-  const row={id:'attempt',fullscreen_warnings:3,security_locked_at:new Date().toISOString()};
+  const row={id:'attempt',fullscreen_warnings:6,security_locked_at:new Date().toISOString()};
   const ctx={requireSameOrigin:()=>null,authenticatePortalRequest:async()=>({supabase:{rpc:async()=>({data:wrapped?[row]:row,error:null})},user:{id:'owner'}}),getOwnedAttempt:async()=>({attempt:{id:'attempt',status:'in_progress'},test:{}}),finalizeIfExpired:async(_,a)=>a,requireAttemptSession:()=>{},readPortalJson:async()=>({event_type:'fullscreen_exited',metadata:{event_id:crypto.randomUUID()}}),stringField:v=>v,uuidField:v=>v,PORTAL_EVENT_TYPES:new Set(['fullscreen_exited']),portalJson:v=>v,portalErrorResponse:e=>{throw e;},logSecurityEvent:()=>{}};
   const post = new Function(...Object.keys(ctx),compiled+';return POST;')(...Object.values(ctx));
-  assert.deepEqual(await post({request:new Request('https://example.test'),params:{attemptId:'attempt'}}),{recorded:true,fullscreen_warnings:3,locked:true});
+  assert.deepEqual(await post({request:new Request('https://example.test'),params:{attemptId:'attempt'}}),{recorded:true,fullscreen_warnings:6,locked:true});
  }
 });

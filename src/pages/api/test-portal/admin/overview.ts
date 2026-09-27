@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { scratchEligibility } from '../../../../lib/portalEligibility';
 import { authenticatePortalRequest, portalErrorResponse, portalJson } from '../../../../lib/testPortalAuth';
 
 export const GET: APIRoute = async ({ request }) => {
@@ -9,9 +10,19 @@ export const GET: APIRoute = async ({ request }) => {
     const ids = (tests ?? []).map((t) => t.id);
     const attempts: Record<string, any>[] = [];
     if (ids.length) for (let offset = 0; ; offset += 500) {
-      const { data, error } = await supabase.from('test_attempts').select('id,test_id,user_id,participant_name,participant_email,status,expires_at,last_seen_at,score,max_score,grading_status,disqualified_at').in('test_id',ids).order('id').range(offset,offset+499);
+      const { data, error } = await supabase.from('test_attempts').select('id,test_id,user_id,participant_name,participant_email,status,expires_at,last_seen_at,score,max_score,grading_status,disqualified_at,working_ended_at,submitted_at').in('test_id',ids).order('id').range(offset,offset+499);
       if (error) throw error;
       attempts.push(...(data ?? [])); if ((data?.length ?? 0) < 500) break;
+    }
+    const scratchCounts = new Map<string, number>();
+    for (let start = 0; start < attempts.length; start += 100) {
+      const batch = attempts.slice(start, start + 100).map((a) => a.id);
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from('test_scratch_files').select('id,attempt_id').in('attempt_id', batch).order('id').range(offset, offset + 499);
+        if (error) throw error;
+        for (const file of data ?? []) scratchCounts.set(file.attempt_id, (scratchCounts.get(file.attempt_id) ?? 0) + 1);
+        if ((data?.length ?? 0) < 500) break;
+      }
     }
     const events = new Map<string, Record<string, number>>();
     // Batch both IDs and rows to avoid PostgREST's default row limit.
@@ -38,14 +49,14 @@ export const GET: APIRoute = async ({ request }) => {
       const section = tests?.find((t) => t.id === attempt.test_id)?.contest_section;
       const counts = events.get(attempt.id) ?? {};
       const row = users.get(attempt.user_id) ?? { user_id: attempt.user_id, name: attempt.participant_name, email: attempt.participant_email, sections: {}, review_events: 0 };
-      row.sections[section] = { ...attempt, events: counts };
+      row.sections[section] = { ...attempt, scratch_file_count: scratchCounts.get(attempt.id) ?? 0, events: counts };
       row.review_events += attentionTypes.reduce((sum,type) => sum+(counts[type] ?? 0),0);
       users.set(attempt.user_id,row);
     }
     const participants = [...users.values()].map((row) => {
       const c = row.sections.computational; const p = row.sections.proof;
       const complete = c && p && !c.disqualified_at && !p.disqualified_at && c.status !== 'in_progress' && p.status !== 'in_progress' && c.grading_status === 'complete' && p.grading_status === 'complete' && Number(c.max_score) > 0 && Number(p.max_score) > 0;
-      return { ...row, combined_percent: complete ? 50*Number(c.score)/Number(c.max_score)+50*Number(p.score)/Number(p.max_score) : null };
+      return { ...row, scratch_eligibility: scratchEligibility(row.sections), combined_percent: complete ? 50*Number(c.score)/Number(c.max_score)+50*Number(p.score)/Number(p.max_score) : null };
     }).sort((a,b) => b.review_events-a.review_events || a.email.localeCompare(b.email));
     return portalJson({ tests, participants, health, scheduler_healthy: Boolean(health?.last_run_at && Date.now()-new Date(health.last_run_at).getTime() < 180000),
       overdue_attempts: attempts.filter((a) => a.status === 'in_progress' && new Date(a.expires_at).getTime() <= Date.now()).length });
